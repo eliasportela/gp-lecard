@@ -1,0 +1,92 @@
+<html>
+<head>
+  <title>Teste</title>
+  <meta charset="UTF-8">
+  <meta name="Description" content="Segue seu <?=$tipo?> em anexo.">
+  <meta name="viewport" content= "width=device-width, initial-scale=1.0">
+  <style>
+    html, body {
+      margin: 0;
+      line-height: 22px;
+    }
+    @page {
+      margin: 0cm 4px 0cm 0cm;
+    }
+    h6 {
+      font-size: 12px;
+      margin: 4px 0;
+      font-weight: 600;
+    }
+    h5 {
+      font-size: 16px;
+      margin: 6px 0;
+      font-weight: normal;
+    }
+    .font-weight-bold {
+      font-weight: bold;
+    }
+    .float-right {
+      float: right;
+    }
+    .text-center {
+      text-align: center;
+    }
+    .text-right {
+      text-align: right;
+    }
+    #content {
+      font-size: 12px;
+      font-family: Helvetica Neue, Helvetica, Arial, serif;
+    }
+    #content .small {
+      font-size: 10px!important;
+    }
+    .border {
+      border: 1px solid #aaa;
+    }
+    .border-bottom {
+      border-bottom: 1px solid #aaa;
+    }
+    .mt-3 {
+      margin-top: 10px;
+    }
+    .mt-4 {
+      margin-top: 12px;
+    }
+    .mb-0 {
+      margin-bottom: 0;
+    }
+    .px-1 {
+      padding: 6px 0;
+    }
+    .p-2 {
+      padding: 8px;
+    }
+    .pb-4 {
+      padding-bottom: 20px;
+    }
+    #andamento {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div id="content">
+</div>
+<div class="text-center" style="margin-top: 24px; font-size: 12px">
+  <b>www.storkdigital.com.br</b>
+</div>
+
+<script>
+  const ipcRenderer = require("electron").ipcRenderer;
+
+  ipcRenderer.on("print", (event, content) => {
+    // console.log(content);
+    document.getElementById('content').innerHTML = content;
+    ipcRenderer.send("readyToPrint");
+  });
+
+</script>
+</body>
+</html>
