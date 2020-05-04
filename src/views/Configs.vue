@@ -37,6 +37,8 @@
 
 <script>
 const { ipcRenderer } = require('electron');
+const Config = require('electron-config');
+const config = new Config();
 import TopBar from '@/components/TopBar.vue'
 
 export default {
@@ -54,17 +56,22 @@ export default {
   },
   methods: {
     resetar() {
+      config.clear();
       localStorage.clear();
-      this.$router.push('/');
+      ipcRenderer.send('relaunch-app');
     },
 
     salvar() {
-      localStorage.setItem('urlSocket', this.url_socket + (!this.url_socket.endsWith('/') ? '/' : ''));
-      localStorage.setItem('urlBase', this.url_base + (!this.url_base.endsWith('/') ? '/' : ''));
-      this.buscar();
+      let urlSocket = this.url_socket + (!this.url_socket.endsWith('/') ? '/' : '');
+      let urlBase = this.url_base + (!this.url_base.endsWith('/') ? '/' : '');
+
+      config.set('urlSocket', urlSocket);
+      config.set('urlBase', urlBase);
+
       this.load = true;
       ipcRenderer.send('relaunch-app');
     },
+
     buscar() {
       if (localStorage.getItem('urlSocket')) {
         this.url_socket = localStorage.getItem('urlSocket');

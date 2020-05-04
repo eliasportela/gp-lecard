@@ -1,6 +1,6 @@
 <template>
   <div>
-    <top-bar @delivery_order="buscarPedidos"/>
+    <top-bar @delivery_order="buscarPedidos" @delivery_desativado="deliveryDesativado"/>
     <div style="height: 100vh; margin-left: 70px; position: relative;">
       <div class="container-pedidos">
         <div class="coluna-1">
@@ -19,6 +19,16 @@
                 <span class="small font-weight-bold bg-danger text-white rounded-sm px-1 float-right" v-show="p.status === '5'">Cancelado</span>
                 <h6 class="mb-0">Pedido: {{p.id_pedido}}</h6>
                 <span class="small">{{p.data_pedido}}</span>
+              </div>
+            </div>
+          </div>
+          <div class="container-aceitar bg-white" style="left: 0; right: 16px; width: auto">
+            <div class="container-fluid small card">
+              <div class="row">
+                <div class="col-12 py-2" v-if="totais.quantidade">
+                  <div class="font-weight-bold m-0">Pedidos ({{totais.quantidade}})</div>
+                  <div class="text-muted">R$ {{totais.total | valor}}</div>
+                </div>
               </div>
             </div>
           </div>
@@ -46,13 +56,24 @@
               <h5 class="font-weight-bold">{{selecionado.cliente.nome_cliente}}
                 <span class="small font-weight-bold">({{selecionado.qtd_pedidos === '0' ? 'Primeiro pedido' : selecionado.qtd_pedidos + ' pedidos'}})</span>
               </h5>
-              <h6 v-show="selecionado.previsao_entrega">Previsão de entrega: <b>{{selecionado.previsao_entrega}}</b></h6>
-              <div class="border p-2 mt-3">
+              <h6 v-show="selecionado.tipo_pedido === '1' && selecionado.previsao_entrega">
+                Previsão de entrega: <b>{{selecionado.previsao_entrega}}</b>
+              </h6>
+              <h6 v-show="selecionado.tipo_pedido === '2' && selecionado.previsao_retirada">
+                Previsão de retirada: <b>{{selecionado.previsao_retirada}}</b>
+              </h6>
+              <div class="border p-2 mt-3" v-show="selecionado.tipo_pedido === '1'">
                 <h6 class="text-success font-weight-bold">Entregar em:</h6>
                 <div>
                   {{selecionado.cliente.endereco}}, {{selecionado.cliente.numero}}, {{selecionado.cliente.bairro}} - {{selecionado.cliente.nome_cidade}} <br>
                   CEP: {{selecionado.cliente.cep}} - {{selecionado.cliente.complemento}} <br>
                   <b>Telefone:</b> {{selecionado.cliente.telefone}} <br>
+                </div>
+              </div>
+              <div class="border p-2 mt-3" v-show="selecionado.tipo_pedido === '2'">
+                <h6 class="text-info font-weight-bold">Retirar no local</h6>
+                <div>
+                  Cliente vai retirar o pedido
                 </div>
               </div>
               <div class="mt-4">
@@ -63,7 +84,7 @@
                     - {{d.nome_produto}}
                   </div>
                   <div class="small" v-for="d in i.adicionais">
-                    - {{d.nome_produto}} <span v-show="d.valor > 0">R$ {{d.valor | valor}}</span>
+                    - {{d.qtd}}x {{d.nome_produto}} <span v-show="d.valor > 0">R$ {{d.valor | valor}}</span>
                   </div>
                   <div class="small" v-show="i.observacao">
                     - Obs: {{i.observacao}}
@@ -71,7 +92,7 @@
                 </div>
                 <div class="mt-3">
                   <div class="text-right">
-                    <div><b>Taxa de entrega:</b> R$ {{selecionado.valor_frete | valor}}</div>
+                    <div v-show="selecionado.tipo_pedido === '1'"><b>Taxa de entrega:</b> R$ {{selecionado.valor_frete | valor}}</div>
                     <div><b>Desconto:</b> R$ {{selecionado.valor_desconto | valor}}</div>
                     <div><b>Cobrar do cliente: R$ {{selecionado.total | valor}}</b></div>
                   </div>
@@ -81,9 +102,9 @@
               </div>
             </div>
           </div>
-          <div class="container-aceitar border-top bg-white">
+          <div class="container-aceitar bg-white">
             <div class="container-fluid">
-              <div class="row pt-3 pb-2">
+              <div class="row pt-2 pb-2">
                 <div class="col-3">
                   <button class="btn btn-outline-secondary btn-block" :disabled="!selecionado.status" @click="imprimir()" >Imprimir</button>
                 </div>
@@ -94,7 +115,7 @@
                   <button class="btn btn-success btn-block" @click="acaoPedido(2)">Aceitar</button>
                 </div>
                 <div class="col-6 text-right" v-show="selecionado.status === '2'">
-                  <button class="btn btn-dark btn-block" @click="acaoPedido(3)">Enviar p/ Entrega</button>
+                  <button class="btn btn-dark btn-block" @click="acaoPedido(3)">{{selecionado.tipo_pedido === '1' ? 'Enviar p/ Entrega' : 'Pronto para retirar'}}</button>
                 </div>
                 <div class="col-6 text-right" v-show="selecionado.status === '3'">
                   <button class="btn btn-info btn-block" @click="acaoPedido(4)">Finalizar</button>
@@ -140,6 +161,7 @@ export default {
   data() {
     return {
       empresa: localStorage.getItem('empresa'),
+      urlBase: localStorage.getItem('urlBase'),
       token: localStorage.getItem('key'),
       loading: true,
       imprimirSelecionado: false,
@@ -154,7 +176,8 @@ export default {
       },
       modalCancelamento: false,
       motivoRecusa: '',
-      socket: true
+      socket: true,
+      totais: '',
     }
   },
 
@@ -162,7 +185,7 @@ export default {
     buscarPedidos() {
       this.loading = true;
 
-      this.$http.get('delivery/pedidos/' + this.empresa, {params: this.pesquisa})
+      this.$http.get(this.urlBase + 'delivery/pedidos/' + this.empresa, {params: this.pesquisa})
         .then(response => {
           this.pedidos = response.data;
           if (this.pedidos.length > 0) {
@@ -194,6 +217,7 @@ export default {
           }
 
           this.loading = false;
+          this.buscarTotais();
 
         }, res => {
           console.log(res);
@@ -205,13 +229,28 @@ export default {
         });
     },
 
+    buscarTotais() {
+      this.$http.get(this.urlBase + 'delivery/relatorio-diario/'  + this.token)
+        .then(response => {
+          this.totais = response.data;
+          // console.log(response);
+        }, res => {
+          // openModalMsg(res.data.result,res.data.msg);
+        });
+    },
+
     acaoPedido(status) {
       this.modalCancelamento = false;
-      this.selecionado.status = status;
-      this.selecionado.obs_cancelamento = this.motivoRecusa;
       this.loading = true;
 
-      this.$http.post('delivery/pedidos/' + this.token, this.selecionado, {emulateJSON: true})
+      let dados = {
+        id_pedido: this.selecionado.id_pedido,
+        status: status,
+        obs_cancelamento: this.motivoRecusa
+      };
+
+      // console.log(dados);
+      this.$http.post(this.urlBase + 'delivery/pedidos/' + this.token, dados, {emulateJSON: true})
         .then(res => {
           if (res.data && status === 2 && localStorage.getItem('impressaoAutomatica')) {
             this.imprimirSelecionado = true;
@@ -247,11 +286,16 @@ export default {
       setTimeout(() => {
         document.getElementById('text-cancelamento').focus()
       }, 500)
+    },
+
+    deliveryDesativado() {
+      this.$swal('', 'Seu delivery está desativado, seus pedidos não serão aceitos!')
     }
   },
 
   mounted() {
     this.buscarPedidos();
+    this.buscarTotais();
   },
 
   created() {
@@ -279,13 +323,13 @@ export default {
     padding-right: 16px;
   }
   .coluna-1 .coluna-1-1 {
-    position: absolute; top: 28px; bottom: 8px; right: 16px; left: 0; overflow: auto; margin-top: 18px; padding: 0
+    position: absolute; top: 28px; bottom: 62px; right: 16px; left: 0; overflow: auto; margin-top: 18px; padding: 0
   }
   .coluna-2 {
     position: absolute; top: 0; bottom: 0; right: 0; width: 60%;
   }
   .conteudo-c2 {
-    position: absolute; top: 0; bottom: 16px; right: 0; left: 0;
+    position: absolute; top: 0; bottom: 62px; right: 0; left: 0;
   }
   .container-aceitar {
     position: absolute; bottom: 0; width: 100%;

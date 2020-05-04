@@ -1,21 +1,32 @@
 <template>
   <div>
     <div class="fixed-top p-2 shadow-sm bg-white">
-      <div class="float-right pr-2 pt-2 text-right">
-        <router-link to="/configs" class="small" style="text-decoration: none">
-          <div class="font-weight-bold text-success" v-show="connected">Você está online</div>
-          <div class="font-weight-bold text-danger" v-show="!connected">Você está offline</div>
-        </router-link>
-      </div>
-      <a href="javascript:" class="float-right pr-3 animated infinite pulse" style="padding-top: 2px" v-show="bell" @click="silenciar">
-        <img src="../assets/icons/notification.svg" style="width: 24px"/>
-      </a>
-      <div class="pt-1 pl-2">
-        <router-link to="/" class="text-dark">
-          <img src="../assets/logo-lecard.png" alt="" style="width: 32px">
-          <span class="font-weight-bold small pl-3">{{empresa.nome}}</span>
-        </router-link>
-        <!--<button @click="teste">Teste</button>-->
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-7">
+            <router-link to="/" class="text-dark">
+              <img src="../assets/logo-lecard.png" alt="" style="width: 32px">
+              <span class="font-weight-bold small pl-3">{{empresa.nome}}</span>
+            </router-link>
+          </div>
+          <div class="col-2">
+            <div class="text-center" v-show="!load">
+              <a class="small text-danger font-weight-bold" href="javascript:" v-show="empresa.status === 1" @click="toogleStatus()">Desativar delivery</a>
+              <a class="small font-weight-bold text-dark" title="Clique para ativar o delivery" href="#" v-show="empresa.status === 0" @click="toogleStatus()">Ativar delivery</a>
+            </div>
+          </div>
+          <div class="col-3 text-right">
+            <div>
+              <a href="javascript:" class="pr-4" title="Tem pedido na área! =)" v-show="bell" @click="silenciar">
+                <img class="d-inline-block animated pulse infinite" src="../assets/icons/notification.svg" style="width: 24px"/>
+              </a>
+              <router-link to="/configs" class="small" style="text-decoration: none">
+                <span class="font-weight-bold text-success" v-show="connected">Você está online</span>
+                <span class="font-weight-bold text-danger" v-show="!connected">Você está offline</span>
+              </router-link>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="menu-lateral bg-dark">
@@ -32,6 +43,10 @@
         <img src="../assets/icons/settings.svg" alt="">
         <span>Configs.</span>
       </router-link>
+      <a class="btn btn-block" @click="logout">
+        <img src="../assets/icons/logout.svg" alt="">
+        <span>Logout</span>
+      </a>
     </div>
 
     <imprimir-comanda/>
@@ -40,6 +55,8 @@
 </template>
 
 <script>
+const Config = require('electron-config');
+const config = new Config();
 import io from 'socket.io-client';
 import ImprimirComanda from "./ImprimirComanda";
 
@@ -51,10 +68,15 @@ export default {
   },
   data() {
     return {
+      token: localStorage.getItem('key'),
+      urlBase: localStorage.getItem('urlBase'),
       empresa: {
         token: localStorage.getItem('empresa'),
-        nome: localStorage.getItem('nome_fantasia')
+        nome: localStorage.getItem('nome_fantasia'),
+        status: 1,
       },
+      load: true,
+      empresaAtiva: false,
       socket: '',
       connected: false,
       bell: false
@@ -72,13 +94,68 @@ export default {
       if (this.$route.name !== 'Pedidos') {
         this.$router.push('/pedidos');
       }
+    },
+
+    logout() {
+      this.$swal({
+        text: "Confirma o logout do sistema?",
+        showCancelButton: true,
+        customClass: {
+          cancelButton: 'btn btn-danger ml-3',
+          confirmButton: 'btn btn-success '
+        },
+        buttonsStyling: false
+      }).then((result) => {
+        if (result.value) {
+          localStorage.clear();
+          config.delete('userData');
+          this.$router.push('/');
+        }
+      });
+    },
+
+    statusEmpresa() {
+      this.$http.get(this.urlBase + 'delivery/empresa/status/' + this.empresa.token)
+        .then(response => {
+          this.empresa.status = parseInt(response.data.status);
+          this.load = false;
+
+          if (this.empresa.status === 0){
+            this.$emit('delivery_desativado');
+          }
+
+        }, res => {
+          console.log(res);
+        });
+    },
+
+    toogleStatus() {
+      let dados = {
+        status: this.empresa.status === 1 ? 0 : 1
+      };
+
+      this.$http.post(this.urlBase + 'delivery/empresa/status/' + this.token, dados)
+        .then(response => {
+          this.empresa.status = parseInt(response.data.status);
+          let msg = 'Sucesso! ' + (this.empresa.status === 1 ? 'Seu delivery está ativado agora.' : 'Seu delivery está desativado.');
+          this.$swal('', msg);
+
+        }, res => {
+          console.log(res);
+          this.$swal('', res.data.msg ? res.data.msg : 'Erro temporário');
+        });
     }
+  },
+
+  mounted() {
+    this.statusEmpresa();
   },
 
   created() {
     if (localStorage.getItem('urlSocket')) {
       this.socket = io(localStorage.getItem('urlSocket') + localStorage.getItem('empresa'));
       this.connected = false;
+      // console.log(this.socket);
 
       this.socket.on('connect', () => {
         this.connected = true

@@ -31,11 +31,14 @@
 
 <script>
 const { ipcRenderer } = require('electron');
+const Config = require('electron-config');
+const config = new Config();
 
 export default {
   name: 'Login',
   data() {
     return {
+      urlBase: '',
       container: 1,
       token: '',
       msg: '',
@@ -48,6 +51,7 @@ export default {
   },
   methods: {
     setToken() {
+      config.set('empresa', this.token);
       localStorage.setItem('empresa', this.token);
       this.container = 2;
     },
@@ -56,21 +60,13 @@ export default {
       this.loading = true;
 
       let parametro = "?empresa=" + this.token;
-      this.$http.post('autenticar' + parametro, this.dados)
+      this.$http.post(this.urlBase + 'autenticar' + parametro, this.dados)
         .then(res => {
 
+          // console.log(res);
           if (res.data.success) {
-
-            localStorage.setItem("key", res.data.dados.token);
-            localStorage.setItem("nome_fantasia", res.data.dados.nome_fantasia);
-            localStorage.setItem("nome_usuario", res.data.dados.nome);
-            localStorage.setItem("plano_empresa", res.data.dados.plano_empresa);
-            localStorage.setItem("administrativo", false);
-
-            if (res.data.dados.id_funcao === '1') {
-              localStorage.setItem("administrativo", true);
-            }
-            localStorage.setItem("permissoes", JSON.stringify(res.data.permissoes));
+            config.set('userData', res.data);
+            this.setUserData(res.data);
 
             setTimeout(() => {
               if (localStorage.getItem('urlSocket')) {
@@ -90,10 +86,22 @@ export default {
             this.msg = res.data.msg;
             this.dados.senha = '';
           } else {
-            alert(this.dados.senha ? 'this.dados.senha' : 'Erro temporário');
+            alert(this.msg ? this.msg : 'Erro temporário');
           }
           this.loading = false;
         });
+    },
+
+    setUserData(data) {
+      localStorage.setItem("key", data.dados.token);
+      localStorage.setItem("nome_fantasia", data.dados.nome_fantasia);
+      localStorage.setItem("nome_usuario", data.dados.nome);
+      localStorage.setItem("plano_empresa", data.dados.plano_empresa);
+      localStorage.setItem("administrativo", false);
+      if (data.dados.id_funcao === '1') {
+        localStorage.setItem("administrativo", true);
+      }
+      localStorage.setItem("permissoes", JSON.stringify(data.permissoes));
     },
 
     test() {
@@ -105,13 +113,36 @@ export default {
       ipcRenderer.send('request-mainprocess-action', Data);
     }
   },
-  created() {
-    if (localStorage.getItem('empresa')) {
-      this.container = 2;
-      this.token = localStorage.getItem('empresa');
 
-      if (localStorage.getItem('key')) {
-        this.$router.push('/home');
+  created() {
+    if (config.get('urlBase')) {
+      localStorage.setItem('urlBase', config.get('urlBase'));
+      this.urlBase = config.get('urlBase');
+
+    } else {
+      let urlBase = 'https://softcomanda.tk/api/';
+      config.set('urlBase', urlBase);
+      localStorage.setItem('urlBase', urlBase);
+      this.urlBase = urlBase;
+    }
+
+    if (config.get('empresa')) {
+      this.container = 2;
+      this.token = config.get('empresa');
+      localStorage.setItem('empresa', config.get('empresa'));
+
+      if (config.get('urlSocket')) {
+        localStorage.setItem('urlSocket', config.get('urlSocket'));
+      }
+
+      if (config.get('userData')) {
+        this.setUserData(config.get('userData'));
+
+        if (config.get('urlSocket')) {
+          this.$router.push("/home");
+        } else {
+          this.$router.push("/configs");
+        }
       }
     }
   }
