@@ -1,0 +1,206 @@
+<template>
+  <div>
+    <top-bar/>
+    <div class="content">
+      <div class="container-fluid">
+        <div class="d-flex" style="height: 75vh" v-if="loading">
+          <div class="m-auto text-center">
+            <img src="../assets/logo-lecard.png" class="animated flipInY infinite" alt="Logo Lecard" style="width: 64px;">
+            <div class="small mt-3 font-weight-bold">Carregando o cardápio..</div>
+          </div>
+        </div>
+        <div id="categorias" class="pt-3" style="margin-bottom: 32px" v-show="!loading">
+          <div class="mb-3" v-for="(c, index) in categorias">
+            <!--categorias-->
+            <div class="border pointer text-info bg-light">
+              <div class="row">
+                <div class="col-9 align-self-center" @click="toogleCategoria(c)">
+                  <div class="p-3">
+                    {{c.nome_categoria}}
+                  </div>
+                </div>
+                <div class="col-3 align-self-center text-right">
+                  <div class="p-3" @click="editar(c, 1)" :class="c.delivery === '1' ? 'text-success' : 'text-secondary'">
+                    <span class="pr-2">{{c.delivery === '1' ? 'Ativado' : 'Desativado'}}</span>
+                    <img class="switch" src="../assets/icons/switch-on.svg" v-show="c.delivery === '1'">
+                    <img class="switch" src="../assets/icons/switch-off.svg" v-show="c.delivery === '0'">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!--produtos-->
+            <div v-show="selCategoria.includes(c.id_categoria)">
+              <h6 class="pl-3 my-4">Produtos</h6>
+              <div v-for="p in c.produtos">
+                <div class="border-top">
+                  <div class="row">
+                    <div class="col-8 align-self-center pointer" @click="toogleProduto(p)">
+                      <div class="p-3">
+                        {{p.nome_produto}}
+                      </div>
+                    </div>
+                    <div class="col-4 text-right align-self-center">
+                      <div class="p-3">
+                        <div class="d-inline-block pointer" @click="editarProduto(p, c)" :class="{'visibility': c.delivery === '0'}">
+                          <span class="pr-2" :class="p.fg_ativo === '1' ? 'text-success' : 'text-secondary'">{{p.fg_ativo === '1' ? 'Ativado' : 'Desativado'}}</span>
+                          <img class="switch" src="../assets/icons/switch-on.svg" v-show="p.fg_ativo === '1'">
+                          <img class="switch" src="../assets/icons/switch-off.svg" v-show="p.fg_ativo === '2'">
+                        </div>
+                        <div class="d-inline-block ml-3 px-3 pointer" @click="toogleProduto(p)" :class="{'visibility': p.tabelas.length < 2}">
+                          <img src="../assets/icons/arrow-right.svg" style="width: 10px">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!--tabelas-->
+                <div class="border mb-4" v-show="selProduto.includes(p.id_produto)">
+                  <h6 class="px-4 py-3 m-0 bg-light">Tabelas</h6>
+                  <div class="border-top px-4" v-for="t in p.tabelas">
+                    <div class="row">
+                      <div class="col-9 align-self-center">
+                        <div class="p-2">
+                          {{t.nome_tabela}}
+                        </div>
+                      </div>
+                      <div class="col-3 align-self-center text-right">
+                        <div class="p-2 pointer" @click="editarTabela(t, p, c)" :class="{'visibility': p.fg_ativo === '2' || c.delivery === '0'}">
+                          <span class="pr-2" :class="t.fg_ativo === '1' ? 'text-success' : 'text-secondary'">{{t.fg_ativo === '1' ? 'Ativado' : 'Desativado'}}</span>
+                          <img class="switch" src="../assets/icons/switch-on.svg" v-show="t.fg_ativo === '1'">
+                          <img class="switch" src="../assets/icons/switch-off.svg" v-show="t.fg_ativo === '2'">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import TopBar from '@/components/TopBar.vue'
+import HelloWorld from '@/components/HelloWorld.vue'
+
+export default {
+  name: 'Home',
+  components: {
+    HelloWorld, TopBar
+  },
+  data() {
+    return {
+      loading: true,
+      selCategoria: [],
+      selProduto: [],
+      urlBase: localStorage.getItem('urlBase'),
+      empresa: localStorage.getItem('empresa'),
+      token: localStorage.getItem('key'),
+      categorias: []
+    }
+  },
+  methods: {
+    buscarProdutos() {
+      this.$http.get(this.urlBase + 'delivery/cardapio/'  + this.token)
+        .then(response => {
+          this.loading = false;
+          this.categorias = response.data;
+          console.log(response);
+        }, res => {
+          this.loading = false;
+          // openModalMsg(res.data.result,res.data.msg);
+        });
+    },
+
+    toogleCategoria(c) {
+      if (!this.selCategoria.includes(c.id_categoria)) {
+        this.selCategoria.push(c.id_categoria);
+      } else {
+        this.selCategoria = [];
+      }
+    },
+
+    toogleProduto(p) {
+      if (p.tabelas.length < 2) {
+        return;
+      }
+
+      if (!this.selProduto.includes(p.id_produto)) {
+        this.selProduto.push(p.id_produto);
+      } else {
+        this.selProduto = [];
+      }
+    },
+
+    editarProduto(p, c) {
+      if (c.delivery === '1') {
+        this.editar(p, 2);
+      }
+    },
+
+    editarTabela(t, p, c) {
+      if (c.delivery === '1' && p.fg_ativo === '1') {
+        this.editar(t, 3);
+      }
+    },
+
+    editar(c, tipo) {
+      let dados;
+
+      if (tipo === 1) {
+        let delivery = c.delivery === '1' ? '0' : '1';
+        c.delivery = delivery;
+
+        dados = {
+          id_categoria: c.id_categoria,
+          delivery: delivery,
+          tipo: tipo
+        }
+
+      } else {
+        let delivery = c.fg_ativo === '1' ? '2' : '1';
+        c.fg_ativo = delivery;
+
+        if (tipo === 2) {
+          dados = {
+            id_produto: c.id_produto,
+            delivery: delivery,
+            tipo: tipo
+          }
+
+        } else {
+          dados = {
+            id_tabela_preco: c.id_tabela_preco,
+            delivery: delivery,
+            tipo: tipo
+          }
+        }
+      }
+
+      this.$http.post(this.urlBase + 'delivery/produto/status/' + this.token, dados)
+        .then(response => {
+          // console.log(response.data.status);
+
+        }, res => {
+          console.log(res);
+          this.$swal('', res.data.msg ? res.data.msg : 'Erro temporário');
+        });
+    }
+  },
+  mounted() {
+    this.buscarProdutos()
+  }
+}
+</script>
+<style scoped>
+  .switch {
+    width: 32px;
+  }
+
+  .visibility {
+    visibility: hidden;
+  }
+</style>

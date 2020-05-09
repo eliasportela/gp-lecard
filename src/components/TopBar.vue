@@ -3,22 +3,28 @@
     <div class="fixed-top p-2 shadow-sm bg-white">
       <div class="container-fluid">
         <div class="row">
-          <div class="col-7">
+          <div class="col-5 align-self-center">
             <router-link to="/" class="text-dark">
               <img src="../assets/logo-lecard.png" alt="" style="width: 32px">
               <span class="font-weight-bold small pl-3">{{empresa.nome}}</span>
             </router-link>
           </div>
-          <div class="col-2">
+          <div class="col-4 align-self-center">
             <div class="text-center" v-show="!load">
-              <a class="small text-danger font-weight-bold" href="javascript:" v-show="empresa.status === 1" @click="toogleStatus()">Desativar delivery</a>
-              <a class="small font-weight-bold text-dark" title="Clique para ativar o delivery" href="#" v-show="empresa.status === 0" @click="toogleStatus()">Ativar delivery</a>
+              <a class="small text-danger font-weight-bold" href="javascript:" v-show="empresa.status === 1" @click="toogleStatus()">
+                <span class="pr-2">Desativar delivery</span>
+                <img src="../assets/icons/switch-on.svg" style="width: 32px">
+              </a>
+              <a class="small font-weight-bold text-dark" title="Clique para ativar o delivery" href="#" v-show="empresa.status === 0" @click="toogleStatus()">
+                <span class="pr-2">Ativar delivery</span>
+                <img src="../assets/icons/switch-off.svg" style="width: 32px">
+              </a>
             </div>
           </div>
-          <div class="col-3 text-right">
+          <div class="col-3 text-right align-self-center">
             <div>
-              <a href="javascript:" class="pr-4" title="Tem pedido na área! =)" v-show="bell" @click="silenciar">
-                <img class="d-inline-block animated pulse infinite" src="../assets/icons/notification.svg" style="width: 24px"/>
+              <a href="javascript:" class="pr-3" title="Tem pedido na área! =)" @click="silenciar">
+                <img class="d-inline-block" :class="{'animated pulse infinite': bell}" src="../assets/icons/notification.svg" style="width: 24px"/>
               </a>
               <router-link to="/configs" class="small" style="text-decoration: none">
                 <span class="font-weight-bold text-success" v-show="connected">Você está online</span>
@@ -34,6 +40,10 @@
         <!--animated infinite pulse-->
         <img src="../assets/icons/orders.svg" alt="">
         <span>Pedidos</span>
+      </router-link>
+      <router-link to="/cardapio" active-class="btn--active" class="btn btn-block">
+        <img src="../assets/icons/food-menu.svg" alt="">
+        <span>Cardápio</span>
       </router-link>
       <router-link to="/impressora" active-class="btn--active" class="btn btn-block">
         <img src="../assets/icons/print.svg" alt="">
@@ -134,25 +144,31 @@ export default {
         status: this.empresa.status === 1 ? 0 : 1
       };
 
+      this.empresa.status = dados.status;
       this.$http.post(this.urlBase + 'delivery/empresa/status/' + this.token, dados)
         .then(response => {
-          this.empresa.status = parseInt(response.data.status);
-          let msg = 'Sucesso! ' + (this.empresa.status === 1 ? 'Seu delivery está ativado agora.' : 'Seu delivery está desativado.');
-          this.$swal('', msg);
+          // console.log(response)
+          // this.empresa.status = parseInt(response.data.status);
+          // let msg = 'Sucesso! ' + (this.empresa.status === 1 ? 'Seu delivery está ativado agora.' : 'Seu delivery está desativado.');
+          // this.$swal('', msg);
 
         }, res => {
           console.log(res);
+          this.empresa.status = dados.status === 1 ? 0 : 1;
           this.$swal('', res.data.msg ? res.data.msg : 'Erro temporário');
         });
     }
   },
 
   mounted() {
+    if (!audio.paused) {
+      audio.pause();
+    }
     this.statusEmpresa();
   },
 
   created() {
-    if (localStorage.getItem('urlSocket')) {
+    if (localStorage.getItem('urlSocket') && localStorage.getItem('urlSocket').length > 5) {
       this.socket = io(localStorage.getItem('urlSocket') + localStorage.getItem('empresa'));
       this.connected = false;
       // console.log(this.socket);

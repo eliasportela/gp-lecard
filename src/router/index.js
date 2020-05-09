@@ -5,6 +5,7 @@ import Pedidos from '../views/Pedidos.vue'
 import Impressora from '../views/Impressora.vue'
 import Login from '../views/Login.vue'
 import Configs from '../views/Configs.vue'
+import Cardapio from '../views/Cardapio.vue'
 
 Vue.use(VueRouter)
 
@@ -33,6 +34,11 @@ const routes = [
     path: '/configs',
     name: 'Configs',
     component: Configs
+  },
+  {
+    path: '/cardapio',
+    name: 'Cardapio',
+    component: Cardapio
   },
 ];
 

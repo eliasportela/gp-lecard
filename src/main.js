@@ -4,6 +4,7 @@ import router from './router'
 import VueResource from 'vue-resource'
 import 'bootstrap'
 import 'bootstrap/dist/css/bootstrap.min.css'
+import 'jquery'
 import 'animate.css/animate.css'
 import VueSweetalert2 from 'vue-sweetalert2'
 
