@@ -252,13 +252,18 @@ export default {
       // console.log(dados);
       this.$http.post(this.urlBase + 'delivery/pedidos/' + this.token, dados, {emulateJSON: true})
         .then(res => {
-          if (res.data && status === 2 && localStorage.getItem('impressaoAutomatica')) {
-            this.imprimirSelecionado = true;
+          this.$emit('notification');
+
+          if (res.data && status === 2) {
+            this.$socket.emit('notification', {token: this.empresa, play: false});
+
+            if (localStorage.getItem('impressaoAutomatica')) {
+              this.imprimirSelecionado = true;
+            }
           }
 
           this.motivoRecusa = '';
-          this.$emit('delivery_status', this.selecionado);
-          this.$emit('notification');
+          this.$socket.emit('delivery_status', this.selecionado);
 
           this.buscarPedidos();
 
@@ -266,9 +271,7 @@ export default {
           this.loading = false;
           console.log(res);
           if (res.status === 401) {
-            alert(res.data.msg);
-            localStorage.removeItem('key');
-            this.$router.push('/')
+            this.$emit('logout');
           }
         });
     },

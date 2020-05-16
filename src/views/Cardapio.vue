@@ -111,7 +111,7 @@ export default {
           console.log(response);
         }, res => {
           this.loading = false;
-          // openModalMsg(res.data.result,res.data.msg);
+          this.$emit('logout');
         });
     },
 

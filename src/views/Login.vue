@@ -115,35 +115,29 @@ export default {
   },
 
   created() {
-    if (config.get('urlBase')) {
-      localStorage.setItem('urlBase', config.get('urlBase'));
-      this.urlBase = config.get('urlBase');
-
-    } else {
-      let urlBase = 'https://softcomanda.tk/api/';
-      config.set('urlBase', urlBase);
-      localStorage.setItem('urlBase', urlBase);
-      this.urlBase = urlBase;
-    }
+    this.urlBase = config.get('urlBase');
+    localStorage.setItem('urlBase', this.urlBase);
 
     if (config.get('empresa')) {
-      this.container = 2;
-      this.token = config.get('empresa');
       localStorage.setItem('empresa', config.get('empresa'));
 
-      if (config.get('urlSocket')) {
-        localStorage.setItem('urlSocket', config.get('urlSocket'));
-      }
+      this.container = 2;
+      this.token = config.get('empresa');
 
       if (config.get('userData')) {
+        localStorage.setItem('userData', config.get('userData'));
         this.setUserData(config.get('userData'));
 
-        if (config.get('urlSocket')) {
+        if (localStorage.getItem('urlSocket')) {
           this.$router.push("/home");
         } else {
           this.$router.push("/configs");
         }
       }
+    }
+
+    if (config.get('urlSocket') && !localStorage.getItem('urlSocket')) {
+      localStorage.setItem('urlSocket', config.get('urlSocket'));
     }
   }
 }

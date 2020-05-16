@@ -61,18 +61,25 @@
 
     <imprimir-comanda/>
 
+    <modal :opened="modalOflline">
+      <h5 class="text-center">Atenção!</h5>
+      <div>Seus pedidos não estão sendo sincronizados. Por favor verifique sua conexão com a internet!</div>
+      <div class="text-center mt-4">
+        <button class="btn btn-danger" @click="modalOflline = false">OK</button>
+      </div>
+    </modal>
   </div>
 </template>
 
 <script>
 const Config = require('electron-config');
 const config = new Config();
-import io from 'socket.io-client';
 import ImprimirComanda from "./ImprimirComanda";
+import Modal from '../components/Modal'
 
 export default {
   name: 'TopBar',
-  components: {ImprimirComanda},
+  components: {ImprimirComanda, Modal},
   props: {
     msg: String,
   },
@@ -87,8 +94,8 @@ export default {
       },
       load: true,
       empresaAtiva: false,
-      socket: '',
       connected: false,
+      modalOflline: false,
       bell: false
     }
   },
@@ -117,11 +124,15 @@ export default {
         buttonsStyling: false
       }).then((result) => {
         if (result.value) {
-          localStorage.clear();
-          config.delete('userData');
-          this.$router.push('/');
+          this.logoff()
         }
       });
+    },
+
+    logoff() {
+      localStorage.clear();
+      config.delete('userData');
+      this.$router.push('/');
     },
 
     statusEmpresa() {
@@ -160,58 +171,57 @@ export default {
     }
   },
 
+  sockets: {
+    connect() {
+      this.modalOflline = false;
+      this.connected = true;
+    },
+
+    disconnect() {
+      this.modalOflline = true;
+      this.connected = false;
+    },
+
+    print_order(res)  {
+      this.print(res.data);
+    },
+
+    notification(res)  {
+      if (res.data.play && !this.bell && audio.paused) {
+        audio.play();
+        this.bell = true;
+
+      } else if (this.bell && !audio.paused) {
+        audio.pause();
+        this.bell = false;
+        this.$emit('delivery_order');
+      }
+    },
+
+    delivery_order() {
+      this.$emit('delivery_order');
+    }
+  },
+
   mounted() {
     if (!audio.paused) {
       audio.pause();
     }
     this.statusEmpresa();
+    this.connected = localStorage.getItem('urlSocket') && this.$socket ? this.$socket.connected : false
   },
 
   created() {
-    if (localStorage.getItem('urlSocket') && localStorage.getItem('urlSocket').length > 5) {
-      this.socket = io(localStorage.getItem('urlSocket') + localStorage.getItem('empresa'));
-      this.connected = false;
-      // console.log(this.socket);
-
-      this.socket.on('connect', () => {
-        this.connected = true
-      });
-
-      this.socket.on('disconnect', () => {
-        this.connected = false
-      });
-
-      this.socket.on('print_order', (res) => {
-        this.print(res.data);
-      });
-
-      this.socket.on('notification', (res) => {
-        // console.log('elias', res);
-        if (res.data.play && !this.bell && audio.paused) {
-          audio.play();
-          this.bell = true;
-
-        } else if (this.bell && !audio.paused) {
-          audio.pause();
-          this.bell = false;
-          this.$emit('delivery_order');
-        }
-      });
-
-      this.socket.on('delivery_order', () => {
-        this.$emit('delivery_order');
-      });
-
-      this.$parent.$on('delivery_status', (data) => {
-        this.socket.emit('delivery_status', data);
-      });
-
-      this.$parent.$on('notification', () => {
+    this.$parent.$on('notification', () => {
+      this.bell = false;
+      if (!audio.paused) {
         audio.pause();
-        this.bell = false;
-        this.socket.emit('notification', {token: this.empresa.token, play: false});
-      });
-    }
+      }
+    });
+
+    this.$parent.$on('logout', () => {
+      this.logoff();
+    });
   }
 }
 </script>

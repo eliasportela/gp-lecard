@@ -37,8 +37,7 @@
     background-color: #fefefe;
     margin: 10% auto 0;
     padding: 20px 10px;
-    border: 1px solid #888;
-    border-radius: 2px;
+    border-radius: 4px;
     max-width: 450px;
   }
 
