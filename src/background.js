@@ -1,7 +1,7 @@
 'use strict'
 /* global __static */
 
-import { app, protocol, BrowserWindow, ipcMain } from 'electron'
+import { app, protocol, BrowserWindow, ipcMain, globalShortcut } from 'electron'
 import {
   createProtocol,
   /* installVueDevtools */
@@ -18,6 +18,7 @@ let contents;
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }])
+app.commandLine.appendSwitch('--autoplay-policy','no-user-gesture-required')
 
 function createWindow () {
   // Create the browser window.
@@ -108,6 +109,10 @@ app.on('ready', async () => {
 
   }
   createWindow()
+
+  globalShortcut.register('CommandOrControl+L', () => {
+    win.webContents.openDevTools()
+  })
 })
 
 // Exit cleanly on request from parent process in development mode.
@@ -127,6 +132,10 @@ if (isDevelopment) {
 
 ipcMain.on('relaunch-app', () => {
   app.quit();
+});
+
+ipcMain.on('reloud', () => {
+  win.reload();
 });
 
 /// impresao

@@ -108,8 +108,8 @@ export default {
         .then(response => {
           this.loading = false;
           this.categorias = response.data;
-          console.log(response);
         }, res => {
+          console.log(res);
           this.loading = false;
           this.$emit('logout');
         });

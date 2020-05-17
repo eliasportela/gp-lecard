@@ -286,6 +286,8 @@ export default {
 
     openModalCancelamento() {
       this.modalCancelamento = true;
+      this.$emit('silenciar');
+
       setTimeout(() => {
         document.getElementById('text-cancelamento').focus()
       }, 500)

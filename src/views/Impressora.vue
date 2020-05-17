@@ -18,7 +18,7 @@
               <select class="form-control" id="nCopia" v-model="config.nCopias">
                 <option value="1">1</option>
                 <option value="2">2</option>
-                <option value="2">3</option>
+                <option value="3">3</option>
               </select>
             </div>
             <div class="mt-4 mt-3">
@@ -42,8 +42,12 @@
 
 <script>
 const { ipcRenderer } = require('electron');
+const Config = require('electron-config');
+
 import TopBar from '@/components/TopBar.vue'
 import HelloWorld from '@/components/HelloWorld.vue'
+
+const config = new Config();
 
 export default {
   name: 'Home',
@@ -74,13 +78,16 @@ export default {
     atualizarConfig() {
       this.atualizar = true;
 
-      // console.log(this.config.automatica);
       if (this.config.automatica === 1) {
         localStorage.setItem('impressaoAutomatica', '1');
+        config.set('impressaoAutomatica', '1');
+
       } else {
         localStorage.removeItem('impressaoAutomatica');
+        config.delete('impressaoAutomatica');
       }
 
+      config.set('nCopias', this.config.nCopias);
       localStorage.setItem('nCopias', this.config.nCopias);
     }
   },
@@ -91,6 +98,8 @@ export default {
     });
 
     this.config.automatica = localStorage.getItem('impressaoAutomatica') ? 1 : 2;
+    this.config.nCopias = config.get('nCopias') ? config.get('nCopias') : 1;
+
     // ipcRenderer.send('print-list');
     // ipcRenderer.on('print-list', (event, arg) => {
     //   this.printers = arg;

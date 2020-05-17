@@ -39,6 +39,12 @@ if (config.get('empresa')) {
   }
 }
 
+if (config.get('nCopias')) {
+  localStorage.setItem('nCopias', config.get('nCopias'))
+} else {
+  localStorage.setItem('nCopias', '1')
+}
+
 Vue.config.productionTip = false;
 Vue.http.options.emulateJSON = true;
 // Vue.http.options.emulateHTTP = true;

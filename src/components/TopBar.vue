@@ -23,13 +23,13 @@
           </div>
           <div class="col-3 text-right align-self-center">
             <div>
-              <a href="javascript:" class="pr-3" title="Tem pedido na área! =)" @click="silenciar">
+              <a href="javascript:" class="pr-3" title="Clique para silenciar o toque! =)" @click="silenciar">
                 <img class="d-inline-block" :class="{'animated pulse infinite': bell}" src="../assets/icons/notification.svg" style="width: 24px"/>
               </a>
-              <router-link to="/configs" class="small" style="text-decoration: none">
+              <a href="javascript:" @click="reloadPage" class="small" style="text-decoration: none">
                 <span class="font-weight-bold text-success" v-show="connected">Você está online</span>
                 <span class="font-weight-bold text-danger" v-show="!connected">Você está offline</span>
-              </router-link>
+              </a>
             </div>
           </div>
         </div>
@@ -65,7 +65,7 @@
       <h5 class="text-center">Atenção!</h5>
       <div>Seus pedidos não estão sendo sincronizados. Por favor verifique sua conexão com a internet!</div>
       <div class="text-center mt-4">
-        <button class="btn btn-danger" @click="modalOflline = false">OK</button>
+        <button class="btn btn-danger" @click="reloadPage">OK</button>
       </div>
     </modal>
   </div>
@@ -73,6 +73,7 @@
 
 <script>
 const Config = require('electron-config');
+const { ipcRenderer } = require('electron');
 const config = new Config();
 import ImprimirComanda from "./ImprimirComanda";
 import Modal from '../components/Modal'
@@ -130,6 +131,7 @@ export default {
     },
 
     logoff() {
+      this.silenciar();
       localStorage.clear();
       config.delete('userData');
       this.$router.push('/');
@@ -168,13 +170,18 @@ export default {
           this.empresa.status = dados.status === 1 ? 0 : 1;
           this.$swal('', res.data.msg ? res.data.msg : 'Erro temporário');
         });
+    },
+
+    reloadPage() {
+      ipcRenderer.send('reloud');
     }
   },
 
   sockets: {
     connect() {
-      this.modalOflline = false;
       this.connected = true;
+      this.modalOflline = false;
+      this.$emit('delivery_order');
     },
 
     disconnect() {
@@ -221,6 +228,10 @@ export default {
 
     this.$parent.$on('logout', () => {
       this.logoff();
+    });
+
+    this.$parent.$on('silenciar', () => {
+      this.silenciar();
     });
   }
 }
