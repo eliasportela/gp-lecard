@@ -10,8 +10,8 @@
             <option value="5">Cancelados</option>
           </select>
           <div class="bg-white coluna-1-1 border">
-            <div class="mt-2" v-show="!loading">
-              <div class="border-bottom p-2 pointer" v-for="p in pedidos" @click="selecionado = p" :class="{'bg-light' : selecionado.id_pedido === p.id_pedido}">
+            <div v-show="!loading">
+              <div class="border-bottom p-2 pointer" v-for="p in pedidos" @click="selecionado = p" :class="{'bg-selecionado' : selecionado.id_pedido === p.id_pedido}">
                 <span class="small font-weight-bold bg-danger text-white rounded-sm px-1 float-right" v-show="p.status === '1'">Em andamento</span>
                 <span class="small font-weight-bold bg-info text-white rounded-sm px-1 float-right" v-show="p.status === '2'">Preparando</span>
                 <span class="small font-weight-bold bg-dark text-white rounded-sm px-1 float-right" v-show="p.status === '3'">Entregando</span>
@@ -66,8 +66,11 @@
                 <h6 class="text-success font-weight-bold">Entregar em:</h6>
                 <div>
                   {{selecionado.cliente.endereco}}, {{selecionado.cliente.numero}}, {{selecionado.cliente.bairro}} - {{selecionado.cliente.nome_cidade}} <br>
-                  CEP: {{selecionado.cliente.cep}} - {{selecionado.cliente.complemento}} <br>
-                  <b>Telefone:</b> {{selecionado.cliente.telefone}} <br>
+                  CEP: {{selecionado.cliente.cep}}
+                  <span v-show="selecionado.cliente.complemento">-</span>
+                  {{selecionado.cliente.complemento}}
+                  <br>
+                  <b>Telefone:</b> {{selecionado.cliente.telefone | phone}} <br>
                 </div>
               </div>
               <div class="border p-2 mt-3" v-show="selecionado.tipo_pedido === '2'">
@@ -78,23 +81,24 @@
               </div>
               <div class="mt-4">
                 <div class="border-bottom p-2 pb-4" v-for="i in selecionado.produtos">
-                  <span class="small bg-dark text-white rounded-sm px-1 float-right"><b>R$ {{i.valor | valor}}</b></span>
-                  <h6 class="mb-0">{{i.quantidade}}x {{i.produto.nome_produto}}</h6>
+                  <span class="small bg-dark text-white rounded-sm px-1 float-right"><b>R$ {{(i.quantidade * i.valor) | valor}}</b></span>
+                  <h6 class="mb-0">{{i.quantidade}}x - {{i.produto.nome_produto}}</h6>
                   <div class="small" v-for="d in i.divisoes">
                     - {{d.nome_produto}}
                   </div>
                   <div class="small" v-for="d in i.adicionais">
                     - {{d.qtd}}x {{d.nome_produto}} <span v-show="d.valor > 0">R$ {{d.valor | valor}}</span>
                   </div>
-                  <div class="small" v-show="i.observacao">
+                  <div class="small font-weight-bold" v-show="i.observacao">
                     - Obs: {{i.observacao}}
                   </div>
                 </div>
                 <div class="mt-3">
                   <div class="text-right">
-                    <div v-show="selecionado.tipo_pedido === '1'"><b>Taxa de entrega:</b> R$ {{selecionado.valor_frete | valor}}</div>
+                    <div><b>SubTotal:</b> R$ {{(parseFloat(selecionado.total) - parseFloat(selecionado.valor_frete)) + parseFloat(selecionado.valor_desconto) | valor}}</div>
+                    <div v-show="selecionado.tipo_pedido === '1'"><b>Taxa de Entrega:</b> R$ {{selecionado.valor_frete | valor}}</div>
                     <div><b>Desconto:</b> R$ {{selecionado.valor_desconto | valor}}</div>
-                    <div><b>Cobrar do cliente: R$ {{selecionado.total | valor}}</b></div>
+                    <div><b>Cobrar do Cliente: R$ {{selecionado.total | valor}}</b></div>
                   </div>
                   <div class="mt-4"><b>Forma de Pagamento:</b> {{selecionado.id_pagamento === '1' ? 'Dinheiro' : 'Cartão'}}</div>
                   <div v-show="selecionado.obs_pedido"><b>Obs:</b> {{selecionado.obs_pedido}}</div>
@@ -315,6 +319,21 @@ export default {
         return parseFloat(value).toFixed(2);
       }
     },
+
+    phone(phone) {
+      if (phone) {
+        if (phone.length === 10) {
+          return phone.replace(/[^0-9]/g, '')
+            .replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+
+        } else if (phone.length === 11) {
+          return phone.replace(/[^0-9]/g, '')
+            .replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+        }
+      }
+
+      return phone
+    }
   }
 }
 </script>
@@ -351,5 +370,8 @@ export default {
   .disabled button {
     pointer-events: none;
     opacity: 0.6!important;
+  }
+  .bg-selecionado {
+    background-color: #e9ecef;
   }
 </style>
