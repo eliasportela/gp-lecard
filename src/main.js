@@ -19,7 +19,7 @@ if (config.get('urlBase')) {
   localStorage.setItem('urlBase', config.get('urlBase'));
 
 } else {
-  let urlBase = 'https://softcomanda.tk/api/';
+  let urlBase = 'https://softcomanda.tk/painel/api/';
   config.set('urlBase', urlBase);
   localStorage.setItem('urlBase', urlBase);
 }
@@ -27,14 +27,16 @@ if (config.get('urlBase')) {
 if (config.get('empresa')) {
   localStorage.setItem('empresa', config.get('empresa'));
 
+  if (config.get('dominio')) {
+    localStorage.setItem('dominio', config.get('dominio'));
+  }
+
   if (config.get('urlSocket')) {
     localStorage.setItem('urlSocket', config.get('urlSocket'));
 
-    const base_socket = config.get('urlSocket') + config.get('empresa');
-    console.log(base_socket);
     Vue.use(new VueSocketIO({
       debug: false,
-      connection: base_socket
+      connection: config.get('urlSocket')
     }));
   }
 }

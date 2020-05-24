@@ -197,11 +197,13 @@ export default {
       if (res.data.play && !this.bell && audio.paused) {
         audio.play();
         this.bell = true;
+        ipcRenderer.send('reloud-icon', true);
 
       } else if (this.bell && !audio.paused) {
         audio.pause();
         this.bell = false;
         this.$emit('delivery_order');
+        ipcRenderer.send('reloud-icon', false);
       }
     },
 
@@ -221,6 +223,7 @@ export default {
   created() {
     this.$parent.$on('notification', () => {
       this.bell = false;
+      ipcRenderer.send('reloud-icon', false);
       if (!audio.paused) {
         audio.pause();
       }

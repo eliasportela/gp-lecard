@@ -15,7 +15,7 @@
           </div>
           <div class="col-4">
             <label class="font-weight-bold">Token Empresa</label>
-            <input type="text" class="form-control" placeholder="Url do servidor" v-model="empresa" disabled>
+            <input type="text" class="form-control" placeholder="Token da empresa" v-model="empresa" disabled>
           </div>
         </div>
         <div class="row">
@@ -58,18 +58,19 @@ export default {
     resetar() {
       config.clear();
       localStorage.clear();
-      ipcRenderer.send('relaunch-app');
+      this.$router.push('/');
+      ipcRenderer.send('reloud');
     },
 
     salvar() {
-      let urlSocket = this.url_socket + (!this.url_socket.endsWith('/') ? '/' : '');
+      let urlSocket = this.url_socket;
       let urlBase = this.url_base + (!this.url_base.endsWith('/') ? '/' : '');
 
       config.set('urlSocket', urlSocket);
       config.set('urlBase', urlBase);
 
       this.load = true;
-      ipcRenderer.send('relaunch-app');
+      ipcRenderer.send('reloud');
     },
 
     buscar() {

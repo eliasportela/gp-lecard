@@ -18,7 +18,8 @@ let contents;
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }])
-app.commandLine.appendSwitch('--autoplay-policy','no-user-gesture-required')
+app.commandLine.appendSwitch('--autoplay-policy','no-user-gesture-required');
+app.setAppUserModelId(process.execPath);
 
 function createWindow () {
   // Create the browser window.
@@ -29,6 +30,8 @@ function createWindow () {
     icon: path.join(__static, 'icon.png'),
   });
   win.setMenu(null);
+
+  win.once('focus', () => win.flashFrame(false));
 
   // impressao de pedidos
   winPrint = new BrowserWindow({
@@ -136,6 +139,16 @@ ipcMain.on('relaunch-app', () => {
 
 ipcMain.on('reloud', () => {
   win.reload();
+});
+
+ipcMain.on('reloud-icon', (evt, option) => {
+  console.log(option)
+  if (option) {
+    win.setOverlayIcon(path.join(__static, 'one.png'), 'Novo pedido');
+    win.flashFrame(true)
+  } else {
+    win.setOverlayIcon(null, '');
+  }
 });
 
 /// impresao

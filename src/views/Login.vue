@@ -5,18 +5,21 @@
       <h4 class="text-danger font-weight-bold mt-4">Gestor de Pedidos - Lecard</h4>
       <div class="mt-4" style="width: 400px; margin: auto">
         <div v-show="container === 1">
-          <form @submit.prevent="setToken">
-            <div class="mb-3">Informe o token de acesso da sua empresa</div>
-            <input type="text" class="form-control mb-3" v-model="token" minlength="6" placeholder="Token da sua empresa">
-            <button class="btn btn-danger btn-block">Próximo</button>
+          <form @submit.prevent="getEmpresa">
+            <div class="alert alert-danger alert-dismissible fade show" role="alert" v-show="msg">
+              {{msg}}
+            </div>
+            <div class="mb-3">Informe o domínio de acesso da sua empresa</div>
+            <input type="text" class="form-control mb-3" v-model="dominio" minlength="6" placeholder="Dominio da sua empresa">
+            <button class="btn btn-danger btn-block">{{loading ? 'Validando o domínio' : 'Próximo'}}</button>
           </form>
         </div>
         <div v-show="container === 2">
           <div class="alert alert-danger alert-dismissible fade show" role="alert" v-show="msg">
             {{msg}}
           </div>
-          <form @submit.prevent="logar()">
-            <input type="text" v-model="dados.usuario" class="form-control mb-3" placeholder="Usuário" minlength="4" required>
+          <form @submit.prevent="logar">
+            <input type="text" id="usuario" v-model="dados.usuario" class="form-control mb-3" placeholder="Usuário" minlength="4" required>
             <input type="password" v-model="dados.senha" class="form-control mb-3" placeholder="Senha" minlength="6" required>
             <button class="btn btn-danger btn-block">{{loading ? 'Aguarde' : 'Login'}}</button>
           </form>
@@ -40,6 +43,8 @@ export default {
     return {
       urlBase: '',
       container: 1,
+      socket: '',
+      dominio: '',
       token: '',
       msg: '',
       loading: false,
@@ -50,31 +55,51 @@ export default {
     }
   },
   methods: {
-    setToken() {
-      config.set('empresa', this.token);
-      localStorage.setItem('empresa', this.token);
-      this.container = 2;
+    getEmpresa() {
+      this.loading = true;
+      this.$http.get(this.urlBase + 'autenticar/' + this.dominio)
+        .then(res => {
+          this.loading = false;
+          this.token = res.data.token;
+          this.socket = res.data.base_socket + this.token;
+
+          config.set('empresa', this.token);
+          localStorage.setItem('empresa', this.token);
+          this.container = 2;
+          this.msg = '';
+
+          setTimeout(() => {
+            document.getElementById('usuario').focus();
+          }, 500);
+
+        }, res => {
+          this.loading = false;
+          this.msg = res.data.msg ? res.data.msg : 'Erro temporário';
+        });
     },
 
     logar() {
-      this.loading = true;
-
       let parametro = "?empresa=" + this.token;
       this.$http.post(this.urlBase + 'autenticar' + parametro, this.dados)
         .then(res => {
-
           // console.log(res);
           if (res.data.success) {
+            config.set('dominio', this.dominio);
+            localStorage.setItem("dominio", this.dominio);
+
+            config.set('urlSocket', this.socket);
+            localStorage.setItem("urlSocket", this.socket);
+
             config.set('userData', res.data);
             this.setUserData(res.data);
 
-            setTimeout(() => {
-              if (localStorage.getItem('urlSocket')) {
-                this.$router.push("/home");
-              } else {
-                this.$router.push("/configs");
-              }
-            },500);
+            if (localStorage.getItem('urlSocket')) {
+              this.$router.push("/home");
+            } else {
+              this.$router.push("/configs");
+            }
+
+            ipcRenderer.send('reloud');
 
           } else {
             this.loading = false;
@@ -82,13 +107,15 @@ export default {
 
         }, res => {
           console.log(res);
+          this.loading = false;
+          let msg = res.data.msg;
+
           if (res.status === 401) {
-            this.msg = res.data.msg;
+            this.msg = msg;
             this.dados.senha = '';
           } else {
-            alert(this.msg ? this.msg : 'Erro temporário');
+            alert(msg ? msg : 'Erro temporário');
           }
-          this.loading = false;
         });
     },
 
@@ -102,16 +129,8 @@ export default {
         localStorage.setItem("administrativo", true);
       }
       localStorage.setItem("permissoes", JSON.stringify(data.permissoes));
-    },
-
-    test() {
-      let Data = {
-        message: "Hi",
-        someData: "Let's go"
-      };
-
-      ipcRenderer.send('request-mainprocess-action', Data);
     }
+
   },
 
   created() {
@@ -121,8 +140,8 @@ export default {
     if (config.get('empresa')) {
       localStorage.setItem('empresa', config.get('empresa'));
 
-      this.container = 2;
       this.token = config.get('empresa');
+      this.dominio = config.get('dominio');
 
       if (config.get('userData')) {
         localStorage.setItem('userData', config.get('userData'));
@@ -138,6 +157,10 @@ export default {
 
     if (config.get('urlSocket') && !localStorage.getItem('urlSocket')) {
       localStorage.setItem('urlSocket', config.get('urlSocket'));
+    }
+
+    if (config.get('dominio') && !localStorage.getItem('dominio')) {
+      localStorage.setItem('dominio', config.get('dominio'));
     }
   }
 }
