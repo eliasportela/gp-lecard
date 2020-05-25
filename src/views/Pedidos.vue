@@ -53,16 +53,17 @@
               <div v-show="selecionado.obs_cancelamento && selecionado.status === '5'">
                 <span><b class="text-danger">Cancelado:</b> {{selecionado.obs_cancelamento}}</span>
               </div>
-              <h5 class="font-weight-bold">{{selecionado.cliente.nome_cliente}}
-                <span class="small font-weight-bold">({{selecionado.qtd_pedidos === '0' ? 'Primeiro pedido' : selecionado.qtd_pedidos + ' pedidos'}})</span>
-              </h5>
+              <h5 class="font-weight-bold">{{selecionado.cliente.nome_cliente}}</h5>
+              <h6 class="m-0">
+                Pedidos: {{selecionado.qtd_pedidos === '0' ? 'Primeiro pedido' : selecionado.qtd_pedidos + ' pedidos'}}
+              </h6>
               <h6 v-show="selecionado.tipo_pedido === '1' && selecionado.previsao_entrega">
                 Previsão de entrega: <b>{{selecionado.previsao_entrega}}</b>
               </h6>
               <h6 v-show="selecionado.tipo_pedido === '2' && selecionado.previsao_retirada">
                 Previsão de retirada: <b>{{selecionado.previsao_retirada}}</b>
               </h6>
-              <div class="border p-2 mt-3" v-show="selecionado.tipo_pedido === '1'">
+              <div class="border p-2 mt-3 mb-2" v-show="selecionado.tipo_pedido === '1'">
                 <h6 class="text-success font-weight-bold">Entregar em:</h6>
                 <div>
                   {{selecionado.cliente.endereco}}, {{selecionado.cliente.numero}}, {{selecionado.cliente.bairro}} - {{selecionado.cliente.nome_cidade}} <br>
@@ -73,37 +74,52 @@
                   <b>Telefone:</b> {{selecionado.cliente.telefone | phone}} <br>
                 </div>
               </div>
-              <div class="border p-2 mt-3" v-show="selecionado.tipo_pedido === '2'">
+              <div class="border p-2 mt-3 mb-2" v-show="selecionado.tipo_pedido === '2'">
                 <h6 class="text-info font-weight-bold">Retirar no local</h6>
                 <div>
                   Cliente vai retirar o pedido
                 </div>
               </div>
-              <div class="mt-4">
-                <div class="border-bottom p-2 pb-4" v-for="i in selecionado.produtos">
-                  <span class="small bg-dark text-white rounded-sm px-1 float-right"><b>R$ {{(i.quantidade * i.valor) | valor}}</b></span>
-                  <h6 class="mb-0">{{i.quantidade}}x - {{i.produto.nome_produto}}</h6>
-                  <div class="small" v-for="d in i.divisoes">
-                    - {{d.nome_produto}}
+              <hr class="d-none">
+              <div class="mb-3">
+                <div class="p-3 border-bottom" v-for="i in selecionado.produtos">
+                  <span class="bg-dark text-white rounded-sm px-1 float-right small"><b>R$ {{(i.quantidade * i.valor) | valor}}</b></span>
+                  <h6 class="mb-0 font-weight-bold">{{i.quantidade}}x - {{i.produto.nome_produto}}</h6>
+                  <div v-for="d in i.divisoes">
+                    # {{d.nome_produto}}
                   </div>
-                  <div class="small" v-for="d in i.adicionais">
-                    - {{d.qtd}}x {{d.nome_produto}} <span v-show="d.valor > 0">R$ {{d.valor | valor}}</span>
+                  <div v-for="d in i.adicionais">
+                    + {{d.qtd}}x {{d.nome_produto}} <span v-show="d.valor > 0">R$ {{d.valor | valor}}</span>
                   </div>
-                  <div class="small font-weight-bold" v-show="i.observacao">
-                    - Obs: {{i.observacao}}
+                  <div class="font-weight-bold" v-show="i.observacao">
+                    Obs: {{i.observacao}}
                   </div>
-                </div>
-                <div class="mt-3">
-                  <div class="text-right">
-                    <div><b>SubTotal:</b> R$ {{(parseFloat(selecionado.total) - parseFloat(selecionado.valor_frete)) + parseFloat(selecionado.valor_desconto) | valor}}</div>
-                    <div v-show="selecionado.tipo_pedido === '1'"><b>Taxa de Entrega:</b> R$ {{selecionado.valor_frete | valor}}</div>
-                    <div><b>Desconto:</b> R$ {{selecionado.valor_desconto | valor}}</div>
-                    <div><b>Cobrar do Cliente: R$ {{selecionado.total | valor}}</b></div>
-                  </div>
-                  <div class="mt-4"><b>Forma de Pagamento:</b> {{selecionado.id_pagamento === '1' ? 'Dinheiro' : 'Cartão'}}</div>
-                  <div v-show="selecionado.obs_pedido"><b>Obs:</b> {{selecionado.obs_pedido}}</div>
                 </div>
               </div>
+              <hr class="d-none">
+              <div class="border p-2">
+                <div>
+                  <span class="float-right">R$ {{(parseFloat(selecionado.total) - parseFloat(selecionado.valor_frete)) + parseFloat(selecionado.valor_desconto) | valor}}</span>
+                  SubTotal:
+                </div>
+                <div>
+                  <span class="float-right">R$ {{selecionado.valor_frete | valor}}</span>
+                  Taxa de Entrega:
+                </div>
+                <div>
+                  <span class="float-right">R$ {{selecionado.valor_desconto | valor}}</span>
+                  Desconto:
+                </div>
+                <div>
+                  <span class="float-right">{{selecionado.id_pagamento === '1' ? 'Dinheiro' : 'Cartão'}}</span>
+                  Forma de Pagamento:
+                </div>
+                <div>
+                  <span class="float-right font-weight-bold">R$ {{selecionado.total | valor}}</span>
+                  <b>Cobrar do Cliente:</b>
+                </div>
+              </div>
+              <div v-show="selecionado.obs_pedido"><b>Obs:</b> {{selecionado.obs_pedido}}</div>
             </div>
           </div>
           <div class="container-aceitar bg-white">
