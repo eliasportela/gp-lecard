@@ -46,7 +46,7 @@
                           <img class="switch" src="../assets/icons/switch-on.svg" v-show="p.fg_ativo === '1'">
                           <img class="switch" src="../assets/icons/switch-off.svg" v-show="p.fg_ativo === '2'">
                         </div>
-                        <div class="d-inline-block ml-3 px-3 pointer" @click="toogleProduto(p)" :class="{'visibility': p.tabelas.length < 2}">
+                        <div class="d-inline-block ml-3 px-3 pointer" @click="toogleProduto(p)">
                           <img src="../assets/icons/arrow-right.svg" style="width: 10px">
                         </div>
                       </div>
@@ -54,24 +54,34 @@
                   </div>
                 </div>
                 <!--tabelas-->
-                <div class="border mb-4" v-show="selProduto.includes(p.id_produto)">
-                  <h6 class="px-4 py-3 m-0 bg-light">Tabelas</h6>
-                  <div class="border-top px-4" v-for="t in p.tabelas">
-                    <div class="row">
-                      <div class="col-9 align-self-center">
-                        <div class="p-2">
-                          {{t.nome_tabela}}
+                <div class="mb-4" v-show="selProduto.includes(p.id_produto)">
+                  <table class="table border">
+                    <thead class="bg-light">
+                      <tr>
+                        <th>Tabela</th>
+                        <th style="width: 250px">Valor</th>
+                        <th style="width: 150px">&nbsp;</th>
+                      </tr>
+                    </thead>
+                    <tr v-for="t in p.tabelas">
+                      <td class="align-middle">{{t.nome_tabela}}</td>
+                      <td class="align-middle">
+                        <div class="input-group mb-2">
+                          <money class="form-control" v-model="t.valor"/>
+                          <div class="input-group-append" style="width: 100px">
+                            <button :id="'btn' + t.id_tabela_preco" class="btn btn-dark btn-edit" @click="editarValor(t)">Alterar</button>
+                          </div>
                         </div>
-                      </div>
-                      <div class="col-3 align-self-center text-right">
+                      </td>
+                      <td class="align-middle">
                         <div class="p-2 pointer" @click="editarTabela(t, p, c)" :class="{'visibility': p.fg_ativo === '2' || c.delivery === '0'}">
                           <span class="pr-2" :class="t.fg_ativo === '1' ? 'text-success' : 'text-secondary'">{{t.fg_ativo === '1' ? 'Ativado' : 'Desativado'}}</span>
                           <img class="switch" src="../assets/icons/switch-on.svg" v-show="t.fg_ativo === '1'">
                           <img class="switch" src="../assets/icons/switch-off.svg" v-show="t.fg_ativo === '2'">
                         </div>
-                      </div>
-                    </div>
-                  </div>
+                      </td>
+                    </tr>
+                  </table>
                 </div>
               </div>
             </div>
@@ -85,11 +95,12 @@
 <script>
 import TopBar from '@/components/TopBar.vue'
 import HelloWorld from '@/components/HelloWorld.vue'
+import {Money} from 'v-money'
 
 export default {
   name: 'Home',
   components: {
-    HelloWorld, TopBar
+    HelloWorld, TopBar, Money
   },
   data() {
     return {
@@ -124,15 +135,30 @@ export default {
     },
 
     toogleProduto(p) {
-      if (p.tabelas.length < 2) {
-        return;
-      }
-
       if (!this.selProduto.includes(p.id_produto)) {
         this.selProduto.push(p.id_produto);
       } else {
         this.selProduto = [];
       }
+    },
+
+    editarValor(t) {
+      let btn = document.getElementById('btn' + t.id_tabela_preco);
+      btn.innerText = 'Salvo';
+      btn.classList.add('salved');
+
+      setTimeout(() => {
+        btn.innerText = 'Alterar';
+        btn.classList.remove('salved');
+      }, 2000);
+
+      this.$http.post(this.urlBase + 'produto/tabela/' + this.token, t)
+        .then(response => {
+
+        }, res => {
+          console.log(res);
+          this.$swal('', res.data.msg ? res.data.msg : 'Erro temporário');
+        });
     },
 
     editarProduto(p, c) {
@@ -202,5 +228,14 @@ export default {
 
   .visibility {
     visibility: hidden;
+  }
+
+  .btn-edit {
+    width: 80px;
+  }
+
+  .salved {
+    background-color: #28a745!important;
+    border-color: #28a745!important;;
   }
 </style>

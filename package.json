@@ -23,6 +23,7 @@
     "jquery": "3.4.1",
     "popper.js": "^1.16.1",
     "socket.io-client": "^2.3.0",
+    "v-money": "^0.8.1",
     "vue": "^2.6.11",
     "vue-resource": "^1.5.1",
     "vue-router": "^3.1.6",
