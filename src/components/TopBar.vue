@@ -37,7 +37,6 @@
     </div>
     <div class="menu-lateral bg-dark">
       <router-link to="/pedidos" active-class="btn--active" class="btn btn-block">
-        <!--animated infinite pulse-->
         <img src="../assets/icons/orders.svg" alt="">
         <span>Pedidos</span>
       </router-link>
@@ -49,6 +48,10 @@
         <img src="../assets/icons/print.svg" alt="">
         <span>Impressora</span>
       </router-link>
+      <a :href="'https://painel.lecard.tk/' + empresa.dominio + '/login'" target="_blank" class="btn btn-block">
+        <img src="../assets/icons/report.svg" alt="">
+        <span>Painel</span>
+      </a>
       <router-link to="/configs" active-class="btn--active" class="btn btn-block">
         <img src="../assets/icons/settings.svg" alt="">
         <span>Configs.</span>
@@ -90,6 +93,7 @@ export default {
       urlBase: localStorage.getItem('urlBase'),
       empresa: {
         token: localStorage.getItem('empresa'),
+        dominio: localStorage.getItem('dominio'),
         nome: localStorage.getItem('nome_fantasia'),
         status: 1,
       },
@@ -213,9 +217,6 @@ export default {
   },
 
   mounted() {
-    if (!audio.paused) {
-      audio.pause();
-    }
     this.statusEmpresa();
     this.connected = localStorage.getItem('urlSocket') && this.$socket ? this.$socket.connected : false
   },

@@ -13,10 +13,15 @@
             <div v-show="!loading">
               <div class="border-bottom p-2 pointer" v-for="p in pedidos" @click="selecionado = p" :class="{'bg-selecionado' : selecionado.id_pedido === p.id_pedido}">
                 <span class="small font-weight-bold bg-danger text-white rounded-sm px-1 float-right" v-show="p.status === '1'">Em andamento</span>
-                <span class="small font-weight-bold bg-info text-white rounded-sm px-1 float-right" v-show="p.status === '2'">Preparando</span>
-                <span class="small font-weight-bold bg-dark text-white rounded-sm px-1 float-right" v-show="p.status === '3'">Entregando</span>
-                <span class="small font-weight-bold bg-dark text-white rounded-sm px-1 float-right" v-show="p.status === '4'">Finalizado</span>
                 <span class="small font-weight-bold bg-danger text-white rounded-sm px-1 float-right" v-show="p.status === '5'">Cancelado</span>
+                <span class="small font-weight-bold bg-dark text-white rounded-sm px-1 float-right" v-show="p.status === '4'">Finalizado</span>
+                <div v-show="!p.id_entrega">
+                  <span class="small font-weight-bold bg-info text-white rounded-sm px-1 float-right" v-show="p.status === '2'">Preparando</span>
+                  <span class="small font-weight-bold bg-dark text-white rounded-sm px-1 float-right" v-show="p.status === '3'">Entregando</span>
+                </div>
+                <div v-show="p.id_entrega && (p.status === '2' || p.status === '3')">
+                  <span class="small font-weight-bold bg-warning text-white rounded-sm px-1 float-right">Agendado</span>
+                </div>
                 <h6 class="mb-0">Pedido: {{p.id_pedido}}</h6>
                 <span class="small">{{p.data_pedido}}</span>
               </div>
@@ -35,29 +40,35 @@
         </div>
         <div class="coluna-2">
           <div class="conteudo-c2 border">
-            <div class="" style="display: flex; height: 90%; justify-content: center; align-items: center;" v-show="selecionado.produtos.length === 0">
+            <div style="display: flex; height: 90%; justify-content: center; align-items: center;" v-show="selecionado.produtos.length === 0">
               <div v-show="loading">
                 <img src="../assets/logo-lecard.png" class="d-block m-auto animated flipInY infinite" alt="Logo Lecard" style="width: 64px;">
               </div>
               <div v-show="!loading"><b>Selecione um pedido</b></div>
             </div>
             <div id="containerPedido" class="container-produtos" v-if="selecionado.cliente" v-show="!loading && selecionado.produtos.length > 0">
-              <div id="andamento" class="small font-weight-bold float-right">
+              <div id="andamento" class="small font-weight-bold float-right" v-show="!selecionado.id_entrega">
                 <span class="bg-danger text-white rounded-sm px-1" v-show="selecionado.status === '1'">Em andamento</span>
                 <span class="bg-info text-white rounded-sm px-1" v-show="selecionado.status === '2'">Preparando</span>
                 <span class="bg-dark text-white rounded-sm px-1" v-show="selecionado.status === '3'">Entregando</span>
                 <span class="bg-dark text-white rounded-sm px-1" v-show="selecionado.status === '4'">Finalizado</span>
                 <span class="bg-danger text-white rounded-sm px-1" v-show="selecionado.status === '5'">Cancelado</span>
               </div>
+              <div class="small font-weight-bold float-right" v-show="selecionado.id_entrega">
+                <span class="bg-warning text-white rounded-sm px-1">Pedido Agendado</span>
+              </div>
               <h6>Pedido: {{selecionado.id_pedido}} - {{selecionado.data_pedido}}</h6>
               <div v-show="selecionado.obs_cancelamento && selecionado.status === '5'">
                 <span><b class="text-danger">Cancelado:</b> {{selecionado.obs_cancelamento}}</span>
               </div>
               <h5 class="font-weight-bold">{{selecionado.cliente.nome_cliente}}</h5>
+              <h6 v-show="selecionado.id_entrega">
+                Pedido Agendado: <b>{{selecionado.data_agendamento}}</b>
+              </h6>
               <h6 class="m-0">
                 Pedidos: {{selecionado.qtd_pedidos === '0' ? 'Primeiro pedido' : selecionado.qtd_pedidos + ' pedidos'}}
               </h6>
-              <h6 v-show="selecionado.tipo_pedido === '1' && selecionado.previsao_entrega">
+              <h6 v-show="!selecionado.id_entrega && selecionado.tipo_pedido === '1' && selecionado.previsao_entrega">
                 Previsão de entrega: <b>{{selecionado.previsao_entrega}}</b>
               </h6>
               <h6 v-show="selecionado.tipo_pedido === '2' && selecionado.previsao_retirada">

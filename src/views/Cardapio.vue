@@ -64,12 +64,19 @@
                       </tr>
                     </thead>
                     <tr v-for="t in p.tabelas">
-                      <td class="align-middle">{{t.nome_tabela}}</td>
+                      <td class="align-middle">
+                        <div class="input-group mb-2">
+                          <input type="text" class="form-control" v-model="t.nome_tabela" :disabled="t.outros !== '1'"/>
+                          <div class="input-group-append" style="width: 100px">
+                            <button :id="'btnTabela' + t.id_tabela_preco" class="btn btn-dark btn-edit" @click="editarValor(t, 'btnTabela')" v-show="t.outros === '1'">Salvar</button>
+                          </div>
+                        </div>
+                      </td>
                       <td class="align-middle">
                         <div class="input-group mb-2">
                           <money class="form-control" v-model="t.valor"/>
                           <div class="input-group-append" style="width: 100px">
-                            <button :id="'btn' + t.id_tabela_preco" class="btn btn-dark btn-edit" @click="editarValor(t)">Alterar</button>
+                            <button :id="'btn' + t.id_tabela_preco" class="btn btn-dark btn-edit" @click="editarValor(t, 'btn')">Salvar</button>
                           </div>
                         </div>
                       </td>
@@ -142,8 +149,8 @@ export default {
       }
     },
 
-    editarValor(t) {
-      let btn = document.getElementById('btn' + t.id_tabela_preco);
+    editarValor(t, id) {
+      let btn = document.getElementById(id + t.id_tabela_preco);
       btn.innerText = 'Salvo';
       btn.classList.add('salved');
 

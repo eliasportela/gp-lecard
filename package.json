@@ -2,7 +2,7 @@
   "name": "gp-lecard",
   "description": "Gestor de Pedidos - Lecard",
   "author": "storkdigital.com.br",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",

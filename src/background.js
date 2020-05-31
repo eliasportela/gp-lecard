@@ -28,10 +28,16 @@ function createWindow () {
     height: 600,
     webPreferences: {nodeIntegration: true},
     icon: path.join(__static, 'icon.png'),
+    resizable: false
   });
   win.setMenu(null);
 
   win.once('focus', () => win.flashFrame(false));
+
+   win.webContents.on('new-window', function(e, url) {
+    e.preventDefault();
+    require('electron').shell.openExternal(url);
+  });
 
   // impressao de pedidos
   winPrint = new BrowserWindow({
@@ -171,7 +177,7 @@ ipcMain.on('printVenda', (event, option) => {
 });
 
 ipcMain.on('readyToPrintVenda', (event) => {
-  //winComanda.webContents.print({silent: true});
+  winComanda.webContents.print({silent: true});
 });
 
 function printData(event, option, wind) {
