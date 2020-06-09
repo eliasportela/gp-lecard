@@ -62,7 +62,7 @@
       </a>
     </div>
 
-    <imprimir-comanda/>
+    <imprimir/>
 
     <modal :opened="modalOflline">
       <h5 class="text-center">Atenção!</h5>
@@ -78,12 +78,12 @@
 const Config = require('electron-config');
 const { ipcRenderer } = require('electron');
 const config = new Config();
-import ImprimirComanda from "./ImprimirComanda";
+import Imprimir from "./Imprimir";
 import Modal from '../components/Modal'
 
 export default {
   name: 'TopBar',
-  components: {ImprimirComanda, Modal},
+  components: {Imprimir, Modal},
   props: {
     msg: String,
   },
@@ -96,6 +96,7 @@ export default {
         dominio: localStorage.getItem('dominio'),
         nome: localStorage.getItem('nome_fantasia'),
         status: 1,
+        agendamento: 1,
       },
       load: true,
       empresaAtiva: false,
@@ -107,7 +108,7 @@ export default {
 
   methods: {
     print(data) {
-      this.$emit('print-venda', data)
+
     },
 
     silenciar() {
@@ -145,9 +146,10 @@ export default {
       this.$http.get(this.urlBase + 'delivery/empresa/status/' + this.empresa.token)
         .then(response => {
           this.empresa.status = parseInt(response.data.status);
+          this.empresa.agendamento = parseInt(response.data.agendamento);
           this.load = false;
 
-          if (this.empresa.status === 0){
+          if (this.empresa.status === 0 && this.empresa.agendamento === 0){
             this.$emit('delivery_desativado');
           }
 
@@ -164,10 +166,6 @@ export default {
       this.empresa.status = dados.status;
       this.$http.post(this.urlBase + 'delivery/empresa/status/' + this.token, dados)
         .then(response => {
-          // console.log(response)
-          // this.empresa.status = parseInt(response.data.status);
-          // let msg = 'Sucesso! ' + (this.empresa.status === 1 ? 'Seu delivery está ativado agora.' : 'Seu delivery está desativado.');
-          // this.$swal('', msg);
 
         }, res => {
           console.log(res);
@@ -177,7 +175,57 @@ export default {
     },
 
     reloadPage() {
-      ipcRenderer.send('reloud');
+      // ipcRenderer.send('reloud');
+      this.askNot()
+    },
+
+    askNot() {
+      function handlePermission(permission) {
+        // Whatever the user answers, we make sure Chrome stores the information
+        if(!('permission' in Notification)) {
+          Notification.permission = permission;
+        }
+
+        // set the button to shown or hidden, depending on what the user answers
+        if(Notification.permission === 'denied' || Notification.permission === 'default') {
+          // notificationBtn.style.display = 'block';
+
+        } else {
+          // notificationBtn.style.display = 'none';
+        }
+      }
+
+      // Let's check if the browser supports notifications
+      if (!"Notification" in window) {
+        console.log("This browser does not support notifications.");
+
+      } else {
+        if(this.checkNotificationPromise()) {
+          Notification.requestPermission()
+            .then((permission) => {
+              handlePermission(permission);
+            })
+        } else {
+          Notification.requestPermission(function(permission) {
+            handlePermission(permission);
+          });
+        }
+      }
+    },
+
+    checkNotificationPromise() {
+      try {
+        Notification.requestPermission().then();
+      } catch(e) {
+        return false;
+      }
+
+      return true;
+    },
+
+    createNotification(title, body) {
+      let img = '/img/logo-lecard.df3a73b6.png';
+      let notification = new Notification(title, { body: body, icon: img });
     }
   },
 
@@ -194,7 +242,7 @@ export default {
     },
 
     print_order(res)  {
-      this.print(res.data);
+      this.$emit('print-venda', res)
     },
 
     notification(res)  {
@@ -218,7 +266,7 @@ export default {
 
   mounted() {
     this.statusEmpresa();
-    this.connected = localStorage.getItem('urlSocket') && this.$socket ? this.$socket.connected : false
+    this.connected = localStorage.getItem('urlSocket') && this.$socket ? this.$socket.connected : false;
   },
 
   created() {

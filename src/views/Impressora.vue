@@ -93,7 +93,7 @@ export default {
   },
   created() {
     ipcRenderer.on('print-return', (event, arg) => {
-      console.log(arg);
+      // console.log(arg);
       this.load = false;
     });
 

@@ -86,7 +86,6 @@
   const ipcRenderer = require("electron").ipcRenderer;
 
   ipcRenderer.on("print", (event, content) => {
-    // console.log(content);
     document.getElementById('content').innerHTML = content;
     ipcRenderer.send("readyToPrint");
   });

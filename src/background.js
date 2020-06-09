@@ -19,7 +19,21 @@ let contents;
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }])
 app.commandLine.appendSwitch('--autoplay-policy','no-user-gesture-required');
-app.setAppUserModelId(process.execPath);
+
+function setAppUserModelId() {
+  console.log(process.execPath);
+  var updateDotExe = path.join(path.dirname(process.execPath), '..', 'update.exe');
+
+  var packageDir = path.dirname(path.resolve(updateDotExe));
+  var packageName = path.basename(packageDir);
+  var exeName = path.basename(process.execPath).replace(/\.exe$/i, '');
+
+  global.appUserModelId = `com.squirrel.${exeName}`;
+  console.log(global.appUserModelId)
+  app.setAppUserModelId(global.appUserModelId);
+}
+
+// setAppUserModelId();
 
 function createWindow () {
   // Create the browser window.

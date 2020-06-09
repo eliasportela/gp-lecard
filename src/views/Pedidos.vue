@@ -12,7 +12,7 @@
           <div class="bg-white coluna-1-1 border">
             <div v-show="!loading">
               <div class="border-bottom p-2 pointer" v-for="p in pedidos" @click="selecionado = p" :class="{'bg-selecionado' : selecionado.id_pedido === p.id_pedido}">
-                <span class="small font-weight-bold bg-danger text-white rounded-sm px-1 float-right" v-show="p.status === '1'">Em andamento</span>
+                <span class="small font-weight-bold bg-danger text-white rounded-sm px-1 float-right" v-show="p.status === '1'">Aguardando</span>
                 <span class="small font-weight-bold bg-danger text-white rounded-sm px-1 float-right" v-show="p.status === '5'">Cancelado</span>
                 <span class="small font-weight-bold bg-dark text-white rounded-sm px-1 float-right" v-show="p.status === '4'">Finalizado</span>
                 <div v-show="!p.id_entrega">
@@ -48,7 +48,7 @@
             </div>
             <div id="containerPedido" class="container-produtos" v-if="selecionado.cliente" v-show="!loading && selecionado.produtos.length > 0">
               <div id="andamento" class="small font-weight-bold float-right" v-show="!selecionado.id_entrega">
-                <span class="bg-danger text-white rounded-sm px-1" v-show="selecionado.status === '1'">Em andamento</span>
+                <span class="bg-danger text-white rounded-sm px-1" v-show="selecionado.status === '1'">Aguardando</span>
                 <span class="bg-info text-white rounded-sm px-1" v-show="selecionado.status === '2'">Preparando</span>
                 <span class="bg-dark text-white rounded-sm px-1" v-show="selecionado.status === '3'">Entregando</span>
                 <span class="bg-dark text-white rounded-sm px-1" v-show="selecionado.status === '4'">Finalizado</span>
@@ -63,7 +63,7 @@
               </div>
               <h5 class="font-weight-bold">{{selecionado.cliente.nome_cliente}}</h5>
               <h6 v-show="selecionado.id_entrega">
-                Pedido Agendado: <b>{{selecionado.data_agendamento}}</b>
+                <b class="text-danger">AGENDADO PARA:</b> {{selecionado.data_agendamento}}
               </h6>
               <h6 class="m-0">
                 Pedidos: {{selecionado.qtd_pedidos === '0' ? 'Primeiro pedido' : selecionado.qtd_pedidos + ' pedidos'}}
@@ -225,19 +225,24 @@ export default {
             this.pedidos.forEach(obj => {
               if (obj.id_pedido === this.selecionado.id_pedido) {
                 this.selecionado = obj;
+                this.$nextTick(function () {
+                  if (this.imprimirSelecionado) {
+                    this.imprimirSelecionado = false;
+                    this.imprimir();
+                  }
+                });
                 existe = true;
               }
             });
 
             if (!existe) {
               this.selecionado = this.pedidos[0];
-            }
-
-            if (this.imprimirSelecionado) {
-              this.imprimirSelecionado = false;
-              setTimeout(() => {
-                this.imprimir();
-              }, 1000);
+              this.$nextTick(function () {
+                if (this.imprimirSelecionado) {
+                  this.imprimirSelecionado = false;
+                  this.imprimir();
+                }
+              });
             }
 
           } else {

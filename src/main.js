@@ -47,6 +47,10 @@ if (config.get('nCopias')) {
   localStorage.setItem('nCopias', '1')
 }
 
+if (config.get('impressaoAutomatica')) {
+  localStorage.setItem('impressaoAutomatica', '1');
+}
+
 Vue.config.productionTip = false;
 Vue.http.options.emulateJSON = true;
 // Vue.http.options.emulateHTTP = true;
