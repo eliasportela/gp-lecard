@@ -41,8 +41,7 @@ function createWindow () {
     width: 1000,
     height: 600,
     webPreferences: {nodeIntegration: true},
-    icon: path.join(__static, 'icon.png'),
-    resizable: false
+    icon: path.join(__static, 'icon.png')
   });
   win.setMenu(null);
 

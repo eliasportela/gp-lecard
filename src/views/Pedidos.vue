@@ -228,7 +228,7 @@ export default {
                 this.$nextTick(function () {
                   if (this.imprimirSelecionado) {
                     this.imprimirSelecionado = false;
-                    this.imprimir();
+                    this.imprimir(localStorage.getItem('nCopias'));
                   }
                 });
                 existe = true;
@@ -240,7 +240,7 @@ export default {
               this.$nextTick(function () {
                 if (this.imprimirSelecionado) {
                   this.imprimirSelecionado = false;
-                  this.imprimir();
+                  this.imprimir(localStorage.getItem('nCopias'));
                 }
               });
             }
@@ -312,10 +312,10 @@ export default {
         });
     },
 
-    imprimir() {
+    imprimir(ncopias) {
       let options = {
         content: document.getElementById('containerPedido').innerHTML,
-        copies: localStorage.getItem('nCopias') ? localStorage.getItem('nCopias') : 1
+        copies: ncopias ? ncopias : 1
       };
       ipcRenderer.send('print', options);
     },

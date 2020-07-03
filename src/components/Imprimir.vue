@@ -31,7 +31,7 @@
             </div>
             <div class="bold" v-show="i.observacao">Obs: {{i.observacao}}</div>
           </td>
-          <td style="text-align: right">{{(i.quantidade * i.valor_total) | valor}}</td>
+          <td style="text-align: right">{{(i.valor_total) | valor}}</td>
         </tr>
       </table>
       <div class="bold" v-show="pedido.total && pedido.total > 0" style="margin-top: 16px">
@@ -47,7 +47,7 @@
     <div id="containerCupom" class="hide" v-if="venda.id_comanda">
       <div class="center bold large">{{venda.empresa.nome_fantasia}}</div>
       <div class="center" style="font-size: 12px">
-        <div>{{venda.empresa.endereco}}, {{venda.empresa.numero}} - {{venda.empresa.nome_cidade}}</div>
+        <div>{{venda.empresa.endereco}}, {{venda.empresa.numero}}</div>
         <div>{{venda.empresa.cnpj}}</div>
       </div>
       <hr>

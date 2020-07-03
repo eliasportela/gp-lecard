@@ -58,7 +58,7 @@
       </router-link>
       <a class="btn btn-block" @click="logout">
         <img src="../assets/icons/logout.svg" alt="">
-        <span>Logout</span>
+        <span>Sair</span>
       </a>
     </div>
 
@@ -221,11 +221,6 @@ export default {
       }
 
       return true;
-    },
-
-    createNotification(title, body) {
-      let img = '/img/logo-lecard.df3a73b6.png';
-      let notification = new Notification(title, { body: body, icon: img });
     }
   },
 
@@ -284,6 +279,10 @@ export default {
 
     this.$parent.$on('silenciar', () => {
       this.silenciar();
+    });
+
+    this.$parent.$on('ativarDelivery', () => {
+      this.toogleStatus();
     });
   }
 }

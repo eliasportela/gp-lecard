@@ -1,6 +1,6 @@
 <template>
   <div>
-    <top-bar/>
+    <top-bar @delivery_desativado="deliveryDesativado"/>
     <div class="content">
       <div class="text-center p-5">
         <img src="../assets/logo-lecard.png" alt="" style="width: 100px">
@@ -20,6 +20,27 @@ export default {
   components: {
     HelloWorld, TopBar
   },
+
+  methods: {
+    deliveryDesativado() {
+      // this.$swal('', 'Seu delivery está desativado. Ative-o para receber seus pedidos!');
+      this.$swal.fire({
+        title: 'O delivery está desativado!',
+        text: "Ative-o para receber seus pedidos.",
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        cancelButtonText: 'Voltar',
+        confirmButtonText: 'Sim, ativar delivery!'
+      }).then((result) => {
+        if (result.value) {
+          this.$emit('ativarDelivery');
+          this.$swal('', 'Delivery ativado!')
+        }
+      })
+    }
+  },
+
   mounted() {
     // console.log(myNotification);
     // myNotification.show();
