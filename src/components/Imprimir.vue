@@ -3,7 +3,7 @@
     <div id="containerPedido" class="hide" v-if="pedido.pedido">
       <div class="center bold large">{{pedido.nome_empresa}}</div>
       <div class="center bold">{{ pedido.pedido }} | {{pedido.data_pedido}} | {{ pedido.tipo }}</div>
-      <div class="center bold">{{pedido.obs_comanda}}</div>
+      <div class="center bold">{{pedido.obs_pedido}}</div>
       <div v-if="pedido.cliente" class="bold" style="margin-top: 12px;">
         {{pedido.cliente.nome_cliente}}
         <div>
@@ -125,11 +125,14 @@
 
     methods: {
       print(container) {
-        let options = {
-          content: document.getElementById(container).innerHTML,
-          copies: 1
-        };
-        ipcRenderer.send('printVenda', options);
+        const cId = document.getElementById(container)
+        if (cId) {
+          let options = {
+            content: document.getElementById(container).innerHTML,
+            copies: 1
+          };
+          ipcRenderer.send('printVenda', options);
+        }
       }
     },
 
