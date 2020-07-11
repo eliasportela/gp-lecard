@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div id="containerPedido" class="hide" v-if="pedido.pedido">
+    <div id="containerPedidoPdv" class="hide" v-if="pedido.pedido">
       <div class="center bold large">{{pedido.nome_empresa}}</div>
       <div class="center bold">{{ pedido.pedido }} | {{pedido.data_pedido}} | {{ pedido.tipo }}</div>
       <div class="center bold">{{pedido.obs_pedido}}</div>
@@ -151,7 +151,7 @@
         } else {
           this.pedido = data;
           this.$nextTick(function () {
-            this.print('containerPedido');
+            this.print('containerPedidoPdv');
           });
         }
       });
