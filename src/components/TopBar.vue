@@ -175,8 +175,8 @@ export default {
     },
 
     reloadPage() {
-      this.dialogNotify()
-      // ipcRenderer.send('reloud');
+      // this.dialogNotify()
+      ipcRenderer.send('reloud');
     },
 
     dialogNotify() {

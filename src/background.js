@@ -148,7 +148,6 @@ ipcMain.on('reloud', () => {
 });
 
 ipcMain.on('reloud-icon', (evt, option) => {
-  console.log(option)
   if (option) {
     win.setOverlayIcon(path.join(__static, 'one.png'), 'Novo pedido');
     win.flashFrame(true)

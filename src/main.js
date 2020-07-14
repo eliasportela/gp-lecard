@@ -19,7 +19,7 @@ if (config.get('urlBase')) {
   localStorage.setItem('urlBase', config.get('urlBase'));
 
 } else {
-  let urlBase = 'https://softcomanda.tk/painel/api/';
+  let urlBase = 'https://api.storkdigital.com.br/api/';
   config.set('urlBase', urlBase);
   localStorage.setItem('urlBase', urlBase);
 }
@@ -38,6 +38,8 @@ if (config.get('empresa')) {
       debug: false,
       connection: config.get('urlSocket')
     }));
+
+    console.log(config.get('urlSocket'))
   }
 }
 
