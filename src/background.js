@@ -2,6 +2,7 @@
 /* global __static */
 
 import { app, protocol, BrowserWindow, ipcMain, globalShortcut } from 'electron'
+import { autoUpdater } from "electron-updater"
 import {
   createProtocol,
   /* installVueDevtools */
@@ -19,21 +20,6 @@ let contents;
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }])
 app.commandLine.appendSwitch('--autoplay-policy','no-user-gesture-required');
-
-function setAppUserModelId() {
-  console.log(process.execPath);
-  var updateDotExe = path.join(path.dirname(process.execPath), '..', 'update.exe');
-
-  var packageDir = path.dirname(path.resolve(updateDotExe));
-  var packageName = path.basename(packageDir);
-  var exeName = path.basename(process.execPath).replace(/\.exe$/i, '');
-
-  global.appUserModelId = `com.squirrel.${exeName}`;
-  console.log(global.appUserModelId)
-  app.setAppUserModelId(global.appUserModelId);
-}
-
-// setAppUserModelId();
 
 function createWindow () {
   // Create the browser window.
@@ -70,7 +56,6 @@ function createWindow () {
   // winPrint.webContents.openDevTools();
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
-
     // Load the url of the dev server if in development mode
     win.loadURL(process.env.WEBPACK_DEV_SERVER_URL);
     if (!process.env.IS_TEST) win.webContents.openDevTools()
@@ -78,6 +63,7 @@ function createWindow () {
   } else {
     createProtocol('app');
     win.loadURL('app://./index.html');
+    autoUpdater.checkForUpdatesAndNotify()
   }
 
   win.on('closed', () => {

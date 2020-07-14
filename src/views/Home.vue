@@ -4,7 +4,7 @@
     <div class="content">
       <div class="text-center p-5">
         <img src="../assets/logo-lecard.png" alt="" style="width: 100px">
-        <h4 class="text-danger font-weight-bold mt-4">Bem-vindo ao Gestor de Pedidos - Lecard</h4>
+        <h4 class="text-danger font-weight-bold mt-4">Bem-vindo ao Gestor de Pedidos</h4>
         <p>Esperemos que aproveite todas as novidades que fizemos para facilitar mais ainda o seu negócio.</p>
       </div>
     </div>
