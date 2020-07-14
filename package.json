@@ -21,7 +21,7 @@
     "core-js": "^3.6.4",
     "electron-config": "^2.0.0",
     "electron-updater": "^4.3.1",
-    "jquery": "3.4.1",
+    "jquery": "3.5.0",
     "popper.js": "^1.16.1",
     "socket.io-client": "^2.3.0",
     "v-money": "^0.8.1",
