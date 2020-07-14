@@ -1,14 +1,14 @@
 'use strict'
 /* global __static */
 
-import { app, protocol, BrowserWindow, ipcMain, globalShortcut } from 'electron'
-import { autoUpdater } from "electron-updater"
+import { app, protocol, BrowserWindow, ipcMain, globalShortcut, dialog } from 'electron'
 import {
-  createProtocol,
-  /* installVueDevtools */
+createProtocol,
+/* installVueDevtools */
 } from 'vue-cli-plugin-electron-builder/lib'
 import path from 'path'
 const isDevelopment = process.env.NODE_ENV !== 'production';
+import { autoUpdater } from "electron-updater"
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -20,6 +20,7 @@ let contents;
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }])
 app.commandLine.appendSwitch('--autoplay-policy','no-user-gesture-required');
+app.setAppUserModelId('delivery.lecard.gplecard');
 
 function createWindow () {
   // Create the browser window.
@@ -63,7 +64,7 @@ function createWindow () {
   } else {
     createProtocol('app');
     win.loadURL('app://./index.html');
-    autoUpdater.checkForUpdatesAndNotify()
+    checkUpdate()
   }
 
   win.on('closed', () => {
@@ -189,4 +190,34 @@ function printData(event, option, wind) {
   }
 
   event.sender.send('print-return', 'success');
+}
+
+function checkUpdate() {
+  autoUpdater.checkForUpdates()
+
+  autoUpdater.on('update-available', (info) => {
+    setTimeout(() => {
+      dialog.showMessageBox(win, {
+        title: 'Gestor de Pedidos - LeCard',
+        message: "Há uma atualização disponível!",
+        detail: 'O sistema irá baixar automaticamente e se auto reiniciar.'
+      })
+    }, 5000)
+  })
+
+  autoUpdater.on('update-downloaded', (info) => {
+    const Config = require('electron-config');
+    const config = new Config();
+    config.clear();
+
+    dialog.showMessageBox(win, {
+      title: 'Gestor de Pedidos - LeCard',
+      message: "Atualização baixada com sucesso!",
+      detail: 'Aguarde que o sistema se auto reiniciará.'
+    });
+
+    setTimeout(() => {
+      autoUpdater.quitAndInstall();
+    }, 3000);
+  })
 }

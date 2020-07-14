@@ -5,7 +5,7 @@
         <div class="row">
           <div class="col-5 align-self-center">
             <router-link to="/" class="text-dark">
-              <img src="../assets/logo-lecard.png" alt="" style="width: 32px">
+              <img src="../assets/logo-lecard.png" alt="" style="width: 32px" id="imgEmpresa">
               <span class="font-weight-bold small pl-3">{{empresa.nome}}</span>
             </router-link>
           </div>
@@ -175,52 +175,15 @@ export default {
     },
 
     reloadPage() {
+      this.dialogNotify()
       // ipcRenderer.send('reloud');
-      this.askNot()
     },
 
-    askNot() {
-      function handlePermission(permission) {
-        // Whatever the user answers, we make sure Chrome stores the information
-        if(!('permission' in Notification)) {
-          Notification.permission = permission;
-        }
-
-        // set the button to shown or hidden, depending on what the user answers
-        if(Notification.permission === 'denied' || Notification.permission === 'default') {
-          // notificationBtn.style.display = 'block';
-
-        } else {
-          // notificationBtn.style.display = 'none';
-        }
-      }
-
-      // Let's check if the browser supports notifications
-      if (!"Notification" in window) {
-        console.log("This browser does not support notifications.");
-
-      } else {
-        if(this.checkNotificationPromise()) {
-          Notification.requestPermission()
-            .then((permission) => {
-              handlePermission(permission);
-            })
-        } else {
-          Notification.requestPermission(function(permission) {
-            handlePermission(permission);
-          });
-        }
-      }
-    },
-
-    checkNotificationPromise() {
-      try {
-        Notification.requestPermission().then();
-      } catch(e) {
-        return false;
-      }
-
-      return true;
+    dialogNotify() {
+      new Notification('LeCard - Gestor de Pedidos', {
+        body: 'Tem pedido novo na área <3',
+        icon: document.getElementById('imgEmpresa').src
+      })
     }
   },
 
@@ -242,6 +205,7 @@ export default {
 
     notification(res)  {
       if (res.data.play && !this.bell && audio.paused) {
+        this.dialogNotify()
         audio.play();
         this.bell = true;
         ipcRenderer.send('reloud-icon', true);

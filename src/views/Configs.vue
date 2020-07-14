@@ -30,6 +30,9 @@
             <button class="btn btn-dark btn-block" @click="resetar">Resetar sistema</button>
           </div>
         </div>
+        <div class="position-fixed" style="right: 14px; bottom: 12px;">
+          <span class="small font-weight-bold">Versão: {{version}}</span>
+        </div>
       </div>
     </div>
   </div>
@@ -51,7 +54,8 @@ export default {
       url_socket: '',
       url_base: '',
       empresa: '',
-      load: false
+      load: false,
+      version: ''
     }
   },
   methods: {
@@ -83,6 +87,8 @@ export default {
       if (localStorage.getItem('empresa')) {
         this.empresa = localStorage.getItem('empresa');
       }
+
+      this.version = require('electron').remote.app.getVersion();
     }
   },
   created() {
