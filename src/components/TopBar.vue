@@ -48,9 +48,9 @@
         <img src="../assets/icons/print.svg" alt="">
         <span>Impressora</span>
       </router-link>
-      <a :href="'https://painel.lecard.tk/' + empresa.dominio + '/login'" target="_blank" class="btn btn-block">
+      <a :href="'https://portal.lecard.delivery/' + empresa.dominio + '/login'" target="_blank" class="btn btn-block">
         <img src="../assets/icons/report.svg" alt="">
-        <span>Painel</span>
+        <span>Portal</span>
       </a>
       <router-link to="/configs" active-class="btn--active" class="btn btn-block">
         <img src="../assets/icons/settings.svg" alt="">

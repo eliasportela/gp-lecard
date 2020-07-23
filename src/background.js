@@ -205,9 +205,9 @@ function checkUpdate() {
   })
 
   autoUpdater.on('update-downloaded', (info) => {
-    const Config = require('electron-config');
-    const config = new Config();
-    config.clear();
+    // const Config = require('electron-config');
+    // const config = new Config();
+    // config.clear();
 
     dialog.showMessageBox(win, {
       title: 'Gestor de Pedidos - LeCard',
