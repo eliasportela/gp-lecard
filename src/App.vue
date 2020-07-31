@@ -4,6 +4,19 @@
   </div>
 </template>
 
+<script>
+  export default {
+    name: 'App',
+    sockets: {
+      connect() {
+        if (localStorage.getItem('empresa')) {
+          this.$socket.emit('empresa_connected', localStorage.getItem('empresa'))
+        }
+      }
+    },
+  }
+</script>
+
 <style>
   .content {
     margin-top: 50px;

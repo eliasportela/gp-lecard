@@ -61,7 +61,7 @@ export default {
         .then(res => {
           this.loading = false;
           this.token = res.data.token;
-          this.socket = res.data.base_socket + this.token;
+          this.socket = res.data.base_socket + 'empresas';
 
           config.set('empresa', this.token);
           localStorage.setItem('empresa', this.token);

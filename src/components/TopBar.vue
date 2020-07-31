@@ -204,7 +204,7 @@ export default {
     },
 
     notification(res)  {
-      if (res.data.play && !this.bell && audio.paused) {
+      if (res.play && !this.bell && audio.paused) {
         this.dialogNotify()
         audio.play();
         this.bell = true;

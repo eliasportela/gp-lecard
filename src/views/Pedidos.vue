@@ -299,7 +299,8 @@ export default {
           }
 
           this.motivoRecusa = '';
-          this.$socket.emit('delivery_status', this.selecionado);
+          const socket_id = this.selecionado.cliente.id_cliente + this.empresa
+          this.$socket.emit('delivery_status', socket_id);
 
           this.buscarPedidos();
 
