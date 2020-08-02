@@ -80,10 +80,18 @@ export default {
 
     logar() {
       let parametro = "?empresa=" + this.token;
+      this.loading = true;
+
       this.$http.post(this.urlBase + 'autenticar' + parametro, this.dados)
         .then(res => {
-          // console.log(res);
+          this.loading = false;
+
           if (res.data.success) {
+            if (res.data.dados.id_funcao !== '1' && (res.data.permissoes && !res.data.permissoes.includes('6'))) {
+              this.msg = "Usuário sem acesso ao Gestor de Pedidos!";
+              return;
+            }
+
             config.set('dominio', this.dominio);
             localStorage.setItem("dominio", this.dominio);
 
@@ -100,9 +108,6 @@ export default {
             }
 
             ipcRenderer.send('reloud');
-
-          } else {
-            this.loading = false;
           }
 
         }, res => {
