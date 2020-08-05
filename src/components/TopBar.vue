@@ -121,7 +121,9 @@ export default {
 
     logout() {
       this.$swal({
-        text: "Confirma o logout do sistema?",
+        text: "Deseja sair do sistema?",
+        confirmButtonText: 'Sim',
+        cancelButtonText: "Cancelar",
         showCancelButton: true,
         customClass: {
           cancelButton: 'btn btn-danger ml-3',
