@@ -1,10 +1,12 @@
 <template>
   <div>
-    <div class="text-center p-5">
-      <img src="../assets/logo-lecard.png" alt="" style="width: 100px">
-      <h4 class="text-danger font-weight-bold mt-4">Gestor de Pedidos - Lecard</h4>
+    <div class="p-5">
+      <div class="text-center">
+        <img src="../assets/logo-lecard.png" alt="" style="width: 100px">
+        <h4 class="text-danger font-weight-bold mt-4">Gestor de Pedidos - Lecard</h4>
+      </div>
       <div class="mt-4" style="width: 400px; margin: auto">
-        <div v-show="container === 1">
+        <div class="text-center" v-show="container === 1">
           <form @submit.prevent="getEmpresa">
             <div class="alert alert-danger alert-dismissible fade show" role="alert" v-show="msg">
               {{msg}}
@@ -15,15 +17,25 @@
           </form>
         </div>
         <div v-show="container === 2">
-          <div class="alert alert-danger alert-dismissible fade show" role="alert" v-show="msg">
+          <div class="alert alert-danger alert-dismissible fade show text-center" role="alert" v-show="msg">
             {{msg}}
           </div>
           <form @submit.prevent="logar">
-            <input type="text" id="usuario" v-model="dados.usuario" class="form-control mb-3" placeholder="Usuário" minlength="4" required>
-            <input type="password" v-model="dados.senha" class="form-control mb-3" placeholder="Senha" minlength="6" required>
+            <div>
+              <input type="text" id="usuario" v-model="dados.usuario" class="form-control mb-3" placeholder="Usuário" minlength="4" required>
+            </div>
+            <div>
+              <input type="password" id="inputSenha" v-model="dados.senha" class="form-control mb-3" placeholder="Senha" minlength="6" required>
+            </div>
+            <div class="form-group">
+              <div class="custom-control custom-checkbox">
+                  <input type="checkbox" class="custom-control-input" id="checkboxSenha" @change="mostrarSenha()">
+                  <label class="custom-control-label" for="checkboxSenha">Exibir senha</label>
+              </div>
+            </div>
             <button class="btn btn-danger btn-block">{{loading ? 'Aguarde' : 'Login'}}</button>
           </form>
-          <div class="mt-5">
+          <div class="mt-5 text-center">
             <a href="javascript:" @click="container = 1">Mudar empresa</a>
           </div>
         </div>
@@ -76,6 +88,15 @@ export default {
           this.loading = false;
           this.msg = res.data.msg ? res.data.msg : 'Erro temporário';
         });
+    },
+
+    mostrarSenha() {
+      const input = document.getElementById("inputSenha");
+      if (input.type === "password") {
+        input.type = "text";
+      } else {
+        input.type = "password";
+      }
     },
 
     logar() {
