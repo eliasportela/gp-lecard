@@ -5,7 +5,7 @@
       <div class="p-5">
         <div class="text-center">
           <img src="../assets/logo-lecard.png" alt="Logo Lecard" style="width: 70px">
-          <h4 class="text-danger font-weight-bold mt-3">LeCard - Avisos e Novidades</h4>
+          <h4 class="text-danger font-weight-bold mt-3">Avisos e Novidades</h4>
         </div>
         <p class="mt-4">
           - O nosso painel administrativo agora será chamado de <b>Portal LeCard.</b>

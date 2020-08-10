@@ -66,16 +66,16 @@
                     <tr v-for="t in p.tabelas">
                       <td class="align-middle">
                         <div class="input-group mb-2">
-                          <input type="text" class="form-control" v-model="t.nome_tabela" :disabled="t.outros !== '1'"/>
-                          <div class="input-group-append" style="width: 100px">
+                          <input type="text" class="form-control" v-model="t.nome_tabela" :disabled="t.outros !== '1' || !adm"/>
+                          <div class="input-group-append" style="width: 100px" v-if="adm">
                             <button :id="'btnTabela' + t.id_tabela_preco" class="btn btn-dark btn-edit" @click="editarValor(t, 'btnTabela')" v-show="t.outros === '1'">Salvar</button>
                           </div>
                         </div>
                       </td>
                       <td class="align-middle">
                         <div class="input-group mb-2">
-                          <money class="form-control" v-model="t.valor"/>
-                          <div class="input-group-append" style="width: 100px">
+                          <money class="form-control" v-model="t.valor" :disabled="!adm"/>
+                          <div class="input-group-append" style="width: 100px" v-if="adm">
                             <button :id="'btn' + t.id_tabela_preco" class="btn btn-dark btn-edit" @click="editarValor(t, 'btn')">Salvar</button>
                           </div>
                         </div>
@@ -116,6 +116,7 @@ export default {
       selProduto: [],
       urlBase: localStorage.getItem('urlBase'),
       empresa: localStorage.getItem('empresa'),
+      adm: localStorage.getItem('administrativo') === 'true',
       token: localStorage.getItem('key'),
       categorias: []
     }
@@ -150,6 +151,10 @@ export default {
     },
 
     editarValor(t, id) {
+      if (!this.adm) {
+        return;
+      }
+
       let btn = document.getElementById(id + t.id_tabela_preco);
       btn.innerText = 'Salvo';
       btn.classList.add('salved');
