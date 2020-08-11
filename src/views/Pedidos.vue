@@ -82,7 +82,10 @@
                   <span v-show="selecionado.cliente.complemento">-</span>
                   {{selecionado.cliente.complemento}}
                   <br>
-                  <b>Telefone:</b> <a :href="'https://api.whatsapp.com/send?phone=+55'+ selecionado.cliente.telefone" target="_blank">{{selecionado.cliente.telefone | phone}}</a><br>
+                  <b>Telefone:</b>
+                  <a :href="'https://api.whatsapp.com/send?phone=+55'+ selecionado.cliente.telefone" class="text-info" target="_blank">
+                    <b>{{selecionado.cliente.telefone | phone}}</b>
+                  </a>
                 </div>
               </div>
               <div class="border p-2 mt-3 mb-2" v-show="selecionado.tipo_pedido === '2'">
@@ -90,7 +93,10 @@
                 <div>
                   Cliente vai retirar o pedido
                 </div>
-                <b>Telefone:</b> <a :href="'https://api.whatsapp.com/send?phone=+55'+ selecionado.cliente.telefone" target="_blank">{{selecionado.cliente.telefone | phone}}</a><br>
+                <b>Telefone: </b>
+                <a :href="'https://api.whatsapp.com/send?phone=+55'+ selecionado.cliente.telefone" class="text-info" target="_blank">
+                  <b>{{selecionado.cliente.telefone | phone}}</b>
+                </a>
               </div>
               <hr class="d-none">
               <div class="mb-3">
