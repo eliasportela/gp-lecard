@@ -48,7 +48,7 @@
         <img src="../assets/icons/print.svg" alt="">
         <span>Impressora</span>
       </router-link>
-      <a :href="'https://portal.lecard.delivery/' + empresa.dominio + '/login'" target="_blank" class="btn btn-block">
+      <a :href="'https://portal.lecard.delivery/'" target="_blank" class="btn btn-block">
         <img src="../assets/icons/report.svg" alt="">
         <span>Portal</span>
       </a>
@@ -199,10 +199,6 @@ export default {
     disconnect() {
       this.modalOflline = true;
       this.connected = false;
-    },
-
-    print_order(res)  {
-      this.$emit('print-venda', res)
     },
 
     notification(res)  {

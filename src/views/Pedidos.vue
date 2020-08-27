@@ -223,7 +223,7 @@ export default {
     buscarPedidos() {
       this.loading = true;
 
-      this.$http.get(this.urlBase + 'delivery/pedidos/' + this.empresa, {params: this.pesquisa})
+      this.$http.get(this.urlBase + 'delivery/pedidos/' + this.token, {params: this.pesquisa})
         .then(response => {
           this.pedidos = response.data;
           if (this.pedidos.length > 0) {

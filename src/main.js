@@ -36,10 +36,8 @@ if (config.get('empresa')) {
 
     Vue.use(new VueSocketIO({
       debug: false,
-      connection: config.get('urlSocket')
+      connection: config.get('urlSocket') + 'empresas'
     }));
-
-    console.log(config.get('urlSocket'))
   }
 }
 
