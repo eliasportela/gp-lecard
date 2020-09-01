@@ -69,8 +69,8 @@ export default {
             const socket = res.data.dados.base_socket;
             localStorage.setItem("urlSocket", socket);
             config.set('urlSocket', socket);
-
             config.set('userData', res.data);
+            config.set('empresa', res.data.dados.token);
             this.setUserData(res.data);
 
             if (localStorage.getItem('urlSocket')) {
@@ -98,6 +98,7 @@ export default {
 
     setUserData(data) {
       localStorage.setItem("key", data.token);
+      localStorage.setItem("empresa", data.dados.token);
       localStorage.setItem("nome_fantasia", data.dados.nome_fantasia);
       localStorage.setItem("nome_usuario", data.dados.nome);
       localStorage.setItem("administrativo", false);

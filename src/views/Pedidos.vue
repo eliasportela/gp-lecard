@@ -268,7 +268,7 @@ export default {
             this.$swal(res.data.msg ? res.data.msg : 'Erro temporário');
             localStorage.removeItem('key');
             this.$router.push('/')
-          }
+          }''
         });
     },
 

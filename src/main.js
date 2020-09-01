@@ -19,7 +19,7 @@ if (config.get('urlBase')) {
   localStorage.setItem('urlBase', config.get('urlBase'));
 
 } else {
-  let urlBase = 'https://api.storkdigital.com.br/api/';
+  let urlBase = 'https://api.storkdigital.com.br/new/api/';
   config.set('urlBase', urlBase);
   localStorage.setItem('urlBase', urlBase);
 }
