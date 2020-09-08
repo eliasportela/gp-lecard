@@ -4,7 +4,7 @@
       <div class="container-fluid">
         <div class="row">
           <div class="col-5 align-self-center">
-            <router-link to="/" class="text-dark">
+            <router-link to="/home" class="text-dark">
               <img src="../assets/logo-lecard.png" alt="" style="width: 32px" id="imgEmpresa">
               <span class="font-weight-bold small pl-3">{{dados.nome_fantasia}}</span>
             </router-link>
@@ -52,6 +52,10 @@
         <img src="../assets/icons/report.svg" alt="">
         <span>Portal</span>
       </a>
+      <router-link to="/whatsapp" active-class="btn--active" class="btn btn-block">
+        <img src="../assets/icons/whatsapp.svg" alt="">
+        <span>LeBot</span>
+      </router-link>
       <a class="btn btn-block" @click="logout">
         <img src="../assets/icons/logout.svg" alt="">
         <span>Sair</span>

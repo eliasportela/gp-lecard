@@ -12,6 +12,7 @@
 </template>
 
 <script>
+  const { ipcRenderer } = require('electron');
   const Config = require('electron-config');
   const config = new Config();
 
@@ -28,12 +29,18 @@
         this.$http.post('autenticar', {key})
           .then(res => {
             this.load = false;
-
             if (res.data.success) {
               this.$store.commit('setDataUser', res.data);
               if (this.$route.name === 'Login') {
                 this.$router.push("/home")
               }
+
+              if (config.get('whatsappBot')) {
+                ipcRenderer.send('openWpp', {
+                  ...res.data.dados
+                });
+              }
+
             } else {
               this.clear();
             }

@@ -5,6 +5,7 @@ import Pedidos from '../views/Pedidos.vue'
 import Configs from '../views/Configs.vue'
 import Login from '../views/Login.vue'
 import Cardapio from '../views/Cardapio.vue'
+import Whatsapp from '../views/Whatsapp.vue'
 
 Vue.use(VueRouter)
 
@@ -33,6 +34,11 @@ const routes = [
     path: '/cardapio',
     name: 'Cardapio',
     component: Cardapio
+  },
+  {
+    path: '/whatsapp',
+    name: 'Whatsapp',
+    component: Whatsapp
   }
 ];
 

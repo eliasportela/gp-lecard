@@ -8,7 +8,8 @@ export default new Vuex.Store({
     dataUser: {
       token: '',
       nome_usuario: '',
-      nome_fantasia: ''
+      nome_fantasia: '',
+      site: '',
     }
   },
   mutations: {
@@ -16,7 +17,8 @@ export default new Vuex.Store({
       state.dataUser = {
         empresa: data.dados.token,
         nome_usuario: data.dados.nome,
-        nome_fantasia: data.dados.nome_fantasia
+        nome_fantasia: data.dados.nome_fantasia,
+        site: data.dados.site
       };
 
       localStorage.setItem('key', data.token)
