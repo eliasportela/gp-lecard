@@ -23,17 +23,15 @@
 
 <script>
 import TopBar from '@/components/TopBar.vue'
-import HelloWorld from '@/components/HelloWorld.vue'
 
 export default {
   name: 'Home',
   components: {
-    HelloWorld, TopBar
+    TopBar
   },
 
   methods: {
     deliveryDesativado() {
-      // this.$swal('', 'Seu delivery está desativado. Ative-o para receber seus pedidos!');
       this.$swal.fire({
         title: 'O delivery está desativado!',
         text: "Ative-o para receber seus pedidos.",
@@ -49,11 +47,6 @@ export default {
         }
       })
     }
-  },
-
-  mounted() {
-    // console.log(myNotification);
-    // myNotification.show();
   }
 }
 </script>

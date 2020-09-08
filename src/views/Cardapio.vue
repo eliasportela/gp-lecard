@@ -114,8 +114,6 @@ export default {
       loading: true,
       selCategoria: [],
       selProduto: [],
-      urlBase: localStorage.getItem('urlBase'),
-      empresa: localStorage.getItem('empresa'),
       adm: localStorage.getItem('administrativo') === 'true',
       token: localStorage.getItem('key'),
       categorias: []
@@ -123,7 +121,7 @@ export default {
   },
   methods: {
     buscarProdutos() {
-      this.$http.get(this.urlBase + 'delivery/cardapio/'  + this.token)
+      this.$http.get('delivery/cardapio/'  + this.token)
         .then(response => {
           this.loading = false;
           this.categorias = response.data;
@@ -218,7 +216,7 @@ export default {
         }
       }
 
-      this.$http.post(this.urlBase + 'delivery/produto/status/' + this.token, dados)
+      this.$http.post('delivery/produto/status/' + this.token, dados)
         .then(response => {
           // console.log(response.data.status);
 

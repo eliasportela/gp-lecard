@@ -3,7 +3,7 @@ module.exports = {
     electronBuilder: {
       builderOptions: {
         appId: "delivery.lecard.gplecard",
-        productName: "Gestor de Pedidos",
+        productName: "LeCard - Gestor de Pedidos",
         artifactName: 'gestor-lecard-${version}.${ext}',
         publish: ['github'],
         win: {

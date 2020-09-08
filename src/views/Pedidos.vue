@@ -198,8 +198,7 @@ export default {
   },
   data() {
     return {
-      empresa: localStorage.getItem('empresa'),
-      urlBase: localStorage.getItem('urlBase'),
+      empresa: localStorage.getItem('token'),
       token: localStorage.getItem('key'),
       loading: true,
       imprimirSelecionado: false,
@@ -223,7 +222,7 @@ export default {
     buscarPedidos() {
       this.loading = true;
 
-      this.$http.get(this.urlBase + 'delivery/pedidos/' + this.token, {params: this.pesquisa})
+      this.$http.get('delivery/pedidos/' + this.token, {params: this.pesquisa})
         .then(response => {
           this.pedidos = response.data;
           if (this.pedidos.length > 0) {
@@ -273,7 +272,7 @@ export default {
     },
 
     buscarTotais() {
-      this.$http.get(this.urlBase + 'delivery/relatorio-diario/'  + this.token)
+      this.$http.get('delivery/relatorio-diario/'  + this.token)
         .then(response => {
           this.totais = response.data;
           // console.log(response);
@@ -292,17 +291,11 @@ export default {
         obs_cancelamento: this.motivoRecusa
       };
 
-      // console.log(dados);
-      this.$http.post(this.urlBase + 'delivery/pedidos/' + this.token, dados, {emulateJSON: true})
+      this.$http.post('delivery/pedidos/' + this.token, dados, {emulateJSON: true})
         .then(res => {
-          this.$emit('notification');
-
-          if (res.data && status === 2) {
-            this.$socket.emit('notification', {token: this.empresa, play: false});
-
-            if (localStorage.getItem('impressaoAutomatica')) {
-              this.imprimirSelecionado = true;
-            }
+          this.$socket.emit('notification', {token: this.empresa, play: false});
+          if (res.data && status === 2 && localStorage.getItem('impressaoAutomatica') === '1') {
+            this.imprimirSelecionado = true;
           }
 
           this.motivoRecusa = '';

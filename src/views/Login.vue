@@ -40,10 +40,9 @@ export default {
   name: 'Login',
   data() {
     return {
-      urlBase: '',
       token: '',
       msg: '',
-      loading: false,
+      loading: true,
       dados: {
         email: '',
         senha: ''
@@ -61,24 +60,13 @@ export default {
     },
 
     logar() {
-      this.$http.post(this.urlBase + 'autenticar', this.dados)
+      this.$http.post('autenticar', this.dados)
         .then(res => {
           this.loading = false;
+          localStorage.clear();
 
           if (res.data.success) {
-            const socket = res.data.dados.base_socket;
-            localStorage.setItem("urlSocket", socket);
-            config.set('urlSocket', socket);
-            config.set('userData', res.data);
-            config.set('empresa', res.data.dados.token);
-            this.setUserData(res.data);
-
-            if (localStorage.getItem('urlSocket')) {
-              this.$router.push("/home");
-            } else {
-              this.$router.push("/configs");
-            }
-
+            this.setToken(res.data);
             ipcRenderer.send('reloud');
           }
 
@@ -96,42 +84,19 @@ export default {
         });
     },
 
-    setUserData(data) {
-      localStorage.setItem("key", data.token);
-      localStorage.setItem("empresa", data.dados.token);
-      localStorage.setItem("nome_fantasia", data.dados.nome_fantasia);
-      localStorage.setItem("nome_usuario", data.dados.nome);
-      localStorage.setItem("administrativo", false);
-      if (data.dados.id_funcao === '1') {
-        localStorage.setItem("administrativo", true);
-      }
+    setToken(data) {
+      const key = data.token;
+      const token = data.dados.token;
+      config.set("key", key);
+      config.set("token", token);
+      localStorage.setItem("key", key);
+      localStorage.setItem("token", token);
     }
-
   },
 
-  created() {
-    this.urlBase = config.get('urlBase');
-    localStorage.setItem('urlBase', this.urlBase);
-
-    if (config.get('empresa')) {
-      localStorage.setItem('empresa', config.get('empresa'));
-
-      this.token = config.get('empresa');
-
-      if (config.get('userData')) {
-        localStorage.setItem('userData', config.get('userData'));
-        this.setUserData(config.get('userData'));
-
-        if (localStorage.getItem('urlSocket')) {
-          this.$router.push("/home");
-        } else {
-          this.$router.push("/configs");
-        }
-      }
-    }
-
-    if (config.get('urlSocket') && !localStorage.getItem('urlSocket')) {
-      localStorage.setItem('urlSocket', config.get('urlSocket'));
+  mounted() {
+    if (!localStorage.getItem('key')) {
+      this.loading = false;
     }
   }
 }

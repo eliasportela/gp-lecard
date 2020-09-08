@@ -2,97 +2,118 @@
   <div>
     <top-bar/>
     <div class="content">
-      <h4 class="font-weight-bold p-3">Configurações do sistema</h4>
       <div class="container-fluid">
         <div class="row">
-          <div class="col-4">
-            <label class="font-weight-bold">Servidor Principal</label>
-            <input type="text" class="form-control" placeholder="Url do servidor" v-model="url_base">
+          <div class="col-md-5">
+            <h4 class="font-weight-bold mt-4">Impressora</h4>
+            <div class="mt-4">
+              <label for="configAutomatica">Impressão automática</label>
+              <select class="form-control" id="configAutomatica" v-model="config.automatica">
+                <option value="1">Sim</option>
+                <option value="0">Não</option>
+              </select>
+            </div>
+            <div class="mt-4">
+              <label for="nCopia">Número de cópias (Automáticas)</label>
+              <select class="form-control" id="nCopia" v-model="config.nCopias">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+              </select>
+            </div>
+            <div class="mt-4 mt-3">
+              <button class="btn btn-dark btn-block" @click="atualizarConfig">{{atualizar ? 'Salvo' : 'Salvar'}}</button>
+            </div>
           </div>
-          <div class="col-4">
-            <label class="font-weight-bold">Servidor socket</label>
-            <input type="text" class="form-control" placeholder="Url do socket" v-model="url_socket">
-          </div>
-          <div class="col-4">
-            <label class="font-weight-bold">Token Empresa</label>
-            <input type="text" class="form-control" placeholder="Token da empresa" v-model="empresa" disabled>
+          <div class="col-md-7 mb-4">
+            <h4 class="font-weight-bold mt-4">Teste de impressão</h4>
+            <div class="mt-4">
+              <label for="testImpressao">Enviar teste de impressão</label>
+              <textarea id="testImpressao" v-model="msgImpressao" class="form-control"
+                        style="height: 140px; overflow: auto">
+              </textarea>
+              <button class="btn btn-dark btn-block mt-3" @click="testImpressao" :disabled="load">{{load ? 'Enviando teste' : 'Enviar Teste'}}</button>
+            </div>
           </div>
         </div>
-        <div class="row">
-          <div class="col-4 mt-4">
-            <button class="btn btn-danger btn-block" @click="salvar">{{load ? 'Salvo' : 'Salvar'}}</button>
+        <div class="col-md-12 border-top">
+          <h4 class="font-weight-bold my-4 text-danger">Danger zone</h4>
+          <div>
+            <button class="btn btn-danger" @click="resetar" style="width: 300px">Resetar sistema</button>
           </div>
         </div>
-        <hr class="my-5">
-        <h4 class="font-weight-bold mb-4 text-danger">Danger zone</h4>
-        <div class="row">
-          <div class="col-4 ">
-            <button class="btn btn-dark btn-block" @click="resetar">Resetar sistema</button>
-          </div>
-        </div>
-        <div class="position-fixed" style="right: 14px; bottom: 12px;">
-          <span class="small font-weight-bold">Versão: {{version}}</span>
-        </div>
+      </div>
+      <div class="position-fixed" style="right: 14px; bottom: 12px;">
+        <span class="small font-weight-bold">Versão: {{version}}</span>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-const { ipcRenderer } = require('electron');
-const Config = require('electron-config');
-const config = new Config();
-import TopBar from '@/components/TopBar.vue'
+  const {ipcRenderer} = require('electron');
+  const Config = require('electron-config');
+  const config = new Config();
 
-export default {
-  name: 'Configs',
-  components: {
-    TopBar
-  },
-  data() {
-    return {
-      url_socket: '',
-      url_base: '',
-      empresa: '',
-      load: false,
-      version: ''
-    }
-  },
-  methods: {
-    resetar() {
-      config.clear();
-      localStorage.clear();
-      this.$router.push('/');
-      ipcRenderer.send('reloud');
+  import TopBar from '@/components/TopBar.vue'
+
+  export default {
+    name: 'Home',
+    components: {
+      TopBar
     },
-
-    salvar() {
-      let urlSocket = this.url_socket;
-      let urlBase = this.url_base + (!this.url_base.endsWith('/') ? '/' : '');
-
-      config.set('urlSocket', urlSocket);
-      config.set('urlBase', urlBase);
-
-      this.load = true;
-      ipcRenderer.send('reloud');
+    data() {
+      return {
+        atualizar: false,
+        load: false,
+        version: '',
+        config: {
+          automatica: '1',
+          nCopias: '1',
+        },
+        msgImpressao: 'Este é um teste de impressão enviado pelo Gestor de pedidos Lecard',
+      }
     },
+    methods: {
+      testImpressao() {
+        this.load = true;
+        let options = {
+          content: this.msgImpressao,
+          copies: 1
+        };
+        ipcRenderer.send("print", options);
+      },
 
-    buscar() {
-      if (localStorage.getItem('urlSocket')) {
-        this.url_socket = localStorage.getItem('urlSocket');
+      atualizarConfig() {
+        this.atualizar = true;
+
+        config.set('impressaoAutomatica', this.config.automatica);
+        localStorage.setItem('impressaoAutomatica', this.config.automatica);
+
+        config.set('nCopias', this.config.nCopias);
+        localStorage.setItem('nCopias', this.config.nCopias);
+      },
+
+      resetar() {
+        config.clear();
+        localStorage.clear();
+        this.$router.push('/');
+        ipcRenderer.send('reloud');
       }
+    },
+    created() {
+      ipcRenderer.on('print-return', (event, arg) => {
+        this.load = false;
+      });
 
-      this.url_base = localStorage.getItem('urlBase') ? localStorage.getItem('urlBase') : 'https://softcomanda.tk/api/';
-
-      if (localStorage.getItem('empresa')) {
-        this.empresa = localStorage.getItem('empresa');
-      }
-
+      this.config.automatica = localStorage.getItem('impressaoAutomatica');
+      this.config.nCopias = localStorage.getItem('nCopias');
       this.version = require('electron').remote.app.getVersion();
-    }
-  },
-  created() {
-    this.buscar();
-  },
-}
+
+      // ipcRenderer.send('print-list');
+      // ipcRenderer.on('print-list', (event, arg) => {
+      //   this.printers = arg;
+      // });
+    },
+  }
 </script>
