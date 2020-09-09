@@ -9,38 +9,13 @@ createProtocol,
 import path from 'path'
 const isDevelopment = process.env.NODE_ENV !== 'production';
 import { autoUpdater } from "electron-updater"
-import fetch from "electron-fetch";
-const  fs = require('fs');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win;
 let winPrint;
 let winComanda;
-let wpp;
 let contents;
-
-let pauseWpp = false;
-function createMenuContext(){
-  return Menu.buildFromTemplate([
-    {
-      label: 'Opções',
-      submenu: [
-        {
-          id: 1,
-          label: pauseWpp ? 'Ativar LeBot' : 'Pausar LeBot',
-          click: () => {
-            desativarWpp();
-            pauseWpp = !pauseWpp;
-            Menu.setApplicationMenu(createMenuContext());
-          }
-        }
-      ]
-    }
-  ])
-}
-
-Menu.setApplicationMenu(createMenuContext())
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }])
@@ -146,10 +121,6 @@ app.on('ready', async () => {
 
   globalShortcut.register('CommandOrControl+L', () => {
     win.webContents.openDevTools()
-
-    if (wpp) {
-      wpp.webContents.openDevTools()
-    }
   })
 });
 
@@ -208,12 +179,6 @@ ipcMain.on('readyToPrintVenda', (event) => {
   winComanda.webContents.print({silent: true});
 });
 
-ipcMain.on('openWpp', (event, arg) => {
-  if (!wpp) {
-    createWpp(arg)
-  }
-});
-
 function printData(event, option, wind) {
   copies = option.copies ? option.copies : 1;
   wind.webContents.send('print', option.content);
@@ -255,61 +220,3 @@ function checkUpdate() {
     }, 3000);
   })
 }
-
-let dados = null;
-function createWpp(data) {
-  dados = data;
-  wpp = new BrowserWindow({
-    width: 1000,
-    height: 600,
-    webPreferences: {
-      nodeIntegration: true,
-      preload: path.join(__static, 'preload.js'),
-    },
-    icon: path.join(__static, 'icon-zap.png')
-  });
-
-  wpp.loadURL('https://web.whatsapp.com/', {
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36'
-  });
-
-  wpp.on('closed', () => {
-    wpp = null;
-  });
-}
-
-function desativarWpp() {
-  let script = pauseWpp ? 'localStorage.removeItem("pauseWpp", 1);' : 'localStorage.setItem("pauseWpp", 1);';
-  if (wpp) {
-    wpp.webContents.executeJavaScript(script)
-  }
-}
-
-ipcMain.on('import-scripts', (event, arg) => {
-  const file = fs.readFileSync(__static + '/whatsapp.js', "utf8");
-  if (wpp) {
-    wpp.webContents.executeJavaScript(file).then(() => {
-      event.reply('is_ready_to_inject', dados);
-    })
-  }
-});
-
-ipcMain.on('asynchronous-message', (event, arg) => {
-  fetch("https://lecard-chatbot.herokuapp.com/message", {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ messageText: arg.text })
-  }).then(function(response) {
-    response.json().then(post => {
-      if (!post && !post.messageResponse) return;
-      const msg = {
-        from: arg.from,
-        msg: post.messageResponse
-      };
-      event.reply('asynchronous-reply', msg)
-    });
-  });
-});

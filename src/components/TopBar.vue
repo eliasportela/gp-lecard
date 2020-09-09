@@ -52,10 +52,6 @@
         <img src="../assets/icons/report.svg" alt="">
         <span>Portal</span>
       </a>
-      <router-link to="/whatsapp" active-class="btn--active" class="btn btn-block">
-        <img src="../assets/icons/whatsapp.svg" alt="">
-        <span>LeBot</span>
-      </router-link>
       <a class="btn btn-block" @click="logout">
         <img src="../assets/icons/logout.svg" alt="">
         <span>Sair</span>

@@ -5,14 +5,14 @@
     </div>
     <div class="d-flex justify-content-center" style="height: 200px" v-if="load">
       <div class="m-auto text-center">
-        <img src="./assets/logo-lecard.png" class="d-inline-block animated flipInY infinite" alt="Logo Lecard" style="width: 64px;">
+        <img src="./assets/logo-lecard.png" class="d-inline-block animated flipInY infinite" alt="Logo Lecard"
+             style="width: 64px;">
       </div>
     </div>
   </div>
 </template>
 
 <script>
-  const { ipcRenderer } = require('electron');
   const Config = require('electron-config');
   const config = new Config();
 
@@ -25,7 +25,6 @@
     name: 'App',
     methods: {
       autenticar(key) {
-        // console.log('autenticando: ' + key);
         this.$http.post('autenticar', {key})
           .then(res => {
             this.load = false;
@@ -33,12 +32,6 @@
               this.$store.commit('setDataUser', res.data);
               if (this.$route.name === 'Login') {
                 this.$router.push("/home")
-              }
-
-              if (config.get('whatsappBot')) {
-                ipcRenderer.send('openWpp', {
-                  ...res.data.dados
-                });
               }
 
             } else {
