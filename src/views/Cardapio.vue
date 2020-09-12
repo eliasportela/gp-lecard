@@ -128,7 +128,10 @@ export default {
         }, res => {
           console.log(res);
           this.loading = false;
-          this.$emit('logout');
+          if (res.status === 401) {
+            this.$swal(res.data.result, res.data.msg);
+            this.$emit('logout');
+          }
         });
     },
 

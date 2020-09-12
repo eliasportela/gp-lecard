@@ -22,6 +22,16 @@ export default new Vuex.Store({
       };
 
       localStorage.setItem('key', data.token)
+    },
+
+    logout(state) {
+      state.dataUser = {
+        token: '',
+        nome_usuario: '',
+        nome_fantasia: '',
+        site: '',
+      };
+      localStorage.clear();
     }
   },
   actions: {

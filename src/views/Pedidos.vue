@@ -263,11 +263,14 @@ export default {
 
         }, res => {
           console.log(res);
+          this.loading = false;
           if (res.status === 401) {
-            this.$swal(res.data.msg ? res.data.msg : 'Erro temporário');
-            localStorage.removeItem('key');
-            this.$router.push('/')
-          }''
+            this.$swal(res.data.result, res.data.msg);
+            this.$emit('logout');
+
+          } else if (!navigator.onLine) {
+            this.$swal("Atenção!", "Não conseguimos acessar sua conexão com a internet. Por favor verifique se seu computador tem uma conexão estável.");
+          }
         });
     },
 
@@ -337,7 +340,6 @@ export default {
 
   mounted() {
     this.buscarPedidos();
-    this.buscarTotais();
   },
 
   created() {

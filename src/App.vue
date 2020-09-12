@@ -31,17 +31,21 @@
             if (res.data.success) {
               this.$store.commit('setDataUser', res.data);
               if (this.$route.name === 'Login') {
-                this.$router.push("/home")
+                this.$router.push("/pedidos")
               }
-
             } else {
               this.clear();
             }
 
           }, res => {
             this.load = false;
-            this.$swal(res.data.result, res.data.msg);
-            this.clear();
+            if (res.status === 401) {
+              this.$swal(res.data.result, res.data.msg);
+              this.clear();
+
+            } else if (!navigator.onLine) {
+              this.$swal("Atenção!", "Não conseguimos acessar sua conexão com a internet. Por favor verifique se seu computador tem uma conexão estável.");
+            }
           });
       },
 

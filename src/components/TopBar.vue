@@ -127,9 +127,12 @@ export default {
 
     logoff() {
       this.silenciar();
+      config.delete('key');
+      config.delete('empresa');
       localStorage.clear();
-      config.delete('userData');
-      this.$router.push('/');
+      if (this.$route.name !== 'Login') {
+        this.$router.push("/")
+      }
     },
 
     statusEmpresa() {
