@@ -7,6 +7,7 @@ export default new Vuex.Store({
   state: {
     dataUser: {
       token: '',
+      empresa: '',
       nome_usuario: '',
       nome_fantasia: '',
       site: '',
@@ -20,8 +21,6 @@ export default new Vuex.Store({
         nome_fantasia: data.dados.nome_fantasia,
         site: data.dados.site
       };
-
-      localStorage.setItem('key', data.token)
     },
 
     logout(state) {

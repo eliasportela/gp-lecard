@@ -31,8 +31,16 @@
             if (res.data.success) {
               this.$store.commit('setDataUser', res.data);
               if (this.$route.name === 'Login') {
-                this.$router.push("/pedidos")
+                this.$router.push("/home")
               }
+
+              const key = res.data.token;
+              const token = res.data.dados.token;
+              config.set("key", key);
+              config.set("token", token);
+              localStorage.setItem("key", key);
+              localStorage.setItem("token", token);
+
             } else {
               this.clear();
             }

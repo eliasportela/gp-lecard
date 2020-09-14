@@ -198,7 +198,6 @@ export default {
   },
   data() {
     return {
-      empresa: localStorage.getItem('token'),
       token: localStorage.getItem('key'),
       loading: true,
       imprimirSelecionado: false,
@@ -345,6 +344,12 @@ export default {
 
   mounted() {
     this.buscarPedidos();
+  },
+
+  computed: {
+    empresa() {
+      return this.$store.state.dataUser.empresa
+    }
   },
 
   created() {

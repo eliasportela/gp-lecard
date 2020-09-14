@@ -141,12 +141,18 @@ export default {
             this.empresa.agendamento = parseInt(response.data.agendamento);
             this.load = false;
 
-            if (this.empresa.status === 0 && this.empresa.agendamento === 0 && !sessionStorage.getItem('delivery_desativado')){
+            const status = this.empresa.status === 0 && this.empresa.agendamento === 0 && !sessionStorage.getItem('delivery_desativado');
+            if (status){
               this.$emit('delivery_desativado');
-              new Notification('LeCard - Gestor de Pedidos', {
-                body: 'Seu delivery está desativado, seus pedidos não serão aceitos!',
-                icon: document.getElementById('imgEmpresa').src
-              });
+
+              setTimeout(() => {
+                if (this.empresa.status === 0 && this.empresa.agendamento === 0) {
+                  new Notification('LeCard - Gestor de Pedidos', {
+                    body: 'Seu delivery está desativado, seus pedidos não serão aceitos!',
+                    icon: document.getElementById('imgEmpresa').src
+                  });
+                }
+              }, 120000)
 
               sessionStorage.setItem('delivery_desativado', 'true');
             }
