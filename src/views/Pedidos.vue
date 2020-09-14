@@ -294,6 +294,10 @@ export default {
         obs_cancelamento: this.motivoRecusa
       };
 
+      if (status === 2) {
+        this.$emit('silenciar');
+      }
+
       this.$http.post('delivery/pedidos/' + this.token, dados, {emulateJSON: true})
         .then(res => {
           this.$socket.emit('notification', {token: this.empresa, play: false});
@@ -302,8 +306,9 @@ export default {
           }
 
           this.motivoRecusa = '';
-          const socket_id = this.selecionado.cliente.id_cliente + this.empresa
-          this.$socket.emit('delivery_status', socket_id);
+
+          dados.socket_id = this.selecionado.cliente.id_cliente + this.empresa;
+          this.$socket.emit('delivery_status', dados);
 
           this.buscarPedidos();
 

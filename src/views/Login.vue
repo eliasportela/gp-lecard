@@ -47,8 +47,8 @@
       return {
         token: '',
         msg: '',
-        loading: true,
-        salvarUser: false,
+        loading: false,
+        salvarUser: true,
         dados: {
           email: '',
           senha: ''

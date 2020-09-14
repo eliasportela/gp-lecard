@@ -102,9 +102,7 @@ export default {
     silenciar() {
       audio.pause();
       this.bell = false;
-      if (this.$route.name !== 'Pedidos') {
-        this.$router.push('/pedidos');
-      }
+      ipcRenderer.send('reloud-icon', false);
     },
 
     logout() {
@@ -213,12 +211,10 @@ export default {
         this.bell = true;
         ipcRenderer.send('reloud-icon', true);
 
-      } else {
-        if (!audio.paused) {
-          audio.pause();
-        }
-        this.bell = false;
+      } else if (!audio.paused) {
+        audio.pause();
         ipcRenderer.send('reloud-icon', false);
+        this.bell = false;
       }
     },
 
