@@ -152,7 +152,7 @@ export default {
                     icon: document.getElementById('imgEmpresa').src
                   });
                 }
-              }, 120000)
+              }, 60000)
 
               sessionStorage.setItem('delivery_desativado', 'true');
             }
@@ -226,7 +226,11 @@ export default {
 
     delivery_order() {
       this.$emit('delivery_order');
-    }
+    },
+
+    print_order(res) {
+      this.$emit('print-venda', res)
+    },
   },
 
   mounted() {
