@@ -306,7 +306,8 @@ export default {
 
           this.motivoRecusa = '';
 
-          dados.socket_id = this.selecionado.cliente.id_cliente + this.empresa;
+          const token = this.selecionado.origin === '2' ? 'lecard_app_geral' : this.empresa;
+          dados.socket_id = this.selecionado.cliente.id_cliente + token;
           this.$socket.emit('delivery_status', dados);
 
           this.buscarPedidos();
