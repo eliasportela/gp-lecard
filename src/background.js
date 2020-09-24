@@ -20,7 +20,7 @@ let contents;
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }])
 app.commandLine.appendSwitch('--autoplay-policy','no-user-gesture-required');
-app.setAppUserModelId('delivery.lecard.gplecard');
+// app.setAppUserModelId('delivery.lecard.gplecard');
 
 function createWindow () {
   // Create the browser window.
@@ -64,7 +64,7 @@ function createWindow () {
   } else {
     createProtocol('app');
     win.loadURL('app://./index.html');
-    checkUpdate()
+    //checkUpdate()
   }
 
   win.on('closed', () => {
