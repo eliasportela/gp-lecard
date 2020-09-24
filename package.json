@@ -1,18 +1,18 @@
 {
   "name": "gp-lecard",
-  "description": "Gestor de Pedidos - Lecard",
-  "author": "storkdigital.com.br",
-  "version": "1.2.6",
+  "version": "1.3.6",
   "private": true,
+  "description": "Gestor de Pedidos - LeCard",
+  "author": "storkdigital.com.br",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "electron:build": "vue-cli-service electron:build",
-    "electron:realese": "electron:build -wl -p always",
+    "electron:generate-icons": "electron-icon-builder --input=./public/icon.png --output=build --flatten",
+    "electron:realese": "electron:build -wl -- -p always",
     "electron:serve": "vue-cli-service electron:serve",
     "postinstall": "electron-builder install-app-deps",
-    "postuninstall": "electron-builder install-app-deps",
-    "electron:generate-icons": "electron-icon-builder --input=./public/icon.png --output=build --flatten"
+    "postuninstall": "electron-builder install-app-deps"
   },
   "main": "background.js",
   "dependencies": {
@@ -20,20 +20,21 @@
     "bootstrap": "^4.4.1",
     "core-js": "^3.6.4",
     "electron-config": "^2.0.0",
+    "electron-fetch": "^1.7.1",
     "electron-updater": "^4.3.1",
-    "jquery": "3.4.1",
-    "popper.js": "^1.16.1",
     "socket.io-client": "^2.3.0",
     "v-money": "^0.8.1",
     "vue": "^2.6.11",
     "vue-resource": "^1.5.1",
     "vue-router": "^3.1.6",
     "vue-socket.io": "3.0.5",
-    "vue-sweetalert2": "^3.0.3"
+    "vue-sweetalert2": "^3.0.3",
+    "vuex": "^3.4.0"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.3.0",
     "@vue/cli-plugin-router": "~4.3.0",
+    "@vue/cli-plugin-vuex": "^4.5.4",
     "@vue/cli-service": "~4.3.0",
     "electron": "^5.0.0",
     "electron-icon-builder": "^1.0.2",

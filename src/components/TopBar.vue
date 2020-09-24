@@ -4,9 +4,9 @@
       <div class="container-fluid">
         <div class="row">
           <div class="col-5 align-self-center">
-            <router-link to="/" class="text-dark">
+            <router-link to="/home" class="text-dark">
               <img src="../assets/logo-lecard.png" alt="" style="width: 32px" id="imgEmpresa">
-              <span class="font-weight-bold small pl-3">{{empresa.nome}}</span>
+              <span class="font-weight-bold small pl-3">{{dados.nome_fantasia}}</span>
             </router-link>
           </div>
           <div class="col-4 align-self-center">
@@ -46,16 +46,12 @@
       </router-link>
       <router-link to="/impressora" active-class="btn--active" class="btn btn-block">
         <img src="../assets/icons/print.svg" alt="">
-        <span>Impressora</span>
+        <span>Configs</span>
       </router-link>
-      <a :href="'https://portal.lecard.delivery/' + empresa.dominio + '/login'" target="_blank" class="btn btn-block">
+      <a :href="'https://portal.lecard.delivery/'" target="_blank" class="btn btn-block">
         <img src="../assets/icons/report.svg" alt="">
         <span>Portal</span>
       </a>
-      <router-link to="/configs" active-class="btn--active" class="btn btn-block">
-        <img src="../assets/icons/settings.svg" alt="">
-        <span>Configs.</span>
-      </router-link>
       <a class="btn btn-block" @click="logout">
         <img src="../assets/icons/logout.svg" alt="">
         <span>Sair</span>
@@ -90,11 +86,7 @@ export default {
   data() {
     return {
       token: localStorage.getItem('key'),
-      urlBase: localStorage.getItem('urlBase'),
       empresa: {
-        token: localStorage.getItem('empresa'),
-        dominio: localStorage.getItem('dominio'),
-        nome: localStorage.getItem('nome_fantasia'),
         status: 1,
         agendamento: 1,
       },
@@ -107,16 +99,10 @@ export default {
   },
 
   methods: {
-    print(data) {
-
-    },
-
     silenciar() {
       audio.pause();
       this.bell = false;
-      if (this.$route.name !== 'Pedidos') {
-        this.$router.push('/pedidos');
-      }
+      ipcRenderer.send('reloud-icon', false);
     },
 
     logout() {
@@ -139,25 +125,42 @@ export default {
 
     logoff() {
       this.silenciar();
+      config.delete('key');
+      config.delete('empresa');
       localStorage.clear();
-      config.delete('userData');
-      this.$router.push('/');
+      if (this.$route.name !== 'Login') {
+        this.$router.push("/")
+      }
     },
 
     statusEmpresa() {
-      this.$http.get(this.urlBase + 'delivery/empresa/status/' + this.empresa.token)
-        .then(response => {
-          this.empresa.status = parseInt(response.data.status);
-          this.empresa.agendamento = parseInt(response.data.agendamento);
-          this.load = false;
+      if (localStorage.getItem('token')) {
+        this.$http.get('delivery/empresa/status/' + localStorage.getItem('token'))
+          .then(response => {
+            this.empresa.status = parseInt(response.data.status);
+            this.empresa.agendamento = parseInt(response.data.agendamento);
+            this.load = false;
 
-          if (this.empresa.status === 0 && this.empresa.agendamento === 0){
-            this.$emit('delivery_desativado');
-          }
+            const status = this.empresa.status === 0 && this.empresa.agendamento === 0 && !sessionStorage.getItem('delivery_desativado');
+            if (status){
+              this.$emit('delivery_desativado');
 
-        }, res => {
-          console.log(res);
-        });
+              setTimeout(() => {
+                if (this.empresa.status === 0 && this.empresa.agendamento === 0) {
+                  new Notification('LeCard - Gestor de Pedidos', {
+                    body: 'Seu delivery está desativado, seus pedidos não serão aceitos!',
+                    icon: document.getElementById('imgEmpresa').src
+                  });
+                }
+              }, 60000)
+
+              sessionStorage.setItem('delivery_desativado', 'true');
+            }
+
+          }, res => {
+            console.log(res);
+          });
+      }
     },
 
     toogleStatus() {
@@ -166,7 +169,7 @@ export default {
       };
 
       this.empresa.status = dados.status;
-      this.$http.post(this.urlBase + 'delivery/empresa/status/' + this.token, dados)
+      this.$http.post('delivery/empresa/status/' + this.token, dados)
         .then(response => {
 
         }, res => {
@@ -186,6 +189,12 @@ export default {
         body: 'Tem pedido novo na área <3',
         icon: document.getElementById('imgEmpresa').src
       })
+    },
+  },
+
+  computed: {
+    dados() {
+      return this.$store.state.dataUser
     }
   },
 
@@ -201,33 +210,32 @@ export default {
       this.connected = false;
     },
 
-    print_order(res)  {
-      this.$emit('print-venda', res)
-    },
-
     notification(res)  {
-      if (res.data.play && !this.bell && audio.paused) {
+      if (res.play) {
         this.dialogNotify()
         audio.play();
         this.bell = true;
         ipcRenderer.send('reloud-icon', true);
 
-      } else if (this.bell && !audio.paused) {
+      } else if (!audio.paused) {
         audio.pause();
-        this.bell = false;
-        this.$emit('delivery_order');
         ipcRenderer.send('reloud-icon', false);
+        this.bell = false;
       }
     },
 
     delivery_order() {
       this.$emit('delivery_order');
-    }
+    },
+
+    print_order(res) {
+      this.$emit('print-venda', res)
+    },
   },
 
   mounted() {
     this.statusEmpresa();
-    this.connected = localStorage.getItem('urlSocket') && this.$socket ? this.$socket.connected : false;
+    this.connected = this.$socket ? this.$socket.connected : false;
   },
 
   created() {

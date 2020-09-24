@@ -39,7 +39,7 @@
         Total:
       </div>
       <div class="center" style="margin-top: 32px; font-size: 12px">
-        <div class="bold">LeCard - storkdigital.com.br</div>
+        <div class="bold">parceiros.lecard.delivery</div>
         Uma comanda digital para o seu negócio real
       </div>
     </div>
@@ -104,7 +104,7 @@
         </div>
       </div>
       <div class="center" style="margin-top: 32px; font-size: 12px">
-        <div class="bold">LeCard - storkdigital.com.br</div>
+        <div class="bold">parceiros.lecard.delivery</div>
         Uma comanda digital para o seu negócio real
       </div>
     </div>

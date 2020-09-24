@@ -82,7 +82,10 @@
                   <span v-show="selecionado.cliente.complemento">-</span>
                   {{selecionado.cliente.complemento}}
                   <br>
-                  <b>Telefone:</b> <a :href="'https://api.whatsapp.com/send?phone=+55'+ selecionado.cliente.telefone" target="_blank">{{selecionado.cliente.telefone | phone}}</a><br>
+                  <b>Telefone:</b>
+                  <a :href="'https://api.whatsapp.com/send?phone=+55'+ selecionado.cliente.telefone" class="text-info" target="_blank">
+                    <b>{{selecionado.cliente.telefone | phone}}</b>
+                  </a>
                 </div>
               </div>
               <div class="border p-2 mt-3 mb-2" v-show="selecionado.tipo_pedido === '2'">
@@ -90,7 +93,10 @@
                 <div>
                   Cliente vai retirar o pedido
                 </div>
-                <b>Telefone:</b> <a :href="'https://api.whatsapp.com/send?phone=+55'+ selecionado.cliente.telefone" target="_blank">{{selecionado.cliente.telefone | phone}}</a><br>
+                <b>Telefone: </b>
+                <a :href="'https://api.whatsapp.com/send?phone=+55'+ selecionado.cliente.telefone" class="text-info" target="_blank">
+                  <b>{{selecionado.cliente.telefone | phone}}</b>
+                </a>
               </div>
               <hr class="d-none">
               <div class="mb-3">
@@ -192,8 +198,6 @@ export default {
   },
   data() {
     return {
-      empresa: localStorage.getItem('empresa'),
-      urlBase: localStorage.getItem('urlBase'),
       token: localStorage.getItem('key'),
       loading: true,
       imprimirSelecionado: false,
@@ -217,7 +221,7 @@ export default {
     buscarPedidos() {
       this.loading = true;
 
-      this.$http.get(this.urlBase + 'delivery/pedidos/' + this.empresa, {params: this.pesquisa})
+      this.$http.get('delivery/pedidos/' + this.token, {params: this.pesquisa})
         .then(response => {
           this.pedidos = response.data;
           if (this.pedidos.length > 0) {
@@ -258,16 +262,19 @@ export default {
 
         }, res => {
           console.log(res);
+          this.loading = false;
           if (res.status === 401) {
-            this.$swal(res.data.msg ? res.data.msg : 'Erro temporário');
-            localStorage.removeItem('key');
-            this.$router.push('/')
+            this.$swal(res.data.result, res.data.msg);
+            this.$emit('logout');
+
+          } else if (!navigator.onLine) {
+            this.$swal("Atenção!", "Não conseguimos acessar sua conexão com a internet. Por favor verifique se seu computador tem uma conexão estável.");
           }
         });
     },
 
     buscarTotais() {
-      this.$http.get(this.urlBase + 'delivery/relatorio-diario/'  + this.token)
+      this.$http.get('delivery/relatorio-diario/'  + this.token)
         .then(response => {
           this.totais = response.data;
           // console.log(response);
@@ -286,21 +293,22 @@ export default {
         obs_cancelamento: this.motivoRecusa
       };
 
-      // console.log(dados);
-      this.$http.post(this.urlBase + 'delivery/pedidos/' + this.token, dados, {emulateJSON: true})
+      if (status === 2) {
+        this.$emit('silenciar');
+      }
+
+      this.$http.post('delivery/pedidos/' + this.token, dados, {emulateJSON: true})
         .then(res => {
-          this.$emit('notification');
-
-          if (res.data && status === 2) {
-            this.$socket.emit('notification', {token: this.empresa, play: false});
-
-            if (localStorage.getItem('impressaoAutomatica')) {
-              this.imprimirSelecionado = true;
-            }
+          this.$socket.emit('notification', {token: this.empresa, play: false});
+          if (res.data && status === 2 && localStorage.getItem('impressaoAutomatica') === '1') {
+            this.imprimirSelecionado = true;
           }
 
           this.motivoRecusa = '';
-          this.$socket.emit('delivery_status', this.selecionado);
+
+          const token = this.selecionado.origin === '2' ? 'lecard_app_geral' : this.empresa;
+          dados.socket_id = this.selecionado.cliente.id_cliente + token;
+          this.$socket.emit('delivery_status', dados);
 
           this.buscarPedidos();
 
@@ -337,7 +345,12 @@ export default {
 
   mounted() {
     this.buscarPedidos();
-    this.buscarTotais();
+  },
+
+  computed: {
+    empresa() {
+      return this.$store.state.dataUser.empresa
+    }
   },
 
   created() {

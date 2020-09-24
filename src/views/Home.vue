@@ -8,13 +8,16 @@
           <h4 class="text-danger font-weight-bold mt-3">Avisos e Novidades</h4>
         </div>
         <p class="mt-4">
-          - O nosso painel administrativo agora será chamado de <b>Portal LeCard.</b>
+          - O nosso painel administrativo está de cara nova. Simplificamos o cadastro de produtos, categorias, melhoramos nossos gráficos e relatórios e adicionamos várias funcionalidades novas.
           <br>
           Para acessar, clique no Menu <b>"Portal"</b> ou digite no seu navegador: <b>portal.lecard.delivery</b>
         </p>
         <p>
-          - Para melhor atende-los, havendo a necessidade do serviço de cadastro/alteração de produtos, o mesmo será realizado de segunda-feira à sexta-feira em horário comercial.
-          Pedimos também um prazo de até 24 horas para a sua realização.
+          - Suporte para cadastro/alteração de produtos são realizados de segunda-feira à sexta-feira em horário comercial.
+          O prazo é de até 2 dias úteis para a sua realização.
+        </p>
+        <p>
+          - Aumente a produtividade do seu negócio com um autoatendimento que direciona os pedidos do WhatsApp para o seu delivery. Converse com a nossa equipe para saber mais.
         </p>
       </div>
     </div>
@@ -23,17 +26,15 @@
 
 <script>
 import TopBar from '@/components/TopBar.vue'
-import HelloWorld from '@/components/HelloWorld.vue'
 
 export default {
   name: 'Home',
   components: {
-    HelloWorld, TopBar
+    TopBar
   },
 
   methods: {
     deliveryDesativado() {
-      // this.$swal('', 'Seu delivery está desativado. Ative-o para receber seus pedidos!');
       this.$swal.fire({
         title: 'O delivery está desativado!',
         text: "Ative-o para receber seus pedidos.",
@@ -49,11 +50,6 @@ export default {
         }
       })
     }
-  },
-
-  mounted() {
-    // console.log(myNotification);
-    // myNotification.show();
   }
 }
 </script>

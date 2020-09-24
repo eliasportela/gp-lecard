@@ -1,7 +1,7 @@
 'use strict'
 /* global __static */
 
-import { app, protocol, BrowserWindow, ipcMain, globalShortcut, dialog } from 'electron'
+import { app, protocol, BrowserWindow, ipcMain, globalShortcut, dialog, Menu } from 'electron'
 import {
 createProtocol,
 /* installVueDevtools */
@@ -59,7 +59,7 @@ function createWindow () {
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     win.loadURL(process.env.WEBPACK_DEV_SERVER_URL);
-    if (!process.env.IS_TEST) win.webContents.openDevTools()
+    // if (!process.env.IS_TEST) win.webContents.openDevTools()
 
   } else {
     createProtocol('app');
@@ -122,7 +122,7 @@ app.on('ready', async () => {
   globalShortcut.register('CommandOrControl+L', () => {
     win.webContents.openDevTools()
   })
-})
+});
 
 // Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {
