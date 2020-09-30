@@ -47,12 +47,12 @@
               <div v-show="!loading"><b>Selecione um pedido</b></div>
             </div>
             <div id="containerPedido" class="container-produtos" v-if="selecionado.cliente" v-show="!loading && selecionado.produtos.length > 0">
-              <div id="andamento" class="small font-weight-bold float-right" v-show="!selecionado.id_entrega">
-                <span class="bg-danger text-white rounded-sm px-1" v-show="selecionado.status === '1'">Aguardando</span>
-                <span class="bg-info text-white rounded-sm px-1" v-show="selecionado.status === '2'">Preparando</span>
-                <span class="bg-dark text-white rounded-sm px-1" v-show="selecionado.status === '3'">Entregando</span>
-                <span class="bg-dark text-white rounded-sm px-1" v-show="selecionado.status === '4'">Finalizado</span>
-                <span class="bg-danger text-white rounded-sm px-1" v-show="selecionado.status === '5'">Cancelado</span>
+              <div id="andamento" class="font-weight-bold float-right" v-show="!selecionado.id_entrega">
+                <span class="badge badge-danger" v-show="selecionado.status === '1'">Aguardando</span>
+                <span class="badge badge-info" v-show="selecionado.status === '2'">Preparando</span>
+                <span class="badge badge-dark" v-show="selecionado.status === '3'">Entregando</span>
+                <span class="badge badge-dark" v-show="selecionado.status === '4'">Finalizado</span>
+                <span class="badge badge-danger" v-show="selecionado.status === '5'">Cancelado</span>
               </div>
               <div class="small font-weight-bold float-right" v-show="selecionado.id_entrega">
                 <span class="bg-warning text-white rounded-sm px-1">Pedido Agendado</span>
@@ -65,7 +65,7 @@
               <h6 v-show="selecionado.id_entrega">
                 <b class="text-danger">AGENDADO PARA:</b> {{selecionado.data_agendamento}}
               </h6>
-              <h6 class="m-0">
+              <h6 class="m-0" v-if="selecionado.origin !== '3'">
                 Pedidos: {{selecionado.qtd_pedidos === '0' ? 'Primeiro pedido' : selecionado.qtd_pedidos + ' pedidos'}}
               </h6>
               <h6 v-show="!selecionado.id_entrega && selecionado.tipo_pedido === '1' && selecionado.previsao_entrega">
@@ -74,6 +74,9 @@
               <h6 v-show="selecionado.tipo_pedido === '2' && selecionado.previsao_retirada">
                 Previsão de retirada: <b>{{selecionado.previsao_retirada}}</b>
               </h6>
+              <div class="mt-2 font-weight-bold" v-if="selecionado.origin === '2'">
+                <span class="badge badge-danger">LeCard Delivery</span>
+              </div>
               <div class="border p-2 mt-3 mb-2" v-show="selecionado.tipo_pedido === '1'">
                 <h6 class="text-success font-weight-bold">Entregar em:</h6>
                 <div>
@@ -82,7 +85,7 @@
                   <span v-show="selecionado.cliente.complemento">-</span>
                   {{selecionado.cliente.complemento}}
                   <br>
-                  <b>Telefone:</b>
+                  <b>Telefone: </b>
                   <a :href="'https://api.whatsapp.com/send?phone=+55'+ selecionado.cliente.telefone" class="text-info" target="_blank">
                     <b>{{selecionado.cliente.telefone | phone}}</b>
                   </a>
@@ -97,6 +100,13 @@
                 <a :href="'https://api.whatsapp.com/send?phone=+55'+ selecionado.cliente.telefone" class="text-info" target="_blank">
                   <b>{{selecionado.cliente.telefone | phone}}</b>
                 </a>
+              </div>
+              <div class="border p-2 mt-3 mb-2" v-show="selecionado.tipo_pedido === '3'">
+                <h6 class="text-warning font-weight-bold">Consumir no Local</h6>
+                <div>
+                  Cliente vai consumir o pedido no local
+                </div>
+                <b>Mesa/Cliente: </b> {{selecionado.obs_pedido}}
               </div>
               <hr class="d-none">
               <div class="mb-3">
@@ -324,7 +334,8 @@ export default {
     imprimir(ncopias) {
       let options = {
         content: document.getElementById('containerPedido').innerHTML,
-        copies: ncopias ? ncopias : 1
+        copies: ncopias ? ncopias : 1,
+        zoom: localStorage.getItem('zoom')
       };
       ipcRenderer.send('print', options);
     },
@@ -355,7 +366,7 @@ export default {
 
   created() {
     ipcRenderer.on('print-return', (event, arg) => {
-      console.log(arg);
+      // console.log(arg);
     });
   },
 
@@ -407,7 +418,7 @@ export default {
   .container-produtos {
     position: absolute;
     top: 0; right: 0; left: 0; bottom: 0;
-    padding: 12px 12px 70px;
+    padding: 12px 12px 35px;
     overflow: auto;
   }
   .disabled {

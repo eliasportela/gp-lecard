@@ -114,7 +114,6 @@ export default {
       loading: true,
       selCategoria: [],
       selProduto: [],
-      adm: localStorage.getItem('administrativo') === 'true',
       token: localStorage.getItem('key'),
       categorias: []
     }
@@ -165,7 +164,7 @@ export default {
         btn.classList.remove('salved');
       }, 2000);
 
-      this.$http.post(this.urlBase + 'produto/tabela/' + this.token, t)
+      this.$http.post('produto/tabela/' + this.token, t)
         .then(response => {
 
         }, res => {
@@ -231,6 +230,11 @@ export default {
   },
   mounted() {
     this.buscarProdutos()
+  },
+  computed: {
+    adm() {
+      return this.$store.state.dataUser.id_funcao === '1'
+    }
   }
 }
 </script>

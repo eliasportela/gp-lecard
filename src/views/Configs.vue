@@ -77,9 +77,17 @@
                   <option value="0">Não</option>
                 </select>
               </div>
-              <div class="mt-3">
+              <div class="mt-2">
                 <label for="nCopia">Número de cópias (Automáticas)</label>
                 <select class="form-control" id="nCopia" v-model="config.nCopias">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                </select>
+              </div>
+              <div class="mt-2">
+                <label for="zoom">Tamanho da impressão</label>
+                <select class="form-control" id="zoom" v-model="config.zoom">
                   <option value="1">1</option>
                   <option value="2">2</option>
                   <option value="3">3</option>
@@ -97,7 +105,7 @@
               </div>
             </div>
           </div>
-          <div class="position-fixed" style="right: 14px; bottom: 12px;">
+          <div class="position-fixed" style="left: 86px; bottom: 12px;">
             <span class="small font-weight-bold">Versão: {{version}}</span>
           </div>
         </div>
@@ -128,6 +136,7 @@
         config: {
           automatica: '1',
           nCopias: '1',
+          zoom: '1',
         },
         dados: {}
       }
@@ -177,6 +186,9 @@
 
         config.set('nCopias', this.config.nCopias);
         localStorage.setItem('nCopias', this.config.nCopias);
+
+        config.set('zoom', this.config.zoom);
+        localStorage.setItem('zoom', this.config.zoom);
       },
 
       resetar() {
@@ -195,6 +207,7 @@
 
       this.config.automatica = localStorage.getItem('impressaoAutomatica');
       this.config.nCopias = localStorage.getItem('nCopias');
+      this.config.zoom = localStorage.getItem('zoom');
       this.version = require('electron').remote.app.getVersion();
 
       // ipcRenderer.send('print-list');

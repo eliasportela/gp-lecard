@@ -15,6 +15,7 @@ import { autoUpdater } from "electron-updater"
 let win;
 let winPrint;
 let winComanda;
+let winAuto;
 let contents;
 
 // Scheme must be registered before the app is ready
@@ -179,12 +180,37 @@ ipcMain.on('readyToPrintVenda', (event) => {
   winComanda.webContents.print({silent: true});
 });
 
+ipcMain.on('autoatendimento', () => {
+  if (winAuto) {
+    winAuto.show()
+    return;
+  }
+
+  winAuto = new BrowserWindow({
+    width: 1000,
+    height: 600,
+    icon: path.join(__static, 'icon.png')
+  });
+  winAuto.setMenu(null);
+  winAuto.loadURL('http://totem.lecard.delivery/');
+
+  winAuto.on('closed', () => {
+    winAuto = null;
+  })
+});
+
 function printData(event, option, wind) {
   copies = option.copies ? option.copies : 1;
-  wind.webContents.send('print', option.content);
+  const zoom = option.zoom ? option.zoom : 1;
+  const data = {
+    content: option.content,
+    zoom
+  };
+
+  wind.webContents.send('print', data);
   for (let i = 1; i < copies; i++) {
     setTimeout(() => {
-      wind.webContents.send('print', option.content);
+      wind.webContents.send('print', data);
     }, 2000)
   }
 

@@ -52,6 +52,10 @@
         <img src="../assets/icons/report.svg" alt="">
         <span>Portal</span>
       </a>
+      <a href="javascript:" @click="autoAtendimento" class="btn btn-block">
+        <img src="../assets/icons/pos.svg" alt="">
+        <span>Totem</span>
+      </a>
       <a class="btn btn-block" @click="logout">
         <img src="../assets/icons/logout.svg" alt="">
         <span>Sair</span>
@@ -190,6 +194,11 @@ export default {
         icon: document.getElementById('imgEmpresa').src
       })
     },
+
+    autoAtendimento() {
+      ipcRenderer.send('autoatendimento');
+    },
+
   },
 
   computed: {
