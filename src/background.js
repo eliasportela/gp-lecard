@@ -14,7 +14,6 @@ import { autoUpdater } from "electron-updater"
 // be closed automatically when the JavaScript object is garbage collected.
 let win;
 let winPrint;
-let winComanda;
 let winAuto;
 let contents;
 
@@ -48,15 +47,6 @@ function createWindow () {
   winPrint.hide();
   winPrint.loadURL(__static + "/print.html");
 
-  // impressao de comandas
-  winComanda = new BrowserWindow({
-    width: 1000,
-    webPreferences: {nodeIntegration: true}
-  });
-  winComanda.hide();
-  winComanda.loadURL(__static + "/venda.html");
-  // winPrint.webContents.openDevTools();
-
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     win.loadURL(process.env.WEBPACK_DEV_SERVER_URL);
@@ -74,10 +64,6 @@ function createWindow () {
 
   winPrint.on("closed", () => {
     winPrint = null;
-  });
-
-  winComanda.on("closed", () => {
-    winComanda = null;
   });
 
   contents = win.webContents;
@@ -172,14 +158,6 @@ ipcMain.on('readyToPrint', (event) => {
   winPrint.webContents.print({silent: true});
 });
 
-ipcMain.on('printVenda', (event, option) => {
-  printData(event, option, winComanda);
-});
-
-ipcMain.on('readyToPrintVenda', (event) => {
-  winComanda.webContents.print({silent: true});
-});
-
 ipcMain.on('autoatendimento', () => {
   if (winAuto) {
     winAuto.show()
@@ -220,29 +198,9 @@ function printData(event, option, wind) {
 function checkUpdate() {
   autoUpdater.checkForUpdates()
 
-  autoUpdater.on('update-available', (info) => {
-    setTimeout(() => {
-      dialog.showMessageBox(win, {
-        title: 'Gestor de Pedidos - LeCard',
-        message: "Há uma atualização disponível!",
-        detail: 'O sistema irá baixar automaticamente e se auto reiniciar.'
-      })
-    }, 5000)
-  })
-
   autoUpdater.on('update-downloaded', (info) => {
-    // const Config = require('electron-config');
-    // const config = new Config();
-    // config.clear();
-
-    dialog.showMessageBox(win, {
-      title: 'Gestor de Pedidos - LeCard',
-      message: "Atualização baixada com sucesso!",
-      detail: 'Aguarde que o sistema se auto reiniciará.'
-    });
-
     setTimeout(() => {
       autoUpdater.quitAndInstall();
-    }, 3000);
+    }, 4000);
   })
 }

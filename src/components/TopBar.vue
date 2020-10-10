@@ -62,8 +62,6 @@
       </a>
     </div>
 
-    <imprimir/>
-
     <modal :opened="modalOflline">
       <h5 class="text-center">Atenção!</h5>
       <div>Seus pedidos não estão sendo sincronizados. Por favor verifique sua conexão com a internet!</div>
@@ -78,12 +76,11 @@
 const Config = require('electron-config');
 const { ipcRenderer } = require('electron');
 const config = new Config();
-import Imprimir from "./Imprimir";
 import Modal from '../components/Modal'
 
 export default {
   name: 'TopBar',
-  components: {Imprimir, Modal},
+  components: {Modal},
   props: {
     msg: String,
   },
@@ -235,11 +232,7 @@ export default {
 
     delivery_order() {
       this.$emit('delivery_order');
-    },
-
-    print_order(res) {
-      this.$emit('print-venda', res)
-    },
+    }
   },
 
   mounted() {

@@ -11,13 +11,13 @@
         </div>
         <div v-show="!load">
           <div class="row">
-            <div class="col-md-7">
+            <div class="col-md-7" v-if="adm">
               <h4 class="font-weight-bold mb-3">Dados da Empresa</h4>
               <form @submit.prevent="salvar">
                 <div class="row">
                   <div class="col-md-6">
                     <div class="form-group">
-                      <label for="tipo_delivery">Mode de Operação</label>
+                      <label for="tipo_delivery">Modo de Operação</label>
                       <select id="tipo_delivery" class="form-control" v-model="dados.tipo_delivery" required>
                         <option value="1">Entregas e retiradas</option>
                         <option value="2">Apenas retiradas</option>
@@ -68,7 +68,7 @@
                 <button class="btn btn-dark btn-block mt-1 mb-3">Atualizar Dados</button>
               </form>
             </div>
-            <div class="col-md-5">
+            <div :class="adm ? 'col-md-5' : 'col-md-6'">
               <h4 class="font-weight-bold mb-3">Impressora</h4>
               <div>
                 <label for="configAutomatica">Impressão automática</label>
@@ -97,6 +97,10 @@
                 <button class="btn btn-dark btn-block mb-3" @click="atualizarConfig">{{atualizar ? 'Salvo' : 'Salvar Configurações'}}</button>
                 <button class="btn btn-outline-dark btn-block" @click="testImpressao">Enviar teste impressão</button>
               </div>
+            </div>
+          </div>
+          <div class="row justify-content-end">
+            <div class="col-md-5">
               <div class="mt-4 mb-3 border-top text-right">
                 <h4 class="font-weight-bold my-3 text-danger">Danger zone</h4>
                 <div>
@@ -144,14 +148,13 @@
     methods: {
       getDadosEmpresa() {
         this.load = true;
-
         this.$http.get('empresa/' + this.token).then(response => {
           this.dados = response.data;
           this.load = false;
 
         }, res => {
           this.load = false;
-          this.$swal(res.data.result,res.data.msg);
+          //this.$swal(res.data.result,res.data.msg);
         });
       },
 
@@ -215,5 +218,10 @@
       //   this.printers = arg;
       // });
     },
+    computed: {
+      adm() {
+        return this.$store.state.dataUser.id_funcao === '1'
+      }
+    }
   }
 </script>
