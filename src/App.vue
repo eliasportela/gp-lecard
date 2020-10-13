@@ -31,7 +31,7 @@
             if (res.data.success) {
               this.$store.commit('setDataUser', res.data);
               if (this.$route.name === 'Login') {
-                this.$router.push("/home")
+                this.$router.push("/pedidos")
               }
 
               const token = res.data.empresa;

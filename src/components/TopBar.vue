@@ -241,11 +241,12 @@ export default {
   },
 
   created() {
-    this.$parent.$on('notification', () => {
-      this.bell = false;
-      ipcRenderer.send('reloud-icon', false);
-      if (!audio.paused) {
-        audio.pause();
+    this.$parent.$on('playNotification', () => {
+      if (audio.paused) {
+        this.bell = true;
+        ipcRenderer.send('reloud-icon', true);
+        audio.play();
+        this.dialogNotify()
       }
     });
 

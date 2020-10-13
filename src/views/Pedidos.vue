@@ -1,6 +1,6 @@
 <template>
   <div>
-    <top-bar @delivery_order="buscarPedidos" @delivery_desativado="deliveryDesativado"/>
+    <top-bar @delivery_order="buscarPedidos(true)" @delivery_desativado="deliveryDesativado"/>
     <div style="height: 100vh; margin-left: 70px; position: relative;">
       <div class="container-pedidos">
         <div class="coluna-1">
@@ -228,7 +228,7 @@ export default {
   },
 
   methods: {
-    buscarPedidos() {
+    buscarPedidos(play) {
       this.loading = true;
 
       this.$http.get('delivery/pedidos/' + this.token, {params: this.pesquisa})
@@ -258,6 +258,10 @@ export default {
                   this.imprimir(localStorage.getItem('nCopias'));
                 }
               });
+            }
+
+            if (play) {
+              this.pedidos.find(p => p.status === '1' && !p.id_entrega) ? this.$emit('playNotification') : '';
             }
 
           } else {
@@ -355,7 +359,7 @@ export default {
   },
 
   mounted() {
-    this.buscarPedidos();
+    this.buscarPedidos(true);
   },
 
   computed: {
