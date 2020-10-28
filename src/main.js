@@ -7,9 +7,11 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import 'animate.css/animate.css'
 import VueSweetalert2 from 'vue-sweetalert2'
 import store from './store'
+import VueTheMask from 'vue-the-mask'
 
 Vue.use(VueResource);
 Vue.use(VueSweetalert2);
+Vue.use(VueTheMask);
 
 Vue.use(new VueSocketIO({
   debug: false,

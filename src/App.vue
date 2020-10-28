@@ -31,11 +31,10 @@
             if (res.data.success) {
               this.$store.commit('setDataUser', res.data);
               if (this.$route.name === 'Login') {
-                this.$router.push("/home")
+                this.$router.push("/pedidos")
               }
 
-              const key = res.data.token;
-              const token = res.data.dados.token;
+              const token = res.data.empresa;
               config.set("key", key);
               config.set("token", token);
               localStorage.setItem("key", key);
@@ -72,11 +71,14 @@
       if (key) {
         const ia = config.get('impressaoAutomatica') ? config.get('impressaoAutomatica') : 0;
         const nCopias = config.get('nCopias') ? config.get('nCopias') : 1;
+        const zoom = config.get('zoom') ? config.get('zoom') : 1;
 
         config.set('impressaoAutomatica', ia);
         localStorage.setItem('impressaoAutomatica', ia);
         config.set('nCopias', nCopias);
         localStorage.setItem('nCopias', nCopias);
+        config.set('zoom', zoom);
+        localStorage.setItem('zoom', zoom);
 
         this.autenticar(key);
 

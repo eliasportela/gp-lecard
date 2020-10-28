@@ -52,13 +52,15 @@
         <img src="../assets/icons/report.svg" alt="">
         <span>Portal</span>
       </a>
+      <a href="javascript:" @click="autoAtendimento" class="btn btn-block">
+        <img src="../assets/icons/pos.svg" alt="">
+        <span>Totem</span>
+      </a>
       <a class="btn btn-block" @click="logout">
         <img src="../assets/icons/logout.svg" alt="">
         <span>Sair</span>
       </a>
     </div>
-
-    <imprimir/>
 
     <modal :opened="modalOflline">
       <h5 class="text-center">Atenção!</h5>
@@ -74,12 +76,11 @@
 const Config = require('electron-config');
 const { ipcRenderer } = require('electron');
 const config = new Config();
-import Imprimir from "./Imprimir";
 import Modal from '../components/Modal'
 
 export default {
   name: 'TopBar',
-  components: {Imprimir, Modal},
+  components: {Modal},
   props: {
     msg: String,
   },
@@ -190,6 +191,11 @@ export default {
         icon: document.getElementById('imgEmpresa').src
       })
     },
+
+    autoAtendimento() {
+      ipcRenderer.send('autoatendimento');
+    },
+
   },
 
   computed: {
@@ -226,11 +232,7 @@ export default {
 
     delivery_order() {
       this.$emit('delivery_order');
-    },
-
-    print_order(res) {
-      this.$emit('print-venda', res)
-    },
+    }
   },
 
   mounted() {
@@ -239,11 +241,12 @@ export default {
   },
 
   created() {
-    this.$parent.$on('notification', () => {
-      this.bell = false;
-      ipcRenderer.send('reloud-icon', false);
-      if (!audio.paused) {
-        audio.pause();
+    this.$parent.$on('playNotification', () => {
+      if (audio.paused) {
+        this.bell = true;
+        ipcRenderer.send('reloud-icon', true);
+        audio.play();
+        this.dialogNotify()
       }
     });
 

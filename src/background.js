@@ -14,7 +14,7 @@ import { autoUpdater } from "electron-updater"
 // be closed automatically when the JavaScript object is garbage collected.
 let win;
 let winPrint;
-let winComanda;
+let winAuto;
 let contents;
 
 // Scheme must be registered before the app is ready
@@ -47,15 +47,6 @@ function createWindow () {
   winPrint.hide();
   winPrint.loadURL(__static + "/print.html");
 
-  // impressao de comandas
-  winComanda = new BrowserWindow({
-    width: 1000,
-    webPreferences: {nodeIntegration: true}
-  });
-  winComanda.hide();
-  winComanda.loadURL(__static + "/venda.html");
-  // winPrint.webContents.openDevTools();
-
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     win.loadURL(process.env.WEBPACK_DEV_SERVER_URL);
@@ -73,10 +64,6 @@ function createWindow () {
 
   winPrint.on("closed", () => {
     winPrint = null;
-  });
-
-  winComanda.on("closed", () => {
-    winComanda = null;
   });
 
   contents = win.webContents;
@@ -171,20 +158,37 @@ ipcMain.on('readyToPrint', (event) => {
   winPrint.webContents.print({silent: true});
 });
 
-ipcMain.on('printVenda', (event, option) => {
-  printData(event, option, winComanda);
-});
+ipcMain.on('autoatendimento', () => {
+  if (winAuto) {
+    winAuto.show()
+    return;
+  }
 
-ipcMain.on('readyToPrintVenda', (event) => {
-  winComanda.webContents.print({silent: true});
+  winAuto = new BrowserWindow({
+    width: 1000,
+    height: 600,
+    icon: path.join(__static, 'icon.png')
+  });
+  winAuto.setMenu(null);
+  winAuto.loadURL('http://totem.lecard.delivery/');
+
+  winAuto.on('closed', () => {
+    winAuto = null;
+  })
 });
 
 function printData(event, option, wind) {
   copies = option.copies ? option.copies : 1;
-  wind.webContents.send('print', option.content);
+  const zoom = option.zoom ? option.zoom : 1;
+  const data = {
+    content: option.content,
+    zoom
+  };
+
+  wind.webContents.send('print', data);
   for (let i = 1; i < copies; i++) {
     setTimeout(() => {
-      wind.webContents.send('print', option.content);
+      wind.webContents.send('print', data);
     }, 2000)
   }
 
@@ -194,29 +198,9 @@ function printData(event, option, wind) {
 function checkUpdate() {
   autoUpdater.checkForUpdates()
 
-  autoUpdater.on('update-available', (info) => {
-    setTimeout(() => {
-      dialog.showMessageBox(win, {
-        title: 'Gestor de Pedidos - LeCard',
-        message: "Há uma atualização disponível!",
-        detail: 'O sistema irá baixar automaticamente e se auto reiniciar.'
-      })
-    }, 5000)
-  })
-
   autoUpdater.on('update-downloaded', (info) => {
-    // const Config = require('electron-config');
-    // const config = new Config();
-    // config.clear();
-
-    dialog.showMessageBox(win, {
-      title: 'Gestor de Pedidos - LeCard',
-      message: "Atualização baixada com sucesso!",
-      detail: 'Aguarde que o sistema se auto reiniciará.'
-    });
-
     setTimeout(() => {
       autoUpdater.quitAndInstall();
-    }, 3000);
+    }, 4000);
   })
 }

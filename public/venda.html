@@ -50,8 +50,8 @@
 <script>
   const ipcRenderer = require("electron").ipcRenderer;
 
-  ipcRenderer.on("print", (event, content) => {
-    document.getElementById('content').innerHTML = content;
+  ipcRenderer.on("print", (event, data) => {
+    document.getElementById('content').innerHTML = data.content;
     ipcRenderer.send("readyToPrintVenda");
   });
 
