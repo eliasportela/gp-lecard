@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <div v-show="!load">
+    <div v-if="!load">
       <router-view/>
     </div>
     <div class="d-flex justify-content-center" style="height: 200px" v-if="load">
@@ -19,28 +19,20 @@
   export default {
     data() {
       return {
-        load: true
+        load: true,
+        empresas: []
       }
     },
     name: 'App',
     methods: {
-      autenticar(key) {
+      async autenticar(key, callback) {
         this.$http.post('autenticar', {key})
           .then(res => {
-            this.load = false;
             if (res.data.success) {
-              this.$store.commit('setDataUser', res.data);
-              if (this.$route.name === 'Login') {
-                this.$router.push("/pedidos")
-              }
-
-              const token = res.data.empresa;
-              config.set("key", key);
-              config.set("token", token);
-              localStorage.setItem("key", key);
-              localStorage.setItem("token", token);
+              callback(res);
 
             } else {
+              this.load = false;
               this.clear();
             }
 
@@ -66,8 +58,10 @@
       }
     },
 
-    mounted() {
+    async mounted() {
+      this.empresas = config.get('empresas') ? config.get('empresas') : [];
       const key = config.get('key');
+
       if (key) {
         const ia = config.get('impressaoAutomatica') ? config.get('impressaoAutomatica') : 0;
         const nCopias = config.get('nCopias') ? config.get('nCopias') : 1;
@@ -80,7 +74,36 @@
         config.set('zoom', zoom);
         localStorage.setItem('zoom', zoom);
 
-        this.autenticar(key);
+        // para nao deslogar nas versoes anteriores, excluir depois
+        if (!this.empresas.length) {
+          this.empresas.push({
+            token: config.get('token'),
+            key,
+            isDefault: true
+          });
+
+          config.set('empresas', this.empresas)
+        }
+        // ------
+
+        for (const e of this.empresas) {
+          await this.autenticar(e.key, (res) => {
+            if (e.isDefault) {
+              this.$store.commit('setDataUser', res.data);
+              const token = res.data.empresa;
+              config.set("key", key);
+              config.set("token", token);
+              localStorage.setItem("key", key);
+              localStorage.setItem("token", token);
+            }
+
+            e.nome_fantasia = res.data.dados.nome_fantasia;
+            e.email = res.data.dados.email;
+          });
+        }
+
+        config.set('empresas', this.empresas);
+        this.load = false;
 
       } else {
         this.load = false;

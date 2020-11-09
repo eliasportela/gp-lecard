@@ -2,8 +2,8 @@
   <div>
     <div class="p-5">
       <div class="text-center">
-        <img src="../assets/logo-lecard.png" alt="" style="width: 100px">
-        <h4 class="text-danger font-weight-bold mt-4">Gestor de Pedidos - Lecard</h4>
+        <img src="../assets/logo-lecard.png" alt="" style="width: 70px">
+        <h5 class="text-danger font-weight-bold mt-4">Gestor de Pedidos - Lecard</h5>
       </div>
       <div class="mt-4" style="width: 400px; margin: auto">
         <div>
@@ -30,6 +30,9 @@
             </div>
             <button class="btn btn-danger btn-block" :disabled="loading">{{loading ? 'Aguarde' : 'Login'}}</button>
           </form>
+          <div class="mt-5 text-center" v-show="$route.name === 'LoginAdd'">
+            <router-link to="/home" class="text-danger">Voltar ao menu principal</router-link>
+          </div>
         </div>
       </div>
     </div>
@@ -47,6 +50,7 @@
       return {
         token: '',
         msg: '',
+        empresas: [],
         loading: false,
         salvarUser: true,
         dados: {
@@ -70,11 +74,11 @@
 
         this.$http.post('autenticar', this.dados)
           .then(res => {
-            localStorage.clear();
-
             if (res.data.success) {
               this.setToken(res.data);
-              ipcRenderer.send('reloud');
+
+            } else {
+              localStorage.clear();
             }
 
           }, res => {
@@ -94,6 +98,28 @@
       setToken(data) {
         const key = data.token;
         const token = data.dados.token;
+
+        this.empresas = config.get('empresas') ? config.get('empresas') : [];
+        if (this.empresas.length) {
+          if (this.empresas.find(e => e.token === token || e.key === key)) {
+            this.loading = false;
+            this.$swal('Atenção!', 'Você já está logado nesta empresa/e-mail, faça o login em outra conta ou volte ao menu principal.');
+            return;
+          }
+
+          this.empresas.forEach(e => {
+            e.isDefault = false
+          });
+        }
+
+        this.empresas.push({
+          token,
+          key,
+          isDefault: true
+        });
+
+        config.set('empresas', this.empresas);
+
         config.set("key", key);
         config.set("token", token);
         localStorage.setItem("key", key);
@@ -104,6 +130,9 @@
         } else {
           config.delete("email");
         }
+
+        this.$router.push(this.$route.name === 'LoginAdd' ? "/home" : "/pedidos");
+        ipcRenderer.send('reloud');
       }
     },
 
@@ -119,6 +148,8 @@
             document.getElementById("inputSenha").focus()
           }, 500)
         }
+      } else if (this.$route.name !== "LoginAdd") {
+        this.$router.push('home');
       }
     }
   }

@@ -4,7 +4,7 @@
       <div class="container-fluid">
         <div class="row">
           <div class="col-5 align-self-center">
-            <router-link to="/home" class="text-dark">
+            <router-link to="/empresas" class="text-dark">
               <img src="../assets/logo-lecard.png" alt="" style="width: 32px" id="imgEmpresa">
               <span class="font-weight-bold small pl-3">{{dados.nome_fantasia}}</span>
             </router-link>
