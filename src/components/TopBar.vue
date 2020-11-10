@@ -180,8 +180,8 @@ export default {
     },
 
     reloadPage() {
-      this.dialogNotify()
-      // ipcRenderer.send('reload');
+      // this.dialogNotify()
+      ipcRenderer.send('reload');
     },
 
     dialogNotify(empresa) {

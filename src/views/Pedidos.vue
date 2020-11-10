@@ -216,7 +216,6 @@ export default {
   },
   data() {
     return {
-      token: localStorage.getItem('key'),
       loading: true,
       imprimirSelecionado: false,
       pedidos: [],
@@ -364,6 +363,10 @@ export default {
   },
 
   mounted() {
+    if (!localStorage.getItem('key')) {
+      return;
+    }
+
     this.empresas = config.get('empresas') ? config.get('empresas') : [];
     this.pesquisa.keys = this.empresas.map(e => {
       return e.key

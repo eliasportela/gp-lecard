@@ -128,7 +128,9 @@
           config.delete("email");
         }
 
-        window.location.href = this.$route.name === 'LoginAdd' ? "/home" : "/pedidos";
+        this.$router.push("/pedidos");
+        ipcRenderer.send('reload');
+
       }
     },
 

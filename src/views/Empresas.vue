@@ -28,9 +28,10 @@
 </template>
 
 <script>
-import TopBar from '@/components/TopBar.vue'
+const {ipcRenderer} = require('electron');
 const Config = require('electron-config');
 const config = new Config();
+import TopBar from '@/components/TopBar.vue'
 
 export default {
   name: 'Empresas',
@@ -58,7 +59,8 @@ export default {
       empresa.isDefault = true;
       config.set('empresas', this.empresas);
 
-      window.location.href = '/';
+      this.$router.push("/home");
+      ipcRenderer.send('reload');
     },
 
     removerEmpresa(e) {
