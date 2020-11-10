@@ -124,7 +124,7 @@
 
           config.set('empresas', this.empresas)
         }
-        // ------
+        // -----
 
         this.autenticarEmpresas(0);
 
