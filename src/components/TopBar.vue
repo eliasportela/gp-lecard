@@ -180,13 +180,13 @@ export default {
     },
 
     reloadPage() {
-      // this.dialogNotify()
-      ipcRenderer.send('reload');
+      this.dialogNotify()
+      // ipcRenderer.send('reload');
     },
 
-    dialogNotify() {
-      new Notification('LeCard - Gestor de Pedidos', {
-        body: 'Tem pedido novo na área <3',
+    dialogNotify(empresa) {
+      new Notification(empresa ? ('LeCard - ' + empresa) : 'LeCard - Gestor de Pedidos', {
+        body: 'Tem pedido novo na área ❤️',
         icon: document.getElementById('imgEmpresa').src
       })
     },
@@ -217,7 +217,7 @@ export default {
 
     notification(res)  {
       if (res.play) {
-        this.dialogNotify()
+        this.dialogNotify(res.nome_fantasia);
         audio.play();
         this.bell = true;
         ipcRenderer.send('reloud-icon', true);

@@ -7,7 +7,7 @@
           <h4 class="mt-2">Escolha uma conta</h4>
         </div>
         <div v-for="e in empresas">
-          <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+          <div class="d-flex justify-content-between align-items-center border-top py-2">
             <a href="javascript:" class="d-block text-decoration-none text-dark" @click="logarConta(e)">
               <h6 class="font-weight-bold m-0">
                 {{e.nome_fantasia}}
@@ -18,7 +18,7 @@
             <button class="btn btn-outline-dark btn-sm" @click="removerEmpresa(e)" v-if="empresas.length > 1">Remover</button>
           </div>
         </div>
-        <router-link to="/add-login" href="javascript:" class="d-block border-bottom py-2 text-decoration-none text-danger">
+        <router-link to="/add-login" href="javascript:" class="d-block border-top py-2 text-decoration-none text-danger">
           <h6 class="font-weight-bold m-0">Adicionar nova conta</h6>
           <small class="text-muted">Clique para adicionar uma nova conta</small>
         </router-link>

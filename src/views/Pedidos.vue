@@ -61,7 +61,7 @@
                 <h5 class="m-0" v-if="pesquisa.keys.length > 1">{{selecionado.nome_fantasia}}</h5>
                 <div class="m-0 font-weight-bold">Pedido: {{selecionado.id_pedido}} - {{selecionado.data_pedido}}</div>
                 <div class="font-weight-bold" v-if="selecionado.origin === '2'">
-                  <span class="badge badge-info">Pedido feito pelo LeCard Geral</span>
+                  <span class="badge badge-info">Realizado pelo LeCard Geral</span>
                 </div>
               </div>
               <div v-show="selecionado.obs_cancelamento && selecionado.status === '5'">
@@ -81,8 +81,8 @@
                 <div v-if="selecionado.origin !== '3'">
                   Nº de Pedidos: {{selecionado.qtd_pedidos === '0' ? 'Primeiro pedido' : selecionado.qtd_pedidos + ' pedidos'}}
                 </div>
-                <div class="mt-2" v-if="selecionado.tipo_pedido === '1'">
-                  <h6 class="text-success font-weight-bold">Entregar em:</h6>
+                <div class="mt-1" v-if="selecionado.tipo_pedido === '1'">
+                  <h6 class="text-success font-weight-bold m-0">Entregar em:</h6>
                   <div>
                     {{selecionado.cliente.endereco}}, {{selecionado.cliente.numero}}, {{selecionado.cliente.bairro}} - {{selecionado.cliente.nome_cidade}} <br>
                     Cep: {{selecionado.cliente.cep}}
@@ -95,8 +95,8 @@
                     </a>
                   </div>
                 </div>
-                <div class="mt-2" v-else-if="selecionado.tipo_pedido === '2'">
-                  <h6 class="text-info font-weight-bold">Retirar no local</h6>
+                <div class="mt-1" v-else-if="selecionado.tipo_pedido === '2'">
+                  <h6 class="text-info font-weight-bold m-0">Retirar no local</h6>
                   <div>
                     Cliente vai retirar o pedido
                   </div>
@@ -105,8 +105,8 @@
                     <b>{{selecionado.cliente.telefone | phone}}</b>
                   </a>
                 </div>
-                <div class="mt-2" v-else="selecionado.tipo_pedido === '3'">
-                  <h6 class="text-warning font-weight-bold">Consumir no Local</h6>
+                <div class="mt-1" v-else="selecionado.tipo_pedido === '3'">
+                  <h6 class="text-warning font-weight-bold m-0">Consumir no Local</h6>
                   <div>
                     Cliente vai consumir o pedido no local
                   </div>
@@ -317,19 +317,16 @@ export default {
         this.$emit('silenciar');
       }
 
-      const token = this.empresas.find(e => e.token === this.selecionado.token).key;
-
-      this.$http.post('delivery/pedidos/' + token, dados, {emulateJSON: true})
+      const empresa = this.empresas.find(e => e.token === this.selecionado.token);
+      this.$http.post('delivery/pedidos/' + empresa.key, dados, {emulateJSON: true})
         .then(res => {
-          this.$socket.emit('notification', {token: this.empresa, play: false});
+          this.$socket.emit('notification', {token: empresa.token, play: false});
           if (res.data && status === 2 && localStorage.getItem('impressaoAutomatica') === '1') {
             this.imprimirSelecionado = true;
           }
 
           this.motivoRecusa = '';
-
-          const token = this.selecionado.origin === '2' ? 'lecard_app_geral' : this.empresa;
-          dados.socket_id = this.selecionado.cliente.id_cliente + token;
+          dados.socket_id = this.selecionado.cliente.id_cliente + (this.selecionado.origin === '2' ? 'lecard_app_geral' : empresa.token);
           this.$socket.emit('delivery_status', dados);
 
           this.buscarPedidos();
@@ -372,12 +369,6 @@ export default {
       return e.key
     });
     this.buscarPedidos(true);
-  },
-
-  computed: {
-    empresa() {
-      return this.$store.state.dataUser.empresa
-    }
   },
 
   created() {
