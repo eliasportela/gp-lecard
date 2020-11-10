@@ -30,7 +30,7 @@
           <div class="container-aceitar bg-white" style="left: 0; right: 16px; width: auto">
             <div class="container-fluid small card">
               <div class="row">
-                <div class="col-12 py-2" v-if="totais.quantidade">
+                <div class="col-12 py-2" v-if="!loading">
                   <div class="font-weight-bold m-0">Pedidos ({{totais.quantidade}})</div>
                   <div class="text-muted">R$ {{totais.total | valor}}</div>
                 </div>
@@ -57,16 +57,18 @@
               <div class="small font-weight-bold float-right" v-show="selecionado.id_entrega">
                 <span class="bg-warning text-white rounded-sm px-1">Pedido Agendado</span>
               </div>
-              <h6>Pedido: {{selecionado.id_pedido}} - {{selecionado.data_pedido}}</h6>
+              <div class="mb-3">
+                <h5 class="m-0" v-if="pesquisa.keys.length > 1">{{selecionado.nome_fantasia}}</h5>
+                <div class="m-0 font-weight-bold">Pedido: {{selecionado.id_pedido}} - {{selecionado.data_pedido}}</div>
+                <div class="font-weight-bold" v-if="selecionado.origin === '2'">
+                  <span class="badge badge-info">Pedido feito pelo LeCard Geral</span>
+                </div>
+              </div>
               <div v-show="selecionado.obs_cancelamento && selecionado.status === '5'">
                 <span><b class="text-danger">Cancelado:</b> {{selecionado.obs_cancelamento}}</span>
               </div>
-              <h5 class="font-weight-bold">{{selecionado.cliente.nome_cliente}}</h5>
               <h6 v-show="selecionado.id_entrega">
                 <b class="text-danger">AGENDADO PARA:</b> {{selecionado.data_agendamento}}
-              </h6>
-              <h6 class="m-0" v-if="selecionado.origin !== '3'">
-                Pedidos: {{selecionado.qtd_pedidos === '0' ? 'Primeiro pedido' : selecionado.qtd_pedidos + ' pedidos'}}
               </h6>
               <h6 v-show="!selecionado.id_entrega && selecionado.tipo_pedido === '1' && selecionado.previsao_entrega">
                 Previsão de entrega: <b>{{selecionado.previsao_entrega}}</b>
@@ -74,39 +76,42 @@
               <h6 v-show="selecionado.tipo_pedido === '2' && selecionado.previsao_retirada">
                 Previsão de retirada: <b>{{selecionado.previsao_retirada}}</b>
               </h6>
-              <div class="mt-2 font-weight-bold" v-if="selecionado.origin === '2'">
-                <span class="badge badge-danger">LeCard Delivery</span>
-              </div>
-              <div class="border p-2 mt-3 mb-2" v-show="selecionado.tipo_pedido === '1'">
-                <h6 class="text-success font-weight-bold">Entregar em:</h6>
-                <div>
-                  {{selecionado.cliente.endereco}}, {{selecionado.cliente.numero}}, {{selecionado.cliente.bairro}} - {{selecionado.cliente.nome_cidade}} <br>
-                  CEP: {{selecionado.cliente.cep}}
-                  <span v-show="selecionado.cliente.complemento">-</span>
-                  {{selecionado.cliente.complemento}}
-                  <br>
+              <div class="border p-2 mt-3 mb-2">
+                <h5 class="font-weight-bold m-0">{{selecionado.cliente.nome_cliente}}</h5>
+                <div v-if="selecionado.origin !== '3'">
+                  Nº de Pedidos: {{selecionado.qtd_pedidos === '0' ? 'Primeiro pedido' : selecionado.qtd_pedidos + ' pedidos'}}
+                </div>
+                <div class="mt-2" v-if="selecionado.tipo_pedido === '1'">
+                  <h6 class="text-success font-weight-bold">Entregar em:</h6>
+                  <div>
+                    {{selecionado.cliente.endereco}}, {{selecionado.cliente.numero}}, {{selecionado.cliente.bairro}} - {{selecionado.cliente.nome_cidade}} <br>
+                    Cep: {{selecionado.cliente.cep}}
+                    <span v-show="selecionado.cliente.complemento">-</span>
+                    {{selecionado.cliente.complemento}}
+                    <br>
+                    <b>Telefone: </b>
+                    <a :href="'https://api.whatsapp.com/send?phone=+55'+ selecionado.cliente.telefone" class="text-info" target="_blank">
+                      <b>{{selecionado.cliente.telefone | phone}}</b>
+                    </a>
+                  </div>
+                </div>
+                <div class="mt-2" v-else-if="selecionado.tipo_pedido === '2'">
+                  <h6 class="text-info font-weight-bold">Retirar no local</h6>
+                  <div>
+                    Cliente vai retirar o pedido
+                  </div>
                   <b>Telefone: </b>
                   <a :href="'https://api.whatsapp.com/send?phone=+55'+ selecionado.cliente.telefone" class="text-info" target="_blank">
                     <b>{{selecionado.cliente.telefone | phone}}</b>
                   </a>
                 </div>
-              </div>
-              <div class="border p-2 mt-3 mb-2" v-show="selecionado.tipo_pedido === '2'">
-                <h6 class="text-info font-weight-bold">Retirar no local</h6>
-                <div>
-                  Cliente vai retirar o pedido
+                <div class="mt-2" v-else="selecionado.tipo_pedido === '3'">
+                  <h6 class="text-warning font-weight-bold">Consumir no Local</h6>
+                  <div>
+                    Cliente vai consumir o pedido no local
+                  </div>
+                  <b>Mesa/Cliente: </b> {{selecionado.obs_pedido}}
                 </div>
-                <b>Telefone: </b>
-                <a :href="'https://api.whatsapp.com/send?phone=+55'+ selecionado.cliente.telefone" class="text-info" target="_blank">
-                  <b>{{selecionado.cliente.telefone | phone}}</b>
-                </a>
-              </div>
-              <div class="border p-2 mt-3 mb-2" v-show="selecionado.tipo_pedido === '3'">
-                <h6 class="text-warning font-weight-bold">Consumir no Local</h6>
-                <div>
-                  Cliente vai consumir o pedido no local
-                </div>
-                <b>Mesa/Cliente: </b> {{selecionado.obs_pedido}}
               </div>
               <hr class="d-none">
               <div class="mb-3">
@@ -196,6 +201,9 @@
 
 <script>
 const { ipcRenderer } = require('electron');
+const Config = require('electron-config');
+const config = new Config();
+
 import TopBar from '@/components/TopBar.vue'
 import HelloWorld from '@/components/HelloWorld.vue'
 import Modal from '../components/Modal'
@@ -214,7 +222,7 @@ export default {
       pedidos: [],
       pesquisa: {
         status: 1,
-        display: true
+        keys: []
       },
       selecionado: {
         produtos: [],
@@ -223,7 +231,11 @@ export default {
       modalCancelamento: false,
       motivoRecusa: '',
       socket: true,
-      totais: '',
+      totais: {
+        total: 0,
+        qtd: 0
+      },
+      empresas: []
     }
   },
 
@@ -231,9 +243,15 @@ export default {
     buscarPedidos(play) {
       this.loading = true;
 
-      this.$http.get('delivery/pedidos/' + this.token, {params: this.pesquisa})
+      this.$http.get('delivery/pedidos', {params: this.pesquisa})
         .then(response => {
-          this.pedidos = response.data;
+          if (!response.data) {
+            return;
+          }
+
+          this.pedidos = response.data.pedidos;
+          this.totais = response.data.totais;
+
           if (this.pedidos.length > 0) {
             let existe = false;
 
@@ -272,28 +290,16 @@ export default {
           }
 
           this.loading = false;
-          this.buscarTotais();
 
         }, res => {
           console.log(res);
           this.loading = false;
           if (res.status === 401) {
-            this.$swal(res.data.result, res.data.msg);
-            this.$emit('logout');
+            ipcRenderer.send('reload');
 
           } else if (!navigator.onLine) {
             this.$swal("Atenção!", "Não conseguimos acessar sua conexão com a internet. Por favor verifique se seu computador tem uma conexão estável.");
           }
-        });
-    },
-
-    buscarTotais() {
-      this.$http.get('delivery/relatorio-diario/'  + this.token)
-        .then(response => {
-          this.totais = response.data;
-          // console.log(response);
-        }, res => {
-          // openModalMsg(res.data.result,res.data.msg);
         });
     },
 
@@ -311,7 +317,9 @@ export default {
         this.$emit('silenciar');
       }
 
-      this.$http.post('delivery/pedidos/' + this.token, dados, {emulateJSON: true})
+      const token = this.empresas.find(e => e.token === this.selecionado.token).key;
+
+      this.$http.post('delivery/pedidos/' + token, dados, {emulateJSON: true})
         .then(res => {
           this.$socket.emit('notification', {token: this.empresa, play: false});
           if (res.data && status === 2 && localStorage.getItem('impressaoAutomatica') === '1') {
@@ -330,7 +338,7 @@ export default {
           this.loading = false;
           console.log(res);
           if (res.status === 401) {
-            this.$emit('logout');
+            ipcRenderer.send('reload');
           }
         });
     },
@@ -359,6 +367,10 @@ export default {
   },
 
   mounted() {
+    this.empresas = config.get('empresas') ? config.get('empresas') : [];
+    this.pesquisa.keys = this.empresas.map(e => {
+      return e.key
+    });
     this.buscarPedidos(true);
   },
 

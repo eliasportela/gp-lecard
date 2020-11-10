@@ -15,16 +15,13 @@
               </h6>
               <small class="text-muted">{{e.email}}</small>
             </a>
-            <button class="btn btn-outline-dark btn-sm" @removerEmpresa(e)>Remover</button>
+            <button class="btn btn-outline-dark btn-sm" @click="removerEmpresa(e)" v-if="empresas.length > 1">Remover</button>
           </div>
         </div>
         <router-link to="/add-login" href="javascript:" class="d-block border-bottom py-2 text-decoration-none text-danger">
           <h6 class="font-weight-bold m-0">Adicionar nova conta</h6>
           <small class="text-muted">Clique para adicionar uma nova conta</small>
         </router-link>
-        <div class="mt-5 text-center">
-          <router-link to="/home" class="text-danger">Voltar</router-link>
-        </div>
       </div>
     </div>
   </div>
@@ -61,11 +58,16 @@ export default {
       empresa.isDefault = true;
       config.set('empresas', this.empresas);
 
-      window.location.href = '/'
+      window.location.href = '/';
     },
 
-    removerEmpresa() {
+    removerEmpresa(e) {
+      this.empresas = this.empresas.filter(el => el !== e);
+      config.set("empresas", this.empresas);
 
+      if (e.isDefault) {
+        this.logarConta(this.empresas[0]);
+      }
     }
   },
   created() {

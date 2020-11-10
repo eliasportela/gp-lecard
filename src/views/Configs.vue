@@ -168,7 +168,6 @@
           }, res => {
             this.load = false;
             this.$swal(res.data.result,res.data.msg);
-
           });
       },
 
@@ -198,7 +197,7 @@
         config.clear();
         localStorage.clear();
         this.$router.push('/');
-        ipcRenderer.send('reloud');
+        ipcRenderer.send('reload');
       }
     },
     created() {

@@ -129,7 +129,7 @@ export default {
           this.loading = false;
           if (res.status === 401) {
             this.$swal(res.data.result, res.data.msg);
-            this.$emit('logout');
+            window.location.reload();
           }
         });
     },

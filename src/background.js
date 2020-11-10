@@ -130,7 +130,7 @@ ipcMain.on('relaunch-app', () => {
   app.quit();
 });
 
-ipcMain.on('reloud', () => {
+ipcMain.on('reload', () => {
   win.reload();
 });
 

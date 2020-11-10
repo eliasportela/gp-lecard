@@ -20,27 +20,42 @@
     data() {
       return {
         load: true,
-        empresas: []
+        empresas: [],
+        key: '',
+        nao_atenticou: false
       }
     },
     name: 'App',
     methods: {
-      async autenticar(key, callback) {
-        this.$http.post('autenticar', {key})
+      autenticar(e, callback) {
+        this.$http.post('autenticar', {key: e.key})
           .then(res => {
             if (res.data.success) {
+              if (e.isDefault) {
+                this.$store.commit('setDataUser', res.data);
+                const token = res.data.empresa;
+                config.set("key", e.key);
+                config.set("token", token);
+                localStorage.setItem("key", e.key);
+                localStorage.setItem("token", token);
+              }
+
+              e.nome_fantasia = res.data.dados.nome_fantasia;
+              e.email = res.data.dados.email;
+
               callback(res);
 
             } else {
+              this.$swal("Atenção!", "Não conseguimos autenticar sua empresa. Por favor tente novamente!");
               this.load = false;
-              this.clear();
             }
 
           }, res => {
             this.load = false;
             if (res.status === 401) {
-              this.$swal(res.data.result, res.data.msg);
-              this.clear();
+              this.nao_atenticou = true;
+              this.empresas = this.empresas.filter(el => el !== e);
+              callback(res);
 
             } else if (!navigator.onLine) {
               this.$swal("Atenção!", "Não conseguimos acessar sua conexão com a internet. Por favor verifique se seu computador tem uma conexão estável.");
@@ -55,14 +70,39 @@
         if (this.$route.name !== 'Login') {
           this.$router.push("/")
         }
+      },
+
+      autenticarEmpresas(count) {
+        if (count < this.empresas.length) {
+          let e = this.empresas[count];
+          this.autenticar(e, () => {
+            this.autenticarEmpresas(++count);
+          });
+
+        } else {
+          config.set('empresas', this.empresas);
+
+          if (this.nao_atenticou) {
+            if (!this.empresas.length) {
+              this.clear();
+
+            } else if (this.$route.name !== 'Empresas') {
+              this.$router.push("/empresas")
+            }
+          }
+
+          this.load = false;
+        }
       }
     },
 
-    async mounted() {
-      this.empresas = config.get('empresas') ? config.get('empresas') : [];
-      const key = config.get('key');
+    mounted() {
+      localStorage.clear();
 
-      if (key) {
+      this.empresas = config.get('empresas') ? config.get('empresas') : [];
+      this.key = config.get('key');
+
+      if (this.key) {
         const ia = config.get('impressaoAutomatica') ? config.get('impressaoAutomatica') : 0;
         const nCopias = config.get('nCopias') ? config.get('nCopias') : 1;
         const zoom = config.get('zoom') ? config.get('zoom') : 1;
@@ -78,7 +118,7 @@
         if (!this.empresas.length) {
           this.empresas.push({
             token: config.get('token'),
-            key,
+            key: this.key,
             isDefault: true
           });
 
@@ -86,24 +126,7 @@
         }
         // ------
 
-        for (const e of this.empresas) {
-          await this.autenticar(e.key, (res) => {
-            if (e.isDefault) {
-              this.$store.commit('setDataUser', res.data);
-              const token = res.data.empresa;
-              config.set("key", key);
-              config.set("token", token);
-              localStorage.setItem("key", key);
-              localStorage.setItem("token", token);
-            }
-
-            e.nome_fantasia = res.data.dados.nome_fantasia;
-            e.email = res.data.dados.email;
-          });
-        }
-
-        config.set('empresas', this.empresas);
-        this.load = false;
+        this.autenticarEmpresas(0);
 
       } else {
         this.load = false;
@@ -113,8 +136,11 @@
 
     sockets: {
       connect() {
-        if (config.get('token')) {
-          this.$socket.emit('empresa_connected', config.get('token'))
+        if (config.get('key')) {
+          const empresas = config.get('empresas') ? config.get('empresas') : [];
+          empresas.forEach(e => {
+            this.$socket.emit('empresa_connected', e.token)
+          });
         }
       }
     },

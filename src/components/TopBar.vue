@@ -127,11 +127,10 @@ export default {
     logoff() {
       this.silenciar();
       config.delete('key');
-      config.delete('empresa');
+      config.delete('token');
+      config.delete('empresas');
       localStorage.clear();
-      if (this.$route.name !== 'Login') {
-        this.$router.push("/")
-      }
+      this.$router.push("/");
     },
 
     statusEmpresa() {
@@ -182,7 +181,7 @@ export default {
 
     reloadPage() {
       // this.dialogNotify()
-      ipcRenderer.send('reloud');
+      ipcRenderer.send('reload');
     },
 
     dialogNotify() {
@@ -248,10 +247,6 @@ export default {
         audio.play();
         this.dialogNotify()
       }
-    });
-
-    this.$parent.$on('logout', () => {
-      this.logoff();
     });
 
     this.$parent.$on('silenciar', () => {

@@ -31,7 +31,7 @@
             <button class="btn btn-danger btn-block" :disabled="loading">{{loading ? 'Aguarde' : 'Login'}}</button>
           </form>
           <div class="mt-5 text-center" v-show="$route.name === 'LoginAdd'">
-            <router-link to="/home" class="text-danger">Voltar ao menu principal</router-link>
+            <router-link to="/empresas" class="text-danger">Voltar</router-link>
           </div>
         </div>
       </div>
@@ -118,12 +118,9 @@
           isDefault: true
         });
 
-        config.set('empresas', this.empresas);
-
         config.set("key", key);
         config.set("token", token);
-        localStorage.setItem("key", key);
-        localStorage.setItem("token", token);
+        config.set('empresas', this.empresas);
 
         if (this.salvarUser) {
           config.set("email", this.dados.email);
@@ -131,13 +128,13 @@
           config.delete("email");
         }
 
-        this.$router.push(this.$route.name === 'LoginAdd' ? "/home" : "/pedidos");
-        ipcRenderer.send('reloud');
+        window.location.href = this.$route.name === 'LoginAdd' ? "/home" : "/pedidos";
       }
     },
 
     mounted() {
-      if (!localStorage.getItem('key')) {
+      if (!config.get('key')) {
+        config.set('empresas', []);
         this.loading = false;
 
         if (config.get("email")) {
@@ -146,10 +143,10 @@
 
           setTimeout(() => {
             document.getElementById("inputSenha").focus()
-          }, 500)
+          }, 500);
         }
       } else if (this.$route.name !== "LoginAdd") {
-        this.$router.push('home');
+        this.$router.push('/pedidos');
       }
     }
   }
