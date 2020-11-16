@@ -144,15 +144,20 @@
                   Desconto:
                 </div>
                 <div>
-                  <span class="float-right">{{selecionado.id_pagamento === '1' ? 'Dinheiro' : 'Cartão'}}</span>
+                  <span class="float-right">{{selecionado.id_pagamento | pagamento}}</span>
                   Forma de Pagamento:
+                </div>
+                <div v-if="selecionado.troco && (parseFloat(selecionado.troco) > selecionado.total)">
+                  <span class="float-right">R$ {{(selecionado.troco - selecionado.total) | valor}}</span>
+                  Troco:
                 </div>
                 <div>
                   <span class="float-right font-weight-bold">R$ {{selecionado.total | valor}}</span>
                   <b>Cobrar do Cliente:</b>
                 </div>
               </div>
-              <div v-show="selecionado.obs_pedido"><b>Obs:</b> {{selecionado.obs_pedido}}</div>
+              <div v-if="selecionado.obs_pedido"><b>Obs:</b> {{selecionado.obs_pedido}}</div>
+              <div v-if="selecionado.troco > 0"><b>Obs:</b> Troco para R${{(selecionado.troco) | valor}}</div>
             </div>
           </div>
           <div class="container-aceitar bg-white">
@@ -225,6 +230,7 @@ export default {
       },
       selecionado: {
         produtos: [],
+        troco: 0,
         total: 0
       },
       modalCancelamento: false,
@@ -375,9 +381,9 @@ export default {
   },
 
   created() {
-    ipcRenderer.on('print-return', (event, arg) => {
-      // console.log(arg);
-    });
+    // ipcRenderer.on('print-return', (event, arg) => {
+    //   // console.log(arg);
+    // });
   },
 
   filters: {
@@ -400,6 +406,21 @@ export default {
       }
 
       return phone
+    },
+
+    pagamento(id) {
+      switch (parseInt(id)) {
+        case 1:
+          return "Dinheiro";
+        case 3:
+          return "Cartão de Crédito";
+        case 4:
+          return "Cartão de Débito";
+        case 5:
+          return "Dinheiro e Cartão";
+        default:
+          return "Outros";
+      }
     }
   }
 }

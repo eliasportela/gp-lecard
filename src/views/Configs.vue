@@ -34,16 +34,31 @@
                       </select>
                     </div>
                   </div>
-                  <div class="col-md-6">
+                  <div class="col-md-4">
                     <div class="form-group">
                       <label>Entrega (minutos)</label>
                       <the-mask typeof="number" :mask="['#', '##', '###']" class="form-control" v-model="dados.media_entrega" required/>
                     </div>
                   </div>
-                  <div class="col-md-6">
+                  <div class="col-md-4">
                     <div class="form-group">
                       <label>Retirada (minutos)</label>
                       <the-mask typeof="number" :mask="['#', '##', '###']" class="form-control" v-model="dados.media_retirada" required/>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label>Desconto Fixo</label>
+                      <the-mask typeof="number" :mask="['#' + '%', '##' + '%']" class="form-control" v-model="dados.cashback_delivery" required/>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label for="entrega_gratis">Entrega Grátis</label>
+                      <select id="entrega_gratis" class="form-control" v-model="dados.entrega_gratis" required>
+                        <option value="1">Sim</option>
+                        <option value="0">Não</option>
+                      </select>
                     </div>
                   </div>
                   <div class="col-md-4">
@@ -52,16 +67,10 @@
                       <money class="form-control" v-model="dados.valor_frete"></money>
                     </div>
                   </div>
-                  <div class="col-md-4">
-                    <div class="form-group">
-                      <label>Mínimo p/ Entrega</label>
+                  <div class="col-md-4" v-show="dados.entrega_gratis === '1'">
+                    <div class="form-group" title="Valor mínimo para entregas gratuitas, abaixo desse valor será cobrado o valor da entrega!">
+                      <label>Mínimo<span class="small"> (Ent. Grátis)</span></label>
                       <money class="form-control" v-model="dados.pedido_minimo"></money>
-                    </div>
-                  </div>
-                  <div class="col-md-4">
-                    <div class="form-group">
-                      <label>Desconto Fixo</label>
-                      <the-mask typeof="number" :mask="['#' + '%', '##' + '%']" class="form-control" v-model="dados.cashback_delivery" required/>
                     </div>
                   </div>
                 </div>
@@ -159,6 +168,11 @@
       },
 
       salvar() {
+        if (this.dados.entrega_gratis === '0' && this.dados.valor_frete <= 0) {
+          this.$swal("", "Atenção, a entrega deve ter um valor maior que R$0.00, para entregas sem valores colocar como \"Entrega Grátis\"");
+          return;
+        }
+
         this.load = true;
         this.$http.post('empresa/' + this.token, this.dados)
           .then(res => {
@@ -201,9 +215,9 @@
       }
     },
     created() {
-      ipcRenderer.on('print-return', (event, arg) => {
-        this.load = false;
-      });
+      // ipcRenderer.on('print-return', (event, arg) => {
+      //   this.load = false;
+      // });
 
       this.getDadosEmpresa();
 
