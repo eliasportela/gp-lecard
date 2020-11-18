@@ -15,7 +15,7 @@
               <h4 class="font-weight-bold mb-3">Dados da Empresa</h4>
               <form @submit.prevent="salvar">
                 <div class="row">
-                  <div class="col-md-6">
+                  <div class="col-md-4">
                     <div class="form-group">
                       <label for="tipo_delivery">Modo de Operação</label>
                       <select id="tipo_delivery" class="form-control" v-model="dados.tipo_delivery" required>
@@ -25,13 +25,19 @@
                       </select>
                     </div>
                   </div>
-                  <div class="col-md-6">
+                  <div class="col-md-4">
                     <div class="form-group">
                       <label for="agendamento">Pedidos Agendados</label>
                       <select id="agendamento" class="form-control" v-model="dados.entrega_agendada" required>
                         <option value="1">Ativado</option>
                         <option value="0">Desativado</option>
                       </select>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label>Pedido Mínimo</label>
+                      <money class="form-control" v-model="dados.pedido_minimo"></money>
                     </div>
                   </div>
                   <div class="col-md-4">
@@ -61,16 +67,16 @@
                       </select>
                     </div>
                   </div>
+                  <div class="col-md-4" v-show="dados.entrega_gratis === '1'">
+                    <div class="form-group" title="Valor mínimo para entregas gratuitas, abaixo desse valor será cobrado o valor da entrega!">
+                      <label>Mínimo<span class="small"> (Ent. Grátis)</span></label>
+                      <money class="form-control" v-model="dados.entrega_gratis_minimo"></money>
+                    </div>
+                  </div>
                   <div class="col-md-4">
                     <div class="form-group">
                       <label>Valor da Entrega</label>
                       <money class="form-control" v-model="dados.valor_frete"></money>
-                    </div>
-                  </div>
-                  <div class="col-md-4" v-show="dados.entrega_gratis === '1'">
-                    <div class="form-group" title="Valor mínimo para entregas gratuitas, abaixo desse valor será cobrado o valor da entrega!">
-                      <label>Mínimo<span class="small"> (Ent. Grátis)</span></label>
-                      <money class="form-control" v-model="dados.pedido_minimo"></money>
                     </div>
                   </div>
                 </div>

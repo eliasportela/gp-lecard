@@ -4,7 +4,7 @@
     <div style="height: 100vh; margin-left: 70px; position: relative;">
       <div class="container-pedidos">
         <div class="coluna-1">
-          <select class="form-control" v-model="pesquisa.status" @change="buscarPedidos">
+          <select class="form-control" v-model="pesquisa.status" @change="buscarPedidos(false)">
             <option value="1">Em andamento</option>
             <option value="4">Finalizados</option>
             <option value="5">Cancelados</option>
@@ -222,7 +222,6 @@ export default {
   data() {
     return {
       loading: true,
-      imprimirSelecionado: false,
       pedidos: [],
       pesquisa: {
         status: 1,
@@ -245,7 +244,7 @@ export default {
   },
 
   methods: {
-    buscarPedidos(play) {
+    buscarPedidos(play, callback) {
       this.loading = true;
 
       this.$http.get('delivery/pedidos', {params: this.pesquisa})
@@ -258,33 +257,26 @@ export default {
           this.totais = response.data.totais;
 
           if (this.pedidos.length > 0) {
-            let existe = false;
+            if (play) {
+              this.pedidos.find(p => p.status === '1' && !p.id_entrega) ? this.$emit('playNotification') : '';
+            }
 
-            this.pedidos.forEach(obj => {
-              if (obj.id_pedido === this.selecionado.id_pedido) {
-                this.selecionado = obj;
+            let existe = false;
+            if (this.selecionado.id_pedido) {
+              const pedido = this.pedidos.find(p => p.id_pedido === this.selecionado.id_pedido);
+              if (pedido) {
+                existe = true;
+                this.selecionado = pedido;
                 this.$nextTick(function () {
-                  if (this.imprimirSelecionado) {
-                    this.imprimirSelecionado = false;
-                    this.imprimir(localStorage.getItem('nCopias'));
+                  if (callback) {
+                    callback();
                   }
                 });
-                existe = true;
               }
-            });
+            }
 
             if (!existe) {
               this.selecionado = this.pedidos[0];
-              this.$nextTick(function () {
-                if (this.imprimirSelecionado) {
-                  this.imprimirSelecionado = false;
-                  this.imprimir(localStorage.getItem('nCopias'));
-                }
-              });
-            }
-
-            if (play) {
-              this.pedidos.find(p => p.status === '1' && !p.id_entrega) ? this.$emit('playNotification') : '';
             }
 
           } else {
@@ -323,18 +315,25 @@ export default {
       }
 
       const empresa = this.empresas.find(e => e.token === this.selecionado.token);
+      if (!empresa) {
+        return;
+      }
+
       this.$http.post('delivery/pedidos/' + empresa.key, dados, {emulateJSON: true})
         .then(res => {
           this.$socket.emit('notification', {token: empresa.token, play: false});
-          if (res.data && status === 2 && localStorage.getItem('impressaoAutomatica') === '1') {
-            this.imprimirSelecionado = true;
+
+          if (res.data) {
+            this.buscarPedidos(false, () => {
+              if (status === 2 && localStorage.getItem('impressaoAutomatica') === '1') {
+                this.imprimir(localStorage.getItem('nCopias'));
+              }
+            });
           }
 
           this.motivoRecusa = '';
           dados.socket_id = this.selecionado.cliente.id_cliente + (this.selecionado.origin === '2' ? 'lecard_app_geral' : empresa.token);
           this.$socket.emit('delivery_status', dados);
-
-          this.buscarPedidos();
 
         }, res => {
           this.loading = false;

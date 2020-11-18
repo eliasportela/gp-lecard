@@ -31,15 +31,17 @@
         this.$http.post('autenticar', {key: e.key})
           .then(res => {
             if (res.data.success) {
+              const token = res.data.empresa;
+
               if (e.isDefault) {
                 this.$store.commit('setDataUser', res.data);
-                const token = res.data.empresa;
                 config.set("key", e.key);
                 config.set("token", token);
                 localStorage.setItem("key", e.key);
                 localStorage.setItem("token", token);
               }
 
+              e.token = token;
               e.nome_fantasia = res.data.dados.nome_fantasia;
               e.email = res.data.dados.email;
 
