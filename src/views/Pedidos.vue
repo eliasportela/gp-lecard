@@ -75,15 +75,15 @@
               </div>
             </div>
             <div id="containerPedido" class="container-produtos" v-if="selecionado.cliente" v-show="!loading && selecionado.produtos.length > 0">
-              <div id="andamento" class="font-weight-bold float-right" v-show="!selecionado.id_entrega">
-                <span class="badge badge-danger" v-show="selecionado.status === '1'">Aguardando</span>
-                <span class="badge badge-info" v-show="selecionado.status === '2'">Preparando</span>
-                <span class="badge badge-dark" v-show="selecionado.status === '3'">Entregando</span>
-                <span class="badge badge-dark" v-show="selecionado.status === '4'">Pedido Finalizado</span>
-                <span class="badge badge-danger" v-show="selecionado.status === '5'">Pedido Cancelado</span>
-              </div>
-              <div class="small font-weight-bold float-right" v-show="selecionado.id_entrega">
-                <span class="bg-warning text-white rounded-sm px-1">Pedido Agendado</span>
+              <div id="andamento" class="font-weight-bold float-right">
+                <div v-if="!selecionado.id_entrega">
+                  <span class="badge badge-danger" v-if="selecionado.status === '1'">Aguardando</span>
+                  <span class="badge badge-info" v-if="selecionado.status === '2'">Preparando</span>
+                  <span class="badge badge-dark" v-if="selecionado.status === '3'">Entregando</span>
+                  <span class="badge badge-dark" v-if="selecionado.status === '4'">Pedido Finalizado</span>
+                  <span class="badge badge-danger" v-if="selecionado.status === '5'">Pedido Cancelado</span>
+                </div>
+                <span class="badge badge-warning" v-else-if="selecionado.id_entrega">Pedido Agendado</span>
               </div>
               <div class="mb-3">
                 <h5 class="m-0" v-if="pesquisa.keys.length > 1">{{selecionado.nome_fantasia}}</h5>
@@ -95,22 +95,24 @@
               <div v-show="selecionado.obs_cancelamento && selecionado.status === '5'">
                 <span><b class="text-danger">Cancelado:</b> {{selecionado.obs_cancelamento}}</span>
               </div>
-              <h6 v-show="selecionado.id_entrega">
-                <b class="text-danger">AGENDADO PARA:</b> {{selecionado.data_agendamento}}
+              <h6 v-if="selecionado.id_entrega">
+                <b class="text-danger">AGENDADO:</b> {{selecionado.data_agendamento}}
               </h6>
-              <h6 v-show="!selecionado.id_entrega && selecionado.tipo_pedido === '1' && selecionado.previsao_entrega">
-                Previsão de entrega: <b>{{selecionado.previsao_entrega}}</b>
-              </h6>
-              <h6 v-show="selecionado.tipo_pedido === '2' && selecionado.previsao_retirada">
-                Previsão de retirada: <b>{{selecionado.previsao_retirada}}</b>
-              </h6>
+              <div v-else>
+                <h6 v-show="!selecionado.id_entrega && selecionado.tipo_pedido === '1' && selecionado.previsao_entrega">
+                  Previsão de entrega: <b>{{selecionado.previsao_entrega}}</b>
+                </h6>
+                <h6 v-show="selecionado.tipo_pedido === '2' && selecionado.previsao_retirada">
+                  Previsão de retirada: <b>{{selecionado.previsao_retirada}}</b>
+                </h6>
+              </div>
               <div class="border p-2 mt-3 mb-2">
                 <h5 class="font-weight-bold m-0">{{selecionado.cliente.nome_cliente}}</h5>
                 <div v-if="selecionado.origin !== '3'">
                   Nº de Pedidos: {{selecionado.qtd_pedidos === '0' ? 'Primeiro pedido' : selecionado.qtd_pedidos + ' pedidos'}}
                 </div>
                 <div class="mt-1" v-if="selecionado.tipo_pedido === '1'">
-                  <h6 class="text-success font-weight-bold m-0">Entregar em:</h6>
+                  <h6 class="text-success font-weight-bold m-0">ENTREGAR EM:</h6>
                   <div>
                     {{selecionado.cliente.endereco}}, {{selecionado.cliente.numero}}, {{selecionado.cliente.bairro}} - {{selecionado.cliente.nome_cidade}} <br>
                     Cep: {{selecionado.cliente.cep}}
@@ -124,7 +126,7 @@
                   </div>
                 </div>
                 <div class="mt-1" v-else-if="selecionado.tipo_pedido === '2'">
-                  <h6 class="text-info font-weight-bold m-0">Retirar no local</h6>
+                  <h6 class="text-info font-weight-bold m-0">RETIRAR NO LOCAL</h6>
                   <div>
                     Cliente vai retirar o pedido
                   </div>
@@ -134,12 +136,12 @@
                   </a>
                 </div>
                 <div class="mt-1" v-else="selecionado.tipo_pedido === '3'">
-                  <h6 class="text-warning font-weight-bold m-0">Consumir no Local</h6>
+                  <h6 class="text-warning font-weight-bold m-0">CONSUMIR NO LOCAL</h6>
                   <div>
                     Cliente vai consumir o pedido no local
                   </div>
-                  <b>Mesa/Cliente: </b> {{selecionado.obs_pedido}}
                 </div>
+                <div v-if="selecionado.origin === '4'"><b>Local: </b> {{selecionado.obs_pedido}}</div>
               </div>
               <hr class="d-none">
               <div class="mb-3">
@@ -184,7 +186,7 @@
                   <b>Cobrar do Cliente:</b>
                 </div>
               </div>
-              <div v-if="selecionado.obs_pedido"><b>Obs:</b> {{selecionado.obs_pedido}}</div>
+              <div v-if="selecionado.origin !== '4' && selecionado.obs_pedido"><b>Obs:</b> {{selecionado.obs_pedido}}</div>
               <div v-if="selecionado.troco > 0"><b>Obs:</b> Troco para R${{(selecionado.troco) | valor}}</div>
             </div>
           </div>

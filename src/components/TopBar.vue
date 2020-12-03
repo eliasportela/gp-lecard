@@ -50,7 +50,7 @@
           <span>Portal</span>
         </a>
         <router-link to="/impressora" active-class="btn--active" class="btn btn-block">
-          <img src="../assets/icons/print.svg" alt="">
+          <img src="../assets/icons/settings.svg" alt="">
           <span>Configs</span>
         </router-link>
       </div>

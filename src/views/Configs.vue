@@ -118,7 +118,7 @@
           <div class="row mb-5">
             <div class="col-md-6">
               <h4 class="font-weight-bold mb-0">Sua Conta</h4>
-              <p>Para trocar de usuário use o botão abaixo</p>
+              <p>Para sair da sua conta use o botão abaixo</p>
               <button class="btn btn-outline-dark" @click="logout" style="width: 200px">Sair</button>
             </div>
             <div class="col-md-6">

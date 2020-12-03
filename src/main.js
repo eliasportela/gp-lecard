@@ -8,10 +8,12 @@ import 'animate.css/animate.css'
 import VueSweetalert2 from 'vue-sweetalert2'
 import store from './store'
 import VueTheMask from 'vue-the-mask'
+import VueFuse from 'vue-fuse'
 
 Vue.use(VueResource);
 Vue.use(VueSweetalert2);
 Vue.use(VueTheMask);
+Vue.use(VueFuse);
 
 Vue.use(new VueSocketIO({
   debug: false,
