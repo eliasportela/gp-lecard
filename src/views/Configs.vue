@@ -114,19 +114,22 @@
               </div>
             </div>
           </div>
-          <div class="row justify-content-end">
-            <div class="col-md-5">
-              <div class="mt-4 mb-3 border-top text-right">
-                <h4 class="font-weight-bold my-3 text-danger">Danger zone</h4>
-                <div>
-                  <button class="btn btn-danger" @click="resetar" style="width: 200px">Resetar sistema</button>
-                </div>
+          <hr>
+          <div class="row mb-5">
+            <div class="col-md-6">
+              <h4 class="font-weight-bold mb-0">Sua Conta</h4>
+              <p>Para trocar de usuário use o botão abaixo</p>
+              <button class="btn btn-outline-dark" @click="logout" style="width: 200px">Sair</button>
+            </div>
+            <div class="col-md-6">
+              <div class="text-right">
+                <h4 class="font-weight-bold text-danger mb-0">Danger zone</h4>
+                <p>Limpar as configurações do sistema</p>
+                <button class="btn btn-danger" @click="resetar" style="width: 200px">Resetar sistema</button>
               </div>
             </div>
           </div>
-          <div class="position-fixed" style="left: 86px; bottom: 12px;">
-            <span class="small font-weight-bold">Versão: {{version}}</span>
-          </div>
+          <div class="small font-weight-bold mb-3">Versão: {{version}}</div>
         </div>
       </div>
     </div>
@@ -214,10 +217,47 @@
       },
 
       resetar() {
-        config.clear();
-        localStorage.clear();
-        this.$router.push('/');
-        ipcRenderer.send('reload');
+        this.$swal({
+          text: "Deseja resetar o sistema?",
+          confirmButtonText: 'Sim',
+          cancelButtonText: "Cancelar",
+          showCancelButton: true,
+          customClass: {
+            cancelButton: 'btn btn-danger ml-3',
+            confirmButton: 'btn btn-success '
+          },
+          buttonsStyling: false
+        }).then((result) => {
+          if (result.value) {
+            config.clear();
+            localStorage.clear();
+            this.$router.push('/');
+            ipcRenderer.send('reload');
+          }
+        });
+
+      },
+
+      logout() {
+        this.$swal({
+          text: "Deseja sair do sistema?",
+          confirmButtonText: 'Sim',
+          cancelButtonText: "Cancelar",
+          showCancelButton: true,
+          customClass: {
+            cancelButton: 'btn btn-danger ml-3',
+            confirmButton: 'btn btn-success '
+          },
+          buttonsStyling: false
+        }).then((result) => {
+          if (result.value) {
+            config.delete('key');
+            config.delete('token');
+            config.delete('empresas');
+            localStorage.clear();
+            this.$router.push("/");
+          }
+        });
       }
     },
     created() {

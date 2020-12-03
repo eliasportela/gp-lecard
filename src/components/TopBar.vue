@@ -44,22 +44,20 @@
         <img src="../assets/icons/food-menu.svg" alt="">
         <span>Cardápio</span>
       </router-link>
-      <router-link to="/impressora" active-class="btn--active" class="btn btn-block">
-        <img src="../assets/icons/print.svg" alt="">
-        <span>Configs</span>
-      </router-link>
-      <a :href="'https://portal.lecard.delivery/'" target="_blank" class="btn btn-block">
-        <img src="../assets/icons/report.svg" alt="">
-        <span>Portal</span>
-      </a>
-      <a href="javascript:" @click="autoAtendimento" class="btn btn-block">
-        <img src="../assets/icons/pos.svg" alt="">
-        <span>Totem</span>
-      </a>
-      <a class="btn btn-block" @click="logout">
-        <img src="../assets/icons/logout.svg" alt="">
-        <span>Sair</span>
-      </a>
+      <div style="bottom: 8px; left: 8px; right: 8px; position: absolute">
+        <a :href="'https://portal.lecard.delivery/'" target="_blank" class="btn btn-block">
+          <img src="../assets/icons/report.svg" alt="">
+          <span>Portal</span>
+        </a>
+        <router-link to="/impressora" active-class="btn--active" class="btn btn-block">
+          <img src="../assets/icons/print.svg" alt="">
+          <span>Configs</span>
+        </router-link>
+      </div>
+      <!--<a href="javascript:" @click="autoAtendimento" class="btn btn-block">-->
+        <!--<img src="../assets/icons/pos.svg" alt="">-->
+        <!--<span>Totem</span>-->
+      <!--</a>-->
     </div>
 
     <modal :opened="modalOflline">
@@ -104,33 +102,6 @@ export default {
       audio.pause();
       this.bell = false;
       ipcRenderer.send('reloud-icon', false);
-    },
-
-    logout() {
-      this.$swal({
-        text: "Deseja sair do sistema?",
-        confirmButtonText: 'Sim',
-        cancelButtonText: "Cancelar",
-        showCancelButton: true,
-        customClass: {
-          cancelButton: 'btn btn-danger ml-3',
-          confirmButton: 'btn btn-success '
-        },
-        buttonsStyling: false
-      }).then((result) => {
-        if (result.value) {
-          this.logoff()
-        }
-      });
-    },
-
-    logoff() {
-      this.silenciar();
-      config.delete('key');
-      config.delete('token');
-      config.delete('empresas');
-      localStorage.clear();
-      this.$router.push("/");
     },
 
     statusEmpresa() {
@@ -269,7 +240,7 @@ export default {
     top: 0;
     left: 0;
     overflow-x: hidden;
-    padding: 65px 8px 0;
+    padding: 62px 8px 0;
   }
   .menu-lateral img {
     width: 24px;

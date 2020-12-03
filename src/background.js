@@ -25,8 +25,8 @@ app.setAppUserModelId('delivery.lecard.gplecard');
 function createWindow () {
   // Create the browser window.
   win = new BrowserWindow({
-    width: 1000,
-    height: 600,
+    minWidth: 1000,
+    minHeight: 600,
     webPreferences: {nodeIntegration: true},
     icon: path.join(__static, 'icon.png')
   });

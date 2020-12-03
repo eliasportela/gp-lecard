@@ -4,35 +4,61 @@
     <div style="height: 100vh; margin-left: 70px; position: relative;">
       <div class="container-pedidos">
         <div class="coluna-1">
-          <select class="form-control" v-model="pesquisa.status" @change="buscarPedidos(false)">
-            <option value="1">Em andamento</option>
-            <option value="4">Finalizados</option>
-            <option value="5">Cancelados</option>
-          </select>
+          <div class="row no-gutters mb-2">
+            <div class="col-6 pr-1">
+              <select class="form-control" v-model="pesquisa.status" @change="buscarPedidos(false)">
+                <option value="1">Em andamento</option>
+                <option value="4">Finalizados</option>
+                <option value="5">Cancelados</option>
+              </select>
+            </div>
+            <div class="col-6 pl-1">
+              <select class="form-control" v-model="pesquisa.nolocal" @change="buscarNoLocal()">
+                <option value="1">Todos</option>
+                <option value="2">No Local</option>
+              </select>
+            </div>
+          </div>
           <div class="bg-white coluna-1-1 border">
             <div v-show="!loading">
-              <div class="border-bottom p-2 pointer" v-for="p in pedidos" @click="selecionado = p" :class="{'bg-selecionado' : selecionado.id_pedido === p.id_pedido}">
-                <span class="small font-weight-bold bg-danger text-white rounded-sm px-1 float-right" v-show="p.status === '1'">Aguardando</span>
-                <span class="small font-weight-bold bg-danger text-white rounded-sm px-1 float-right" v-show="p.status === '5'">Cancelado</span>
-                <span class="small font-weight-bold bg-dark text-white rounded-sm px-1 float-right" v-show="p.status === '4'">Finalizado</span>
-                <div v-show="!p.id_entrega">
-                  <span class="small font-weight-bold bg-info text-white rounded-sm px-1 float-right" v-show="p.status === '2'">Preparando</span>
-                  <span class="small font-weight-bold bg-dark text-white rounded-sm px-1 float-right" v-show="p.status === '3'">Entregando</span>
+              <div class="d-flex justify-content-between border-bottom p-2 pointer"
+                   v-for="p in pedidos" @click="selecionado = p" :class="{'bg-selecionado' : selecionado.id_pedido === p.id_pedido}">
+                <div>
+                  <h6 class="mb-0" :class="p.status === '5' ? 'text-danger' : 'text-dark'">
+                    Pedido: {{p.id_pedido}}
+                  </h6>
+                  <div class="small">{{p.data_pedido}}</div>
+                  <div>
+                    <span class="badge badge-light text-dark pr-1" v-if="p.origin === '1'">APP Corporativo</span>
+                    <span class="badge badge-warning pr-1" v-if="p.origin === '4'">{{p.obs_pedido}}</span>
+                    <span class="badge badge-light text-danger" v-if="p.origin === '2'">APP Geral</span>
+                  </div>
                 </div>
-                <div v-show="p.id_entrega && (p.status === '2' || p.status === '3')">
-                  <span class="small font-weight-bold bg-warning text-white rounded-sm px-1 float-right">Agendado</span>
+                <div class="text-right">
+                  <span class="badge badge-danger" v-if="p.status === '1'">Aguardando</span>
+                  <span class="badge badge-dark" v-if="p.status === '4'">Finalizado</span>
+                  <span class="badge badge-danger" v-if="p.status === '5'">Cancelado</span>
+                  <div v-if="!p.id_entrega && p.origin !== '4'">
+                    <span class="badge badge-info" v-show="p.status === '2'">Preparando</span>
+                    <span class="badge badge-dark" v-show="p.status === '3'">Entregando</span>
+                  </div>
+                  <div v-else-if="p.id_entrega && p.status <= 3">
+                    <span class="badge badge-warning">Agendado</span>
+                  </div>
                 </div>
-                <h6 class="mb-0">Pedido: {{p.id_pedido}}</h6>
-                <span class="small">{{p.data_pedido}}</span>
               </div>
             </div>
           </div>
-          <div class="container-aceitar bg-white" style="left: 0; right: 16px; width: auto">
-            <div class="container-fluid small card">
-              <div class="row">
-                <div class="col-12 py-2" v-if="!loading">
-                  <div class="font-weight-bold m-0">Pedidos ({{totais.quantidade}})</div>
+          <div class="container-aceitar bg-white" style="left: 0; right: 8px; width: auto" v-if="!loading">
+            <div class="card p-2 small">
+              <div class="d-flex justify-content-between">
+                <div>
+                  <div class="font-weight-bold m-0">APP Delivery ({{totais.quantidade}})</div>
                   <div class="text-muted">R$ {{totais.total | valor}}</div>
+                </div>
+                <div class="text-right">
+                  <div class="font-weight-bold m-0">No Local ({{nolocal.quantidade}})</div>
+                  <div class="text-muted">R$ {{nolocal.total | valor}}</div>
                 </div>
               </div>
             </div>
@@ -40,19 +66,21 @@
         </div>
         <div class="coluna-2">
           <div class="conteudo-c2 border">
-            <div style="display: flex; height: 90%; justify-content: center; align-items: center;" v-show="selecionado.produtos.length === 0">
-              <div v-show="loading">
-                <img src="../assets/logo-lecard.png" class="d-block m-auto animated flipInY infinite" alt="Logo Lecard" style="width: 64px;">
+            <div v-show="selecionado.produtos.length === 0">
+              <div v-if="loading" style="padding-top: 28vh">
+                <img src="../assets/logo-lecard.png" class="d-block m-auto animated flipInY infinite" alt="Logo Lecard" style="width: 72px;">
               </div>
-              <div v-show="!loading"><b>Selecione um pedido</b></div>
+              <div v-else class="container-produtos">
+                <msg-home class="mt-1"/>
+              </div>
             </div>
             <div id="containerPedido" class="container-produtos" v-if="selecionado.cliente" v-show="!loading && selecionado.produtos.length > 0">
               <div id="andamento" class="font-weight-bold float-right" v-show="!selecionado.id_entrega">
                 <span class="badge badge-danger" v-show="selecionado.status === '1'">Aguardando</span>
                 <span class="badge badge-info" v-show="selecionado.status === '2'">Preparando</span>
                 <span class="badge badge-dark" v-show="selecionado.status === '3'">Entregando</span>
-                <span class="badge badge-dark" v-show="selecionado.status === '4'">Finalizado</span>
-                <span class="badge badge-danger" v-show="selecionado.status === '5'">Cancelado</span>
+                <span class="badge badge-dark" v-show="selecionado.status === '4'">Pedido Finalizado</span>
+                <span class="badge badge-danger" v-show="selecionado.status === '5'">Pedido Cancelado</span>
               </div>
               <div class="small font-weight-bold float-right" v-show="selecionado.id_entrega">
                 <span class="bg-warning text-white rounded-sm px-1">Pedido Agendado</span>
@@ -160,23 +188,23 @@
               <div v-if="selecionado.troco > 0"><b>Obs:</b> Troco para R${{(selecionado.troco) | valor}}</div>
             </div>
           </div>
-          <div class="container-aceitar bg-white">
-            <div class="container-fluid">
-              <div class="row pt-2 pb-2">
-                <div class="col-3">
-                  <button class="btn btn-outline-secondary btn-block" :disabled="!selecionado.status" @click="imprimir()" >Imprimir</button>
+          <div class="container-aceitar bg-white" style="left: 0; right: 0; width: auto">
+            <div class="card p-2">
+              <div class="d-flex justify-content-between">
+                <div class="w-25 mr-2">
+                  <button class="btn btn-outline-secondary btn-block" :disabled="!selecionado.status || loading" @click="imprimir()">Imprimir</button>
                 </div>
-                <div class="col-3" v-show="['1','2','3'].includes(selecionado.status)">
-                  <button class="btn btn-danger btn-block" @click="openModalCancelamento">{{selecionado.status === '1' ? 'Recusar' : 'Cancelar'}}</button>
+                <div class="w-25 mr-2" v-show="['1','2','3'].includes(selecionado.status)">
+                  <button class="btn btn-danger btn-block" @click="openModalCancelamento" :disabled="loading">{{selecionado.status === '1' ? 'Recusar' : 'Cancelar'}}</button>
                 </div>
-                <div class="col-6 text-right" v-show="selecionado.status === '1'">
-                  <button class="btn btn-success btn-block" @click="acaoPedido(2)">Aceitar</button>
+                <div class="w-50 ml-auto" v-if="selecionado.status === '1'">
+                  <button class="btn btn-success btn-block" @click="acaoPedido(2)" :disabled="loading">Aceitar</button>
                 </div>
-                <div class="col-6 text-right" v-show="selecionado.status === '2'">
-                  <button class="btn btn-dark btn-block" @click="acaoPedido(3)">{{selecionado.tipo_pedido === '1' ? 'Enviar p/ Entrega' : 'Pronto para retirar'}}</button>
+                <div class="w-50 ml-auto" v-if="selecionado.status === '2'">
+                  <button class="btn btn-dark btn-block" @click="acaoPedido(3)" :disabled="loading">Despachar</button>
                 </div>
-                <div class="col-6 text-right" v-show="selecionado.status === '3'">
-                  <button class="btn btn-info btn-block" @click="acaoPedido(4)">Finalizar</button>
+                <div class="w-50 ml-auto" v-if="selecionado.status === '3'">
+                  <button class="btn btn-info btn-block" @click="acaoPedido(4)" :disabled="loading">Finalizar</button>
                 </div>
               </div>
             </div>
@@ -205,6 +233,7 @@
 </template>
 
 <script>
+import MsgHome from "../components/MsgHome";
 const { ipcRenderer } = require('electron');
 const Config = require('electron-config');
 const config = new Config();
@@ -216,6 +245,7 @@ import Modal from '../components/Modal'
 export default {
   name: 'Pedidos',
   components: {
+    MsgHome,
     Modal,
     HelloWorld, TopBar
   },
@@ -225,7 +255,8 @@ export default {
       pedidos: [],
       pesquisa: {
         status: 1,
-        keys: []
+        keys: [],
+        nolocal: 1
       },
       selecionado: {
         produtos: [],
@@ -237,14 +268,35 @@ export default {
       socket: true,
       totais: {
         total: 0,
-        qtd: 0
+        quantidade: 0
+      },
+      nolocal: {
+        total: 0,
+        quantidade: 0
       },
       empresas: []
     }
   },
 
   methods: {
+    buscarNoLocal() {
+      if (this.pesquisa.nolocal === '2') {
+        this.pedidos = this.pedidos.filter(p => p.origin === '4');
+        if (this.pedidos.length) {
+          this.selecionado = this.pedidos[0];
+        } else {
+          this.selecionado = {
+            produtos: [],
+            total: 0
+          }
+        }
+      } else {
+        this.buscarPedidos()
+      }
+    },
+
     buscarPedidos(play, callback) {
+      this.pesquisa.nolocal = '1';
       this.loading = true;
 
       this.$http.get('delivery/pedidos', {params: this.pesquisa})
@@ -255,6 +307,7 @@ export default {
 
           this.pedidos = response.data.pedidos;
           this.totais = response.data.totais;
+          this.nolocal = response.data.nolocal;
 
           if (this.pedidos.length > 0) {
             if (play) {
@@ -301,6 +354,10 @@ export default {
     },
 
     acaoPedido(status) {
+      if (this.loading) {
+        return;
+      }
+
       this.modalCancelamento = false;
       this.loading = true;
 
@@ -345,6 +402,10 @@ export default {
     },
 
     imprimir(ncopias) {
+      if (!this.selecionado.id_pedido) {
+        return;
+      }
+
       let options = {
         content: document.getElementById('containerPedido').innerHTML,
         copies: ncopias ? ncopias : 1,
@@ -431,10 +492,12 @@ export default {
   }
   .coluna-1 {
     position: absolute; top: 0; bottom: 0; width: 40%;
-    padding-right: 16px;
+    padding-right: 8px;
   }
   .coluna-1 .coluna-1-1 {
-    position: absolute; top: 28px; bottom: 62px; right: 16px; left: 0; overflow: auto; margin-top: 18px; padding: 0
+    top: 28px;
+    /*top: 75px;*/
+    position: absolute; bottom: 62px; right: 8px; left: 0; overflow: auto; margin-top: 18px; padding: 0
   }
   .coluna-2 {
     position: absolute; top: 0; bottom: 0; right: 0; width: 60%;
@@ -460,5 +523,14 @@ export default {
   }
   .bg-selecionado {
     background-color: #e9ecef;
+  }
+
+  @media (min-width:1200px) {
+    .coluna-1 {
+      width: 30%;
+    }
+    .coluna-2 {
+      width: 70%;
+    }
   }
 </style>

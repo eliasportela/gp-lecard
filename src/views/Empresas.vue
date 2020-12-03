@@ -59,7 +59,7 @@ export default {
       empresa.isDefault = true;
       config.set('empresas', this.empresas);
 
-      this.$router.push("/home");
+      this.$router.push("/pedidos");
       ipcRenderer.send('reload');
     },
 
