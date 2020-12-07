@@ -85,7 +85,7 @@
                 </div>
                 <span class="badge badge-warning" v-else-if="selecionado.id_entrega">Pedido Agendado</span>
               </div>
-              <div class="mb-3">
+              <div class="mb-2">
                 <h5 class="m-0" v-if="pesquisa.keys.length > 1">{{selecionado.nome_fantasia}}</h5>
                 <div class="m-0 font-weight-bold">Pedido: {{selecionado.id_pedido}} - {{selecionado.data_pedido}}</div>
                 <div class="font-weight-bold" v-if="selecionado.origin === '2'">
@@ -96,8 +96,9 @@
                 <span><b class="text-danger">Cancelado:</b> {{selecionado.obs_cancelamento}}</span>
               </div>
               <h6 v-if="selecionado.id_entrega">
-                <b class="text-danger">AGENDADO:</b> {{selecionado.data_agendamento}}
+                <b class="text-danger">Agendado:</b> {{selecionado.data_agendamento}}
               </h6>
+              <h6 class="m-0" v-if="selecionado.origin === '4'"><b>Local: </b> {{selecionado.obs_pedido}}</h6>
               <div v-else>
                 <h6 v-show="!selecionado.id_entrega && selecionado.tipo_pedido === '1' && selecionado.previsao_entrega">
                   Previsão de entrega: <b>{{selecionado.previsao_entrega}}</b>
@@ -141,7 +142,6 @@
                     Cliente vai consumir o pedido no local
                   </div>
                 </div>
-                <div v-if="selecionado.origin === '4'"><b>Local: </b> {{selecionado.obs_pedido}}</div>
               </div>
               <hr class="d-none">
               <div class="mb-3">
@@ -309,7 +309,9 @@ export default {
 
           this.pedidos = response.data.pedidos;
           this.totais = response.data.totais;
-          this.nolocal = response.data.nolocal;
+          if (response.data.nolocal) {
+            this.nolocal = response.data.nolocal;
+          }
 
           if (this.pedidos.length > 0) {
             if (play) {
