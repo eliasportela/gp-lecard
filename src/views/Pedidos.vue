@@ -1,6 +1,6 @@
 <template>
   <div>
-    <top-bar @delivery_order="buscarPedidos(true)" @delivery_desativado="deliveryDesativado"/>
+    <top-bar @delivery_order="buscarPedidos" @delivery_desativado="deliveryDesativado"/>
     <div style="height: 100vh; margin-left: 70px; position: relative;">
       <div class="container-pedidos">
         <div class="coluna-1">

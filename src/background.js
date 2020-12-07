@@ -25,6 +25,8 @@ app.setAppUserModelId('delivery.lecard.gplecard');
 function createWindow () {
   // Create the browser window.
   win = new BrowserWindow({
+    width: 1000,
+    height: 600,
     minWidth: 1000,
     minHeight: 600,
     webPreferences: {nodeIntegration: true},
@@ -134,6 +136,12 @@ ipcMain.on('reload', () => {
   win.reload();
 });
 
+ipcMain.on('focus', () => {
+  if (win) {
+    win.show()
+  }
+});
+
 ipcMain.on('reloud-icon', (evt, option) => {
   if (option) {
     win.setOverlayIcon(path.join(__static, 'one.png'), 'Novo pedido');
@@ -160,7 +168,7 @@ ipcMain.on('readyToPrint', (event) => {
 
 ipcMain.on('autoatendimento', () => {
   if (winAuto) {
-    winAuto.show()
+    winAuto.show();
     return;
   }
 

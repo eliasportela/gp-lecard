@@ -93,7 +93,8 @@ export default {
       empresaAtiva: false,
       connected: false,
       modalOflline: false,
-      bell: false
+      bell: false,
+      notification: ''
     }
   },
 
@@ -123,7 +124,7 @@ export default {
                     icon: document.getElementById('imgEmpresa').src
                   });
                 }
-              }, 60000)
+              }, 60000);
 
               sessionStorage.setItem('delivery_desativado', 'true');
             }
@@ -156,10 +157,19 @@ export default {
     },
 
     dialogNotify(empresa) {
-      new Notification(empresa ? ('LeCard - ' + empresa) : 'LeCard - Gestor de Pedidos', {
+      this.notification = new Notification(empresa ? ('LeCard - ' + empresa) : 'LeCard - Gestor de Pedidos', {
         body: 'Tem pedido novo na área ❤️',
         icon: document.getElementById('imgEmpresa').src
-      })
+      });
+
+      this.notification.onclick = (event) => {
+        event.preventDefault();
+        ipcRenderer.send('focus');
+
+        if (this.$route.name !== 'Pedidos') {
+          this.$router.push('/pedidos');
+        }
+      };
     },
 
     autoAtendimento() {
@@ -178,7 +188,7 @@ export default {
     connect() {
       this.connected = true;
       this.modalOflline = false;
-      this.$emit('delivery_order');
+      this.$emit('delivery_order', true);
     },
 
     disconnect() {
@@ -201,7 +211,7 @@ export default {
     },
 
     delivery_order() {
-      this.$emit('delivery_order');
+      this.$emit('delivery_order', true);
     }
   },
 
