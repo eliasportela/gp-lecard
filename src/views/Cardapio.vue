@@ -9,10 +9,9 @@
             <div class="small mt-3 font-weight-bold">Carregando o cardápio..</div>
           </div>
         </div>
-        <div id="categorias" class="pt-3" style="margin-bottom: 32px" v-show="!loading">
+        <div id="categorias" class="pt-4" style="margin-bottom: 32px" v-show="!loading">
           <div class="mb-3">
             <div class="form-group">
-              <label for="search" class="mb-0 font-weight-bold">Pesquisar</label>
               <div class="input-group">
                 <input id="search" type="text" class="form-control small" placeholder="Nome do produto" v-model="term" @keyup="pesquisar">
                 <a href="javascript:" class="input-group-append text-decoration-none" @click="clear">

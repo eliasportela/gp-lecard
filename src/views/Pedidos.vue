@@ -4,7 +4,7 @@
     <div style="height: 100vh; margin-left: 70px; position: relative;">
       <div class="container-pedidos">
         <div class="coluna-1">
-          <div class="row no-gutters mb-2">
+          <div class="row no-gutters mb-2" v-if="pesquisa.nolocal !== '3'">
             <div class="col-6 pr-1">
               <select class="form-control" v-model="pesquisa.status" @change="buscarPedidos(false)">
                 <option value="1">Em andamento</option>
@@ -16,7 +16,16 @@
               <select class="form-control" v-model="pesquisa.nolocal" @change="buscarNoLocal()">
                 <option value="1">Todos</option>
                 <option value="2">No Local</option>
+                <option value="3">Filtrar data</option>
               </select>
+            </div>
+          </div>
+          <div class="row no-gutters mb-2" v-else>
+            <div class="col-7 pr-1">
+              <input type="date" id="noLocal" class="form-control" v-model="pesquisa.data" @change="buscarPedidos(false)">
+            </div>
+            <div class="col-5 pl-1">
+              <button class="btn btn-dark btn-block" @click="clearPesquisa()">Voltar</button>
             </div>
           </div>
           <div class="bg-white coluna-1-1 border">
@@ -258,7 +267,8 @@ export default {
       pesquisa: {
         status: 1,
         keys: [],
-        nolocal: 1
+        nolocal: 1,
+        data: ''
       },
       selecionado: {
         produtos: [],
@@ -292,15 +302,31 @@ export default {
             total: 0
           }
         }
+      } else if (this.pesquisa.nolocal === '1') {
+        this.buscarPedidos();
+
       } else {
-        this.buscarPedidos()
+        this.pesquisa.data = new Date().toDateInputValue();
+        setTimeout(() => {
+          document.getElementById("noLocal").focus()
+        }, 200);
+        this.buscarPedidos(false);
       }
     },
 
-    buscarPedidos(play, callback) {
-      this.pesquisa.nolocal = '1';
-      this.loading = true;
+    clearPesquisa() {
+      this.pesquisa.status = 1;
+      this.pesquisa.nolocal = 1;
+      this.pesquisa.data = '';
+      this.buscarPedidos(false);
+    },
 
+    buscarPedidos(play, callback) {
+      if (this.pesquisa.nolocal === '2') {
+        this.pesquisa.nolocal = '1';
+      }
+
+      this.loading = true;
       this.$http.get('delivery/pedidos', {params: this.pesquisa})
         .then(response => {
           if (!response.data) {

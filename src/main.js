@@ -25,6 +25,12 @@ Vue.http.options.emulateJSON = true;
 Vue.http.options.emulateHTTP = true;
 Vue.http.options.root = process.env.VUE_APP_BASE_SERVER + 'api/';
 
+Date.prototype.toDateInputValue = (function() {
+  let local = new Date(this);
+  local.setMinutes(this.getMinutes() - this.getTimezoneOffset());
+  return local.toJSON().slice(0,10);
+});
+
 new Vue({
   router,
   store,
