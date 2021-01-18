@@ -23,10 +23,17 @@ Vue.use(new VueSocketIO({
   connection: process.env.VUE_APP_BASE_SOCKET
 }));
 
+const base_server = (config.get('base_server') ? config.get('base_server') : process.env.VUE_APP_BASE_SERVER);
 Vue.config.productionTip = false;
 Vue.http.options.emulateJSON = true;
 Vue.http.options.emulateHTTP = true;
-Vue.http.options.root = (config.get('base_server') ? config.get('base_server') : process.env.VUE_APP_BASE_SERVER) + 'api/';
+Vue.http.options.root = base_server + 'api/';
+
+Vue.mixin({
+  data() {
+    return { base_server }
+  }
+});
 
 Date.prototype.toDateInputValue = (function() {
   let local = new Date(this);

@@ -89,7 +89,6 @@ export default {
   },
   data() {
     return {
-      base_server: process.env.VUE_APP_BASE_SERVER,
       token: localStorage.getItem('key'),
       empresa: {
         ativo: '1',
