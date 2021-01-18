@@ -103,7 +103,7 @@
 
       this.empresas = config.get('empresas') ? config.get('empresas') : [];
       this.key = config.get('key');
-
+      
       if (this.key) {
         const ia = config.get('impressaoAutomatica') ? config.get('impressaoAutomatica') : 0;
         const nCopias = config.get('nCopias') ? config.get('nCopias') : 1;
@@ -151,12 +151,16 @@
 
 <style>
   .content {
-    margin-top: 50px;
+    margin-top: 55px;
     margin-left: 70px;
     position: relative;
   }
 
   .pointer {
     cursor: pointer;
+  }
+
+  .switch {
+    width: 32px;
   }
 </style>

@@ -10,6 +10,9 @@ import store from './store'
 import VueTheMask from 'vue-the-mask'
 import VueFuse from 'vue-fuse'
 
+const Config = require('electron-config');
+const config = new Config();
+
 Vue.use(VueResource);
 Vue.use(VueSweetalert2);
 Vue.use(VueTheMask);
@@ -23,7 +26,7 @@ Vue.use(new VueSocketIO({
 Vue.config.productionTip = false;
 Vue.http.options.emulateJSON = true;
 Vue.http.options.emulateHTTP = true;
-Vue.http.options.root = process.env.VUE_APP_BASE_SERVER + 'api/';
+Vue.http.options.root = (config.get('base_server') ? config.get('base_server') : process.env.VUE_APP_BASE_SERVER) + 'api/';
 
 Date.prototype.toDateInputValue = (function() {
   let local = new Date(this);

@@ -12,6 +12,7 @@ export default new Vuex.Store({
       nome_fantasia: '',
       id_funcao: '',
       site: '',
+      master: ''
     }
   },
   mutations: {
@@ -21,7 +22,8 @@ export default new Vuex.Store({
         nome_usuario: data.dados.nome,
         nome_fantasia: data.dados.nome_fantasia,
         id_funcao: data.dados.id_funcao,
-        site: data.dados.site
+        site: data.dados.site,
+        master: data.dados.master,
       };
     },
 

@@ -362,10 +362,6 @@
   }
 </script>
 <style scoped>
-  .switch {
-    width: 32px;
-  }
-
   .visibility {
     visibility: hidden;
   }

@@ -119,7 +119,7 @@
             <div class="col-md-6">
               <h4 class="font-weight-bold mb-0">Sua Conta</h4>
               <p>Para sair da sua conta use o botão abaixo</p>
-              <button class="btn btn-outline-dark" @click="logout" style="width: 200px">Sair</button>
+              <button class="btn btn-outline-dark" @click="confirmLogout" style="width: 200px">Sair</button>
             </div>
             <div class="col-md-6">
               <div class="text-right">
@@ -127,6 +127,15 @@
                 <p>Limpar as configurações do sistema</p>
                 <button class="btn btn-danger" @click="resetar" style="width: 200px">Resetar sistema</button>
               </div>
+            </div>
+          </div>
+          <div class="mb-5" v-if="master">
+            <hr>
+            <h5 class="font-weight-bold mb-3">Modo Homologação</h5>
+            <div class="d-inline-block pointer" @click="toggleHomologacao()">
+              <span class="pr-2">{{modo_homologacao ? 'Ativado' : 'Desativado'}}</span>
+              <img class="switch" src="../assets/icons/switch-on.svg" v-show="modo_homologacao">
+              <img class="switch" src="../assets/icons/switch-off.svg" v-show="!modo_homologacao">
             </div>
           </div>
           <div class="small font-weight-bold mb-3">Versão: {{version}}</div>
@@ -160,7 +169,8 @@
           nCopias: '1',
           zoom: '1',
         },
-        dados: {}
+        dados: {},
+        modo_homologacao: false
       }
     },
     methods: {
@@ -239,6 +249,13 @@
       },
 
       logout() {
+        config.delete('key');
+        config.delete('token');
+        config.delete('empresas');
+        localStorage.clear();
+      },
+
+      confirmLogout() {
         this.$swal({
           text: "Deseja sair do sistema?",
           confirmButtonText: 'Sim',
@@ -251,13 +268,25 @@
           buttonsStyling: false
         }).then((result) => {
           if (result.value) {
-            config.delete('key');
-            config.delete('token');
-            config.delete('empresas');
-            localStorage.clear();
+            this.logout();
             this.$router.push("/");
           }
         });
+      },
+
+      toggleHomologacao() {
+        this.logout();
+
+        this.modo_homologacao = !this.modo_homologacao;
+        if (this.modo_homologacao) {
+          config.set('base_server','https://api.storkdigital.com.br/dev/');
+
+        } else {
+          config.delete('base_server');
+        }
+
+        this.$router.push("/");
+        ipcRenderer.send('reload');
       }
     },
     created() {
@@ -271,16 +300,22 @@
       this.config.nCopias = localStorage.getItem('nCopias');
       this.config.zoom = localStorage.getItem('zoom');
       this.version = require('electron').remote.app.getVersion();
+      this.modo_homologacao = config.get('base_server');
 
       // ipcRenderer.send('print-list');
       // ipcRenderer.on('print-list', (event, arg) => {
       //   this.printers = arg;
       // });
     },
+
     computed: {
       adm() {
         return this.$store.state.dataUser.id_funcao === '1'
+      },
+
+      master() {
+        return this.$store.state.dataUser.master === '1'
       }
-    }
+    },
   }
 </script>

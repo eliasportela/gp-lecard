@@ -1,35 +1,36 @@
 <template>
   <div>
-    <div class="fixed-top p-2 shadow-sm bg-white">
+    <div class="fixed-top shadow-sm bg-white">
       <div class="container-fluid">
-        <div class="row">
-          <div class="col-5 align-self-center">
+        <div class="row py-1 align-items-center">
+          <div class="col-5">
             <router-link to="/empresas" class="text-dark">
               <img src="../assets/logo-lecard.png" alt="" style="width: 32px" id="imgEmpresa">
-              <span class="font-weight-bold small pl-3">{{dados.nome_fantasia}}</span>
+              <span class="font-weight-bold small pl-3">{{dados.nome_fantasia}} {{homologacao ? '(Teste)' : ''}}</span>
             </router-link>
           </div>
-          <div class="col-4 align-self-center">
-            <div class="text-center" v-show="!load">
-              <a class="small text-danger font-weight-bold" href="javascript:" v-show="empresa.status === 1" @click="toogleStatus()">
-                <span class="pr-2">Desativar delivery</span>
-                <img src="../assets/icons/switch-on.svg" style="width: 32px">
-              </a>
-              <a class="small font-weight-bold text-dark" title="Clique para ativar o delivery" href="#" v-show="empresa.status === 0" @click="toogleStatus()">
-                <span class="pr-2">Ativar delivery</span>
-                <img src="../assets/icons/switch-off.svg" style="width: 32px">
-              </a>
+          <div class="col-7 d-flex justify-content-end align-items-center">
+            <div class="mr-3" v-if="bell">
+              <button class="btn btn-outline-danger" @click="silenciar">
+                Silenciar
+              </button>
             </div>
-          </div>
-          <div class="col-3 text-right align-self-center">
-            <div>
-              <a href="javascript:" class="pr-3" title="Clique para silenciar o toque! =)" @click="silenciar">
-                <img class="d-inline-block" :class="{'animated pulse infinite': bell}" src="../assets/icons/notification.svg" style="width: 24px"/>
-              </a>
-              <a href="javascript:" @click="reloadPage" class="small" style="text-decoration: none">
-                <span class="font-weight-bold text-success" v-show="connected">Você está online</span>
-                <span class="font-weight-bold text-danger" v-show="!connected">Você está offline</span>
-              </a>
+            <button class="btn mr-3" :class="empresa.ativo === '1' ? 'btn-danger' : 'btn-dark'" @click="toogleStatus()" :disabled="load">
+              {{empresa.ativo === '1' ? 'Desativar agora' : 'Ativar Loja'}}
+            </button>
+            <div class="border rounded p-1 px-2" @click="reloadPage" style="width: 250px; height: 50px">
+              <div v-show="!load">
+                <h6 class="m-0 text-danger" v-if="!connected">Você está offline</h6>
+                <h6 class="m-0 text-success" v-else-if="empresa.ativo === '1' && empresa.aberto === '1'">Loja Aberta</h6>
+                <h6 class="m-0 text-warning" v-else-if="empresa.ativo === '1' && empresa.entregas.length">Loja Fechada</h6>
+                <h6 class="m-0 text-dark" v-else>{{empresa.ativo === '1' ? 'Loja Fechada' : 'Loja Desativada'}}</h6>
+                <div class="small">
+                  <span v-if="!connected">Verifique sua coneção com a internet</span>
+                  <span v-else-if="empresa.ativo === '1' && empresa.aberto === '1'">Dentro do horário de expediente</span>
+                  <span v-else-if="empresa.ativo === '1' && empresa.entregas.length">Aceitando apenas pedidos agendados</span>
+                  <span v-else>{{empresa.ativo === '1' ? 'Fora do horário de expediente' : 'Ative a loja para receber pedidos'}}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -43,6 +44,10 @@
       <router-link to="/cardapio" active-class="btn--active" class="btn btn-block">
         <img src="../assets/icons/food-menu.svg" alt="">
         <span>Cardápio</span>
+      </router-link>
+      <router-link to="/vantagens" active-class="btn--active" class="btn btn-block">
+        <img src="../assets/icons/vantagens.svg" alt="">
+        <span>Vantagens</span>
       </router-link>
       <div style="bottom: 8px; left: 8px; right: 8px; position: absolute">
         <a :href="'https://portal.lecard.delivery/'" target="_blank" class="btn btn-block">
@@ -84,17 +89,21 @@ export default {
   },
   data() {
     return {
+      base_server: process.env.VUE_APP_BASE_SERVER,
       token: localStorage.getItem('key'),
       empresa: {
-        status: 1,
-        agendamento: 1,
+        ativo: '1',
+        status: '1',
+        aberto: '0',
+        entregas: [],
       },
       load: true,
       empresaAtiva: false,
       connected: false,
       modalOflline: false,
       bell: false,
-      notification: ''
+      notification: '',
+      homologacao: config.get('base_server')
     }
   },
 
@@ -107,18 +116,14 @@ export default {
 
     statusEmpresa() {
       if (localStorage.getItem('token')) {
-        this.$http.get('delivery/empresa/status/' + localStorage.getItem('token'))
+        this.$http.get(this.base_server + 'delivery/' + localStorage.getItem('token') + '/empresa/status/')
           .then(response => {
-            this.empresa.status = parseInt(response.data.status);
-            this.empresa.agendamento = parseInt(response.data.agendamento);
-            this.load = false;
+            this.empresa = response.data;
 
-            const status = this.empresa.status === 0 && this.empresa.agendamento === 0 && !sessionStorage.getItem('delivery_desativado');
-            if (status){
+            if (this.empresa.ativo === '0' && !sessionStorage.getItem('delivery_desativado')){
               this.$emit('delivery_desativado');
-
               setTimeout(() => {
-                if (this.empresa.status === 0 && this.empresa.agendamento === 0) {
+                if (this.empresa.ativo === '0') {
                   new Notification('LeCard - Gestor de Pedidos', {
                     body: 'Seu delivery está desativado, seus pedidos não serão aceitos!',
                     icon: document.getElementById('imgEmpresa').src
@@ -129,6 +134,8 @@ export default {
               sessionStorage.setItem('delivery_desativado', 'true');
             }
 
+            this.load = false;
+
           }, res => {
             console.log(res);
           });
@@ -136,17 +143,44 @@ export default {
     },
 
     toogleStatus() {
-      let dados = {
-        status: this.empresa.status === 1 ? 0 : 1
-      };
+      if (this.load) {
+        return;
+      }
 
-      this.empresa.status = dados.status;
+      if (this.empresa.ativo === '1') {
+        this.$swal({
+          icon: 'warning',
+          title: 'Atenção!',
+          text: "Ao desativar sua loja seus clientes não poderão realizar mais pedidos ao menos que você ative novamente a empresa. Deseja realmente desativar?",
+          confirmButtonText: 'Sim',
+          cancelButtonText: "Cancelar",
+          showCancelButton: true,
+          customClass: {
+            cancelButton: 'btn btn-danger w-25 m-2',
+            confirmButton: 'btn btn-primary w-25 m-2'
+          },
+          buttonsStyling: false
+        }).then((result) => {
+          if (result.value) {
+            this.changeStatus();
+          }
+        });
+
+      } else {
+        this.changeStatus();
+      }
+    },
+
+    changeStatus() {
+      this.load = true;
+      const dados = { status: this.empresa.ativo === '1' ? '0' : '1' };
       this.$http.post('delivery/empresa/status/' + this.token, dados)
         .then(response => {
+          this.statusEmpresa();
 
         }, res => {
           console.log(res);
-          this.empresa.status = dados.status === 1 ? 0 : 1;
+          this.empresa.ativo = dados.status === '1' ? '0' : '1';
           this.$swal('', res.data.msg ? res.data.msg : 'Erro temporário');
         });
     },
@@ -250,7 +284,7 @@ export default {
     top: 0;
     left: 0;
     overflow-x: hidden;
-    padding: 62px 8px 0;
+    padding: 65px 8px 0;
   }
   .menu-lateral img {
     width: 24px;
