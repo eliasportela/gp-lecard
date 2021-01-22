@@ -46,7 +46,7 @@
                 <div class="text-right">
                   <span class="badge badge-danger" v-if="p.status === '1'">Aguardando</span>
                   <span class="badge badge-dark" v-if="p.status === '4'">Finalizado</span>
-                  <span class="badge badge-danger" v-if="p.status === '5'">Cancelado</span>
+                  <span class="badge border border-danger text-danger" v-if="p.status === '5'">Cancelado</span>
                   <div v-if="!p.id_entrega && p.origin !== '4'">
                     <span class="badge badge-info" v-show="p.status === '2'">Preparando</span>
                     <span class="badge badge-dark" v-show="p.status === '3'">Entregando</span>
@@ -101,8 +101,10 @@
                   <span class="badge badge-info">Realizado pelo LeCard Geral</span>
                 </div>
               </div>
-              <div v-show="selecionado.obs_cancelamento && selecionado.status === '5'">
-                <span><b class="text-danger">Cancelado:</b> {{selecionado.obs_cancelamento}}</span>
+              <div v-show="selecionado.status === '5'">
+                <span><b class="text-danger">Cancelado:</b>
+                  {{selecionado.obs_cancelamento ? selecionado.obs_cancelamento : 'Pedido cancelado pelo cliente'}}
+                </span>
               </div>
               <h6 v-if="selecionado.id_entrega">
                 <b class="text-danger">Agendado:</b> {{selecionado.data_agendamento}}
@@ -183,7 +185,7 @@
                   Desconto:
                 </div>
                 <div>
-                  <span class="float-right">{{selecionado.id_pagamento | pagamento}}</span>
+                  <span class="float-right">{{selecionado.nome_pagamento}}</span>
                   Forma de Pagamento:
                 </div>
                 <div v-if="selecionado.troco && (parseFloat(selecionado.troco) > selecionado.total)">

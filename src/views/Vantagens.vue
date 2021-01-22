@@ -17,9 +17,11 @@
                 <div class="card-body">
                   <div class="form-group">
                     <label class="mb-0" for="voucher">Código do Voucher</label>
-                    <input type="text" id="voucher" class="form-control" placeholder="Ex: V100232" v-model="dados.voucher"/>
+                    <input type="text" id="voucher" class="form-control" placeholder="Ex: V100232" v-model="dados.voucher" @keyup.enter="validarVoucher"/>
                   </div>
-                  <button class="btn btn-dark btn-block" @click="validarVoucher">Validar Voucher</button>
+                  <button class="btn btn-dark btn-block" @click="validarVoucher" :disabled="loadVoucher">
+                    {{loadVoucher ? 'Validando..' : 'Validar Voucher'}}
+                  </button>
                 </div>
               </div>
             </div>
@@ -31,7 +33,7 @@
                     <th>Benefício</th>
                     <th class="text-center">Status</th>
                   </tr>
-                  <tr class="pointer" v-for="d in fidelidade.beneficios">
+                  <tr v-for="d in fidelidade.beneficios">
                     <td @click="selBeneficio(d)">
                       {{d.pontos}} Pontos -
                       {{d.titulo}}
@@ -60,6 +62,7 @@
     data() {
       return {
         load: true,
+        loadVoucher: false,
         token: localStorage.getItem('key'),
         fidelidade: {
           beneficios: []
@@ -85,10 +88,14 @@
       },
 
       validarVoucher() {
-        this.load = true;
+        if (this.loadVoucher) {
+          return;
+        }
+
+        this.loadVoucher = true;
         this.$http.post('voucher/validar/' + this.token, this.dados)
           .then(res => {
-            this.load = false;
+            this.loadVoucher = false;
 
             if (res.data.result) {
               this.$swal("Sucesso", res.data.msg, "success");
@@ -99,7 +106,7 @@
             }
 
           }, res => {
-            this.load = false;
+            this.loadVoucher = false;
             this.$swal(res.data.result,res.data.msg);
           });
       },
