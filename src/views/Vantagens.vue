@@ -10,7 +10,7 @@
           </div>
         </div>
         <div v-show="!load">
-          <div class="row no-gutters">
+          <div class="row no-gutters" v-if="fidelidade.beneficios.length">
             <div class="col-md-5 pr-3">
               <h5 class="font-weight-bold mb-3">Validador de Vouchers</h5>
               <div class="card">
@@ -44,6 +44,17 @@
                     </td>
                   </tr>
                 </table>
+              </div>
+            </div>
+          </div>
+          <div class="text-center mb-3" v-else>
+            <div class="img-bkg bg-light shadow-sm border">
+              <div class="img-bkg-container">
+                <div>
+                  <h3 class="font-weight-bolder text-danger mb-3">Programa de Vantagens</h3>
+                  <p class="mb-0">Fidelize seus clientes com benefícios e vantagens. Quanto mais ele compra, mais ele ganha!</p>
+                  <p class="mb-0">Habilite este módulo com a nossa equipe.</p>
+                </div>
               </div>
             </div>
           </div>
@@ -139,3 +150,16 @@
     }
   }
 </script>
+<style scoped>
+  .img-bkg {
+    height: 450px;
+    border-radius: 8px;
+  }
+  .img-bkg-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+</style>

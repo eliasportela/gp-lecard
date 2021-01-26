@@ -92,7 +92,7 @@
                   <option value="0">Não</option>
                 </select>
               </div>
-              <div class="mt-2">
+              <div class="mt-2" v-if="config.automatica === '1'">
                 <label for="nCopia">Número de cópias (Automáticas)</label>
                 <select class="form-control" id="nCopia" v-model="config.nCopias">
                   <option value="1">1</option>

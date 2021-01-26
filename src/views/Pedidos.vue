@@ -364,6 +364,8 @@ export default {
               this.selecionado = this.pedidos[0];
             }
 
+            this.$emit('ativarEmpresa');
+
           } else {
             this.selecionado = {
               produtos: [],
@@ -426,6 +428,14 @@ export default {
 
         }, res => {
           this.loading = false;
+          const data = res.data;
+
+          if (data && data.status == 1) {
+            this.$swal("", data.msg).then(() => {
+              this.buscarPedidos(false);
+            });
+          }
+
           console.log(res);
           if (res.status === 401) {
             ipcRenderer.send('reload');

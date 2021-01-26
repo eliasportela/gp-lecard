@@ -15,10 +15,10 @@
                 Silenciar
               </button>
             </div>
-            <button class="btn mr-3" :class="empresa.ativo === '1' ? 'btn-danger' : 'btn-dark'" @click="toogleStatus()" :disabled="load">
+            <button class="btn mr-3" :class="empresa.ativo === '1' ? 'btn-danger' : 'btn-dark'" @click="toogleStatus()" :disabled="load" v-if="!load">
               {{empresa.ativo === '1' ? 'Desativar agora' : 'Ativar Loja'}}
             </button>
-            <div class="border rounded p-1 px-2" @click="reloadPage" style="width: 250px; height: 50px">
+            <div class="border rounded p-1 px-2 pointer" title="Clique para atualizar a pagina" @click="reloadPage" style="width: 250px; height: 50px">
               <div v-show="!load">
                 <h6 class="m-0 text-danger" v-if="!connected">Você está offline</h6>
                 <h6 class="m-0 text-success" v-else-if="empresa.ativo === '1' && empresa.aberto === '1'">Loja Aberta</h6>
@@ -173,6 +173,8 @@ export default {
     changeStatus() {
       this.load = true;
       const dados = { status: this.empresa.ativo === '1' ? '0' : '1' };
+      this.empresa.ativo = dados.status;
+
       this.$http.post('delivery/empresa/status/' + this.token, dados)
         .then(response => {
           this.statusEmpresa();
@@ -190,6 +192,10 @@ export default {
     },
 
     dialogNotify(empresa) {
+      if (document.hasFocus()) {
+        return;
+      }
+
       this.notification = new Notification(empresa ? ('LeCard - ' + empresa) : 'LeCard - Gestor de Pedidos', {
         body: 'Tem pedido novo na área ❤️',
         icon: document.getElementById('imgEmpresa').src
@@ -245,6 +251,12 @@ export default {
 
     delivery_order() {
       this.$emit('delivery_order', true);
+    },
+
+    status_empresa(data) {
+      if (data.aberto !== this.empresa.ativo) {
+        this.statusEmpresa();
+      }
     }
   },
 
@@ -255,8 +267,8 @@ export default {
 
   created() {
     this.$parent.$on('playNotification', () => {
+      this.bell = true;
       if (audio.paused) {
-        this.bell = true;
         ipcRenderer.send('reloud-icon', true);
         audio.play();
         this.dialogNotify()
@@ -269,6 +281,12 @@ export default {
 
     this.$parent.$on('ativarDelivery', () => {
       this.toogleStatus();
+    });
+
+    this.$parent.$on('ativarEmpresa', () => {
+      if (this.empresa.aberto === '0') {
+        this.statusEmpresa();
+      }
     });
   }
 }
