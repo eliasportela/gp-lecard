@@ -39,8 +39,9 @@
                   <div class="small">{{p.data_pedido}}</div>
                   <div>
                     <span class="badge badge-light text-dark pr-1" v-if="p.origin === '1'">APP Corporativo</span>
-                    <span class="badge badge-warning pr-1" v-if="p.origin === '4'">{{p.obs_pedido}}</span>
-                    <span class="badge badge-light text-danger" v-if="p.origin === '2'">APP Geral</span>
+                    <span class="badge badge-light text-danger" v-else-if="p.origin === '2'">APP Geral</span>
+                    <span class="badge badge-success" v-else-if="p.origin === '5'">GO LeCard</span>
+                    <span class="badge badge-warning pr-1" v-else-if="p.origin === '4'">{{p.obs_pedido}}</span>
                   </div>
                 </div>
                 <div class="text-right">
@@ -110,14 +111,9 @@
                 <b class="text-danger">Agendado:</b> {{selecionado.data_agendamento}}
               </h6>
               <h6 class="m-0" v-if="selecionado.origin === '4'"><b>Local: </b> {{selecionado.obs_pedido}}</h6>
-              <div v-else>
-                <h6 v-show="!selecionado.id_entrega && selecionado.tipo_pedido === '1' && selecionado.previsao_entrega">
-                  Previsão de entrega: <b>{{selecionado.previsao_entrega}}</b>
-                </h6>
-                <h6 v-show="selecionado.tipo_pedido === '2' && selecionado.previsao_retirada">
-                  Previsão de retirada: <b>{{selecionado.previsao_retirada}}</b>
-                </h6>
-              </div>
+              <h6 class="m-0" v-else-if="!selecionado.id_entrega && selecionado.previsao">
+                Previsão de {{selecionado.tipo_pedido === '1' ? 'entrega' : 'retirada'}}: <b>{{selecionado.previsao}}</b>
+              </h6>
               <div class="border p-2 mt-3 mb-2">
                 <h5 class="font-weight-bold m-0">{{selecionado.cliente.nome_cliente}}</h5>
                 <div v-if="selecionado.origin !== '3'">
@@ -422,9 +418,31 @@ export default {
             });
           }
 
-          this.motivoRecusa = '';
           dados.socket_id = this.selecionado.cliente.id_cliente + (this.selecionado.origin === '2' ? 'lecard_app_geral' : empresa.token);
+          if (this.selecionado.user_whatsapp && status !== 4) {
+            dados.to = this.selecionado.user_whatsapp;
+            dados.token = empresa.token;
+            const nome_cliente = this.selecionado.cliente ? this.selecionado.cliente.nome_cliente.split(" ") : ["cliente"];
+
+            switch (status) {
+              case 2:
+                dados.msg = ["🤖\n\n" + nome_cliente[0] + ", já estamos fazendo o seu pedido 😋. Avisaremos quando ele estiver pronto."];
+                break;
+
+              case 3:
+                if (this.selecionado.previsao_prazo == 1) {
+                  dados.msg = ["🤖\n\nhuummm 😋... Segura a fome aí " + nome_cliente[0] + ", seu pedido já saiu pra entrega 🛵."];
+                }
+                break;
+
+              case 5:
+                dados.msg = ["🤖\n\n" + nome_cliente[0] + " infelizmente seu pedido foi recusado, se preferir, entre em contato conosco para entender melhor.\n\n*Motivo cancelamento:* " + this.motivoRecusa];
+                break;
+            }
+          }
+
           this.$socket.emit('delivery_status', dados);
+          this.motivoRecusa = '';
 
         }, res => {
           this.loading = false;
