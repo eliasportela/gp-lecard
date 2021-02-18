@@ -103,7 +103,7 @@
 
       this.empresas = config.get('empresas') ? config.get('empresas') : [];
       this.key = config.get('key');
-      
+
       if (this.key) {
         const ia = config.get('impressaoAutomatica') ? config.get('impressaoAutomatica') : 0;
         const nCopias = config.get('nCopias') ? config.get('nCopias') : 1;

@@ -419,28 +419,6 @@ export default {
           }
 
           dados.socket_id = this.selecionado.cliente.id_cliente + (this.selecionado.origin === '2' ? 'lecard_app_geral' : empresa.token);
-          if (this.selecionado.user_whatsapp && status !== 4) {
-            dados.to = this.selecionado.user_whatsapp;
-            dados.token = empresa.token;
-            const nome_cliente = this.selecionado.cliente ? this.selecionado.cliente.nome_cliente.split(" ") : ["cliente"];
-
-            switch (status) {
-              case 2:
-                dados.msg = ["🤖\n\n" + nome_cliente[0] + ", já estamos fazendo o seu pedido 😋. Avisaremos quando ele estiver pronto."];
-                break;
-
-              case 3:
-                if (this.selecionado.previsao_prazo == 1) {
-                  dados.msg = ["🤖\n\nhuummm 😋... Segura a fome aí " + nome_cliente[0] + ", seu pedido já saiu pra entrega 🛵."];
-                }
-                break;
-
-              case 5:
-                dados.msg = ["🤖\n\n" + nome_cliente[0] + " infelizmente seu pedido foi recusado, se preferir, entre em contato conosco para entender melhor.\n\n*Motivo cancelamento:* " + this.motivoRecusa];
-                break;
-            }
-          }
-
           this.$socket.emit('delivery_status', dados);
           this.motivoRecusa = '';
 
