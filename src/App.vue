@@ -116,18 +116,6 @@
         config.set('zoom', zoom);
         localStorage.setItem('zoom', zoom);
 
-        // para nao deslogar nas versoes anteriores, excluir depois
-        if (!this.empresas.length) {
-          this.empresas.push({
-            token: config.get('token'),
-            key: this.key,
-            isDefault: true
-          });
-
-          config.set('empresas', this.empresas)
-        }
-        // -----
-
         this.autenticarEmpresas(0);
 
       } else {
@@ -143,6 +131,17 @@
           empresas.forEach(e => {
             this.$socket.emit('empresa_connected', e.token)
           });
+        }
+      },
+
+      notification(res) {
+        if (res.play) {
+          this.$store.commit('setBell', true);
+          this.playNotification(res.nome_fantasia);
+
+        } else if (!audio.paused) {
+          this.$store.commit('setBell', false);
+          this.pauseNotification();
         }
       }
     },

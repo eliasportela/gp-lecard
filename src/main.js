@@ -1,3 +1,4 @@
+const { ipcRenderer } = require('electron');
 import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
@@ -32,6 +33,42 @@ Vue.http.options.root = base_server + 'api/';
 Vue.mixin({
   data() {
     return { base_server }
+  },
+  methods: {
+    playNotification() {
+      if (audio.paused) {
+        ipcRenderer.send('reloud-icon', true);
+        audio.play();
+        this.dialogNotify();
+      }
+    },
+
+    pauseNotification() {
+      ipcRenderer.send('reloud-icon', false);
+      if (!audio.paused) {
+        audio.pause();
+      }
+    },
+
+    dialogNotify(empresa) {
+      if (document.hasFocus()) {
+        return;
+      }
+
+      const notification = new Notification(empresa ? ('LeCard - ' + empresa) : 'LeCard - Gestor de Pedidos', {
+        body: 'Tem pedido novo na área ❤️',
+        icon: document.getElementById('imgEmpresa').src
+      });
+
+      notification.onclick = (event) => {
+        event.preventDefault();
+        ipcRenderer.send('focus');
+
+        if (this.$route.name !== 'Pedidos') {
+          this.$router.push('/pedidos');
+        }
+      };
+    }
   }
 });
 

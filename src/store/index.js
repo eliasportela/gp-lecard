@@ -13,6 +13,10 @@ export default new Vuex.Store({
       id_funcao: '',
       site: '',
       master: ''
+    },
+
+    bell: {
+      status: false
     }
   },
   mutations: {
@@ -35,6 +39,12 @@ export default new Vuex.Store({
         site: '',
       };
       localStorage.clear();
+    },
+
+    setBell(state, data) {
+      state.bell = {
+        status: data
+      }
     }
   },
   actions: {

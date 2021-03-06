@@ -7,6 +7,7 @@ import Configs from '../views/Configs.vue'
 import Login from '../views/Login.vue'
 import Cardapio from '../views/Cardapio.vue'
 import Vantagens from '../views/Vantagens.vue'
+import Pdv from '../views/Pdv.vue'
 
 Vue.use(VueRouter)
 
@@ -50,6 +51,11 @@ const routes = [
     path: '/vantagens',
     name: 'Vantagens',
     component: Vantagens
+  },
+  {
+    path: '/pdv',
+    name: 'Pdv',
+    component: Pdv
   }
 ];
 

@@ -22,6 +22,13 @@ protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true
 app.commandLine.appendSwitch('--autoplay-policy','no-user-gesture-required');
 app.setAppUserModelId('delivery.lecard.gplecard');
 
+if (!isDevelopment) {
+  app.setLoginItemSettings({
+    openAtLogin: true,
+    path: app.getPath('exe')
+  });
+}
+
 function createWindow () {
   // Create the browser window.
   win = new BrowserWindow({
@@ -29,7 +36,10 @@ function createWindow () {
     height: 600,
     minWidth: 1000,
     minHeight: 600,
-    webPreferences: {nodeIntegration: true},
+    webPreferences: {
+      nodeIntegration: true,
+      webviewTag: true
+    },
     icon: path.join(__static, 'icon.png')
   });
   win.setMenu(null);
@@ -69,6 +79,7 @@ function createWindow () {
   });
 
   contents = win.webContents;
+  win.maximize();
 }
 
 // Quit when all windows are closed.

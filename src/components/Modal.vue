@@ -1,6 +1,6 @@
 <template>
-  <div id="modal" class="modal" v-show="opened">
-    <div class="modal-content animated bounceInDown">
+  <div id="modal" class="modal" :class="width" v-show="opened">
+    <div class="modal-content" :class="width === 'small' ? 'animated bounceInUp' : ''">
       <slot></slot>
     </div>
   </div>
@@ -8,13 +8,8 @@
 
 <script>
   export default {
-    name: "ModalBottom",
-    props: ['opened'],
-    methods: {
-      getDominio() {
-        return empresa.dominio
-      }
-    }
+    name: "Modal",
+    props: ['opened', 'width'],
   }
 </script>
 
@@ -39,6 +34,24 @@
     padding: 20px 10px;
     border-radius: 4px;
     max-width: 450px;
+  }
+
+  .modal.full .modal-content {
+    max-width: none;
+    width: calc(100% - 85px);
+    margin: 65px auto 0 77px;
+    height: calc(100% - 75px);
+    position: relative;
+    padding: 0;
+  }
+
+  .modal.small .modal-content {
+    background-color: #fefefe;
+    margin: 10% auto 0;
+    padding: 20px 10px;
+    border-radius: 4px;
+    max-width: 450px;
+    height: auto;
   }
 
   @media (max-width: 600px) {

@@ -10,7 +10,7 @@
             </router-link>
           </div>
           <div class="col-7 d-flex justify-content-end align-items-center">
-            <div class="mr-3" v-if="bell">
+            <div class="mr-3" v-show="bell">
               <button class="btn btn-outline-danger" @click="silenciar">
                 Silenciar
               </button>
@@ -37,9 +37,20 @@
       </div>
     </div>
     <div class="menu-lateral bg-dark">
-      <router-link to="/pedidos" active-class="btn--active" class="btn btn-block">
+      <a href="javascript:" class="btn btn-block" v-if="page === 'Pdv'" style="position: relative" @click="$emit('openPedidos')">
+        <img src="../assets/icons/orders.svg" :class="bell ? 'animated bounceIn infinite' : ''" alt="">
+        <span>Pedidos</span>
+        <div style="position: absolute; top: 0; right: 0" v-if="bell">
+          <span class="badge badge-danger p-1" style="width: 16px; height: 16px; border-radius: 50px;">1</span>
+        </div>
+      </a>
+      <router-link to="/pedidos" active-class="btn--active" class="btn btn-block" v-else>
         <img src="../assets/icons/orders.svg" alt="">
         <span>Pedidos</span>
+      </router-link>
+      <router-link to="/pdv" active-class="btn--active" class="btn btn-block">
+        <img src="../assets/icons/pos.svg" alt="">
+        <span>Comandas</span>
       </router-link>
       <router-link to="/cardapio" active-class="btn--active" class="btn btn-block">
         <img src="../assets/icons/food-menu.svg" alt="">
@@ -100,17 +111,16 @@ export default {
       empresaAtiva: false,
       connected: false,
       modalOflline: false,
-      bell: false,
       notification: '',
-      homologacao: config.get('base_server')
+      homologacao: config.get('base_server'),
+      page: ''
     }
   },
 
   methods: {
     silenciar() {
-      audio.pause();
-      this.bell = false;
-      ipcRenderer.send('reloud-icon', false);
+      this.$store.commit('setBell', false);
+      this.pauseNotification();
     },
 
     statusEmpresa() {
@@ -120,7 +130,21 @@ export default {
             this.empresa = response.data;
 
             if (this.empresa.ativo === '0' && !sessionStorage.getItem('delivery_desativado')){
-              this.$emit('delivery_desativado');
+              this.$swal.fire({
+                title: 'O delivery está desativado!',
+                text: "Ative-o para receber seus pedidos.",
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                cancelButtonText: 'Voltar',
+                confirmButtonText: 'Sim, ativar delivery!'
+              }).then((result) => {
+                if (result.value) {
+                  this.$emit('ativarDelivery');
+                  this.$swal('', 'Delivery ativado!')
+                }
+              });
+
               setTimeout(() => {
                 if (this.empresa.ativo === '0') {
                   new Notification('LeCard - Gestor de Pedidos', {
@@ -189,68 +213,28 @@ export default {
     reloadPage() {
       // this.dialogNotify()
       ipcRenderer.send('reload');
-    },
-
-    dialogNotify(empresa) {
-      if (document.hasFocus()) {
-        return;
-      }
-
-      this.notification = new Notification(empresa ? ('LeCard - ' + empresa) : 'LeCard - Gestor de Pedidos', {
-        body: 'Tem pedido novo na área ❤️',
-        icon: document.getElementById('imgEmpresa').src
-      });
-
-      this.notification.onclick = (event) => {
-        event.preventDefault();
-        ipcRenderer.send('focus');
-
-        if (this.$route.name !== 'Pedidos') {
-          this.$router.push('/pedidos');
-        }
-      };
-    },
-
-    autoAtendimento() {
-      ipcRenderer.send('autoatendimento');
-    },
-
+    }
   },
 
   computed: {
     dados() {
       return this.$store.state.dataUser
-    }
+    },
+
+    bell() {
+      return this.$store.state.bell.status
+    },
   },
 
   sockets: {
     connect() {
       this.connected = true;
       this.modalOflline = false;
-      this.$emit('delivery_order', true);
     },
 
     disconnect() {
       this.modalOflline = true;
       this.connected = false;
-    },
-
-    notification(res)  {
-      if (res.play) {
-        this.dialogNotify(res.nome_fantasia);
-        audio.play();
-        this.bell = true;
-        ipcRenderer.send('reloud-icon', true);
-
-      } else if (!audio.paused) {
-        audio.pause();
-        ipcRenderer.send('reloud-icon', false);
-        this.bell = false;
-      }
-    },
-
-    delivery_order() {
-      this.$emit('delivery_order', true);
     },
 
     status_empresa(data) {
@@ -263,22 +247,11 @@ export default {
   mounted() {
     this.statusEmpresa();
     this.connected = this.$socket ? this.$socket.connected : false;
+
+    this.page = this.$route.name;
   },
 
   created() {
-    this.$parent.$on('playNotification', () => {
-      this.bell = true;
-      if (audio.paused) {
-        ipcRenderer.send('reloud-icon', true);
-        audio.play();
-        this.dialogNotify()
-      }
-    });
-
-    this.$parent.$on('silenciar', () => {
-      this.silenciar();
-    });
-
     this.$parent.$on('ativarDelivery', () => {
       this.toogleStatus();
     });
