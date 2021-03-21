@@ -26,8 +26,10 @@ export default new Vuex.Store({
         nome_usuario: data.dados.nome,
         nome_fantasia: data.dados.nome_fantasia,
         id_funcao: data.dados.id_funcao,
+        id_plano: data.dados.id_plano,
         site: data.dados.site,
         master: data.dados.master,
+        email: data.dados.email,
       };
     },
 

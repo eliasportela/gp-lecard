@@ -1,7 +1,7 @@
 <template>
   <div>
     <top-bar/>
-    <div class="content">
+    <div class="content" style="padding-top: 10px">
       <div class="container-fluid">
         <div class="d-flex" style="height: 75vh" v-if="loading">
           <div class="m-auto text-center">
@@ -9,160 +9,174 @@
             <div class="small mt-3 font-weight-bold">Carregando o cardápio..</div>
           </div>
         </div>
-        <div id="categorias" class="pt-4" style="margin-bottom: 32px" v-show="!loading">
-          <div class="mb-3">
-            <div class="form-group">
-              <div class="input-group">
-                <input id="search" type="text" class="form-control small" placeholder="Nome do produto" v-model="term" @keyup="pesquisar">
-                <a href="javascript:" class="input-group-append text-decoration-none" @click="clear">
-                  <div class="input-group-text">Limpar</div>
-                </a>
+        <div id="categorias" style="margin-bottom: 32px" v-show="!loading">
+          <div class="row mb-4">
+            <div class="col-8 col-xl-9">
+              <label for="search" class="mb-0 small">Pesquisar produto</label>
+              <input id="search" type="search" class="form-control small" placeholder="Pesquisar" v-model="term" @keyup="pesquisar" @search="pesquisar">
+            </div>
+            <div class="col-4 col-xl-3">
+              <label for="cardapio" class="mb-0 small">Cardápio</label>
+              <select id="cardapio" class="form-control" v-model="pesquisa.id_cardapio" @change="toggleCardapio()">
+                <option value="1">Principal</option>
+                <option value="2">Delivery</option>
+                <option value="3">PDV</option>
+              </select>
+            </div>
+          </div>
+          <div v-if="categorias.length">
+            <div v-if="!searchResult.length && !term.length">
+              <div class="mb-3" v-for="c in categorias" v-if="c.delivery === '1'">
+                <!--categorias-->
+                <div class="border pointer bg-light" @click="toogleCategoria(c)">
+                  <div class="row">
+                    <div class="col-9 align-self-center">
+                      <div class="p-4">
+                        {{c.nome_categoria}}
+                      </div>
+                    </div>
+                    <div class="col-3 align-self-center text-right">
+                      <div class="p-4 small">
+                        Expandir <img src="../assets/icons/arrow-right.svg" style="width: 10px">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!--produtos-->
+                <div v-show="selCategoria.includes(c.id_categoria)">
+                  <h6 class="pl-3 my-4">Produtos</h6>
+                  <div v-for="p in c.produtos">
+                    <div class="border-top">
+                      <div class="row">
+                        <div class="col-8 align-self-center pointer" @click="toogleProduto(p)">
+                          <div class="p-3">
+                            {{p.nome_produto}}
+                          </div>
+                        </div>
+                        <div class="col-4 text-right align-self-center">
+                          <div class="p-3">
+                            <div class="d-inline-block pointer" @click="editarProduto(p)" :class="{'visibility': c.delivery === '0'}">
+                              <span class="pr-2" :class="p.fg_ativo === '1' ? 'text-success' : 'text-secondary'">{{p.fg_ativo === '1' ? 'Ativado' : 'Desativado'}}</span>
+                              <img class="switch" src="../assets/icons/switch-on.svg" v-show="p.fg_ativo === '1'">
+                              <img class="switch" src="../assets/icons/switch-off.svg" v-show="p.fg_ativo === '2'">
+                            </div>
+                            <div class="d-inline-block ml-3 px-3 pointer" @click="toogleProduto(p)">
+                              <img src="../assets/icons/arrow-right.svg" style="width: 10px">
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <!--tabelas-->
+                    <div class="mb-4" v-show="selProduto.includes(p.id_produto)">
+                      <table class="table border">
+                        <thead class="bg-light">
+                        <tr>
+                          <th>Tabela</th>
+                          <th style="width: 250px">Valor</th>
+                          <th style="width: 150px">&nbsp;</th>
+                        </tr>
+                        </thead>
+                        <tr v-for="t in p.tabelas">
+                          <td class="align-middle">
+                            <div class="input-group mb-2">
+                              <input type="text" class="form-control" v-model="t.nome_tabela" :disabled="t.outros !== '1' || !adm"/>
+                              <div class="input-group-append" style="width: 100px" v-if="adm">
+                                <button :id="'btnTabela' + t.id_tabela_preco" class="btn btn-dark btn-edit" @click="editarValor(t, 'btnTabela')" v-show="t.outros === '1'">Salvar</button>
+                              </div>
+                            </div>
+                          </td>
+                          <td class="align-middle">
+                            <div class="input-group mb-2">
+                              <money class="form-control" v-model="t.valor" :disabled="!adm"/>
+                              <div class="input-group-append" style="width: 100px" v-if="adm">
+                                <button :id="'btn' + t.id_tabela_preco" class="btn btn-dark btn-edit" @click="editarValor(t, 'btn')">Salvar</button>
+                              </div>
+                            </div>
+                          </td>
+                          <td class="align-middle">
+                            <div class="p-2 pointer" @click="editarTabela(t, p)" :class="{'visibility': p.fg_ativo === '2' || c.delivery === '0'}">
+                              <span class="pr-2" :class="t.fg_ativo === '1' ? 'text-success' : 'text-secondary'">{{t.fg_ativo === '1' ? 'Ativado' : 'Desativado'}}</span>
+                              <img class="switch" src="../assets/icons/switch-on.svg" v-show="t.fg_ativo === '1'">
+                              <img class="switch" src="../assets/icons/switch-off.svg" v-show="t.fg_ativo === '2'">
+                            </div>
+                          </td>
+                        </tr>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="mb-3" v-if="searchResult.length">
+              <div v-for="p in searchResult">
+                <div class="border-top">
+                  <div class="row">
+                    <div class="col-8 align-self-center pointer" @click="toogleProduto(p)">
+                      <div class="p-2">
+                        <div>{{p.nome_produto}}</div>
+                        <span class="badge badge-dark small mt-0">{{p.nome_categoria}}</span>
+                      </div>
+                    </div>
+                    <div class="col-4 text-right align-self-center">
+                      <div class="p-3">
+                        <div class="d-inline-block pointer" @click="editarProduto(p)">
+                          <span class="pr-2" :class="p.fg_ativo === '1' ? 'text-success' : 'text-secondary'">{{p.fg_ativo === '1' ? 'Ativado' : 'Desativado'}}</span>
+                          <img class="switch" src="../assets/icons/switch-on.svg" v-show="p.fg_ativo === '1'">
+                          <img class="switch" src="../assets/icons/switch-off.svg" v-show="p.fg_ativo === '2'">
+                        </div>
+                        <div class="d-inline-block ml-3 px-3 pointer" @click="toogleProduto(p)">
+                          <img src="../assets/icons/arrow-right.svg" style="width: 10px">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!--tabelas-->
+                <div class="mb-4" v-show="selProduto.includes(p.id_produto)">
+                  <table class="table border">
+                    <thead class="bg-light">
+                    <tr>
+                      <th>Tabela</th>
+                      <th style="width: 250px">Valor</th>
+                      <th style="width: 150px">&nbsp;</th>
+                    </tr>
+                    </thead>
+                    <tr v-for="t in p.tabelas">
+                      <td class="align-middle">
+                        <div class="input-group mb-2">
+                          <input type="text" class="form-control" v-model="t.nome_tabela" :disabled="t.outros !== '1' || !adm"/>
+                          <div class="input-group-append" style="width: 100px" v-if="adm">
+                            <button :id="'btnTabela' + t.id_tabela_preco" class="btn btn-dark btn-edit" @click="editarValor(t, 'btnTabela')" v-show="t.outros === '1'">Salvar</button>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="align-middle">
+                        <div class="input-group mb-2">
+                          <money class="form-control" v-model="t.valor" :disabled="!adm"/>
+                          <div class="input-group-append" style="width: 100px" v-if="adm">
+                            <button :id="'btn' + t.id_tabela_preco" class="btn btn-dark btn-edit" @click="editarValor(t, 'btn')">Salvar</button>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="align-middle">
+                        <div class="p-2 pointer" @click="editarTabela(t, p)" :class="{'visibility': p.fg_ativo === '2'}">
+                          <span class="pr-2" :class="t.fg_ativo === '1' ? 'text-success' : 'text-secondary'">{{t.fg_ativo === '1' ? 'Ativado' : 'Desativado'}}</span>
+                          <img class="switch" src="../assets/icons/switch-on.svg" v-show="t.fg_ativo === '1'">
+                          <img class="switch" src="../assets/icons/switch-off.svg" v-show="t.fg_ativo === '2'">
+                        </div>
+                      </td>
+                    </tr>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
-          <div v-if="!searchResult.length && !term.length">
-            <div class="mb-3" v-for="c in categorias" v-if="c.delivery === '1'">
-              <!--categorias-->
-              <div class="border pointer bg-light" @click="toogleCategoria(c)">
-                <div class="row">
-                  <div class="col-9 align-self-center">
-                    <div class="p-4">
-                      {{c.nome_categoria}}
-                    </div>
-                  </div>
-                  <div class="col-3 align-self-center text-right">
-                    <div class="p-4 small">
-                      Expandir <img src="../assets/icons/arrow-right.svg" style="width: 10px">
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <!--produtos-->
-              <div v-show="selCategoria.includes(c.id_categoria)">
-                <h6 class="pl-3 my-4">Produtos</h6>
-                <div v-for="p in c.produtos">
-                  <div class="border-top">
-                    <div class="row">
-                      <div class="col-8 align-self-center pointer" @click="toogleProduto(p)">
-                        <div class="p-3">
-                          {{p.nome_produto}}
-                        </div>
-                      </div>
-                      <div class="col-4 text-right align-self-center">
-                        <div class="p-3">
-                          <div class="d-inline-block pointer" @click="editarProduto(p)" :class="{'visibility': c.delivery === '0'}">
-                            <span class="pr-2" :class="p.fg_ativo === '1' ? 'text-success' : 'text-secondary'">{{p.fg_ativo === '1' ? 'Ativado' : 'Desativado'}}</span>
-                            <img class="switch" src="../assets/icons/switch-on.svg" v-show="p.fg_ativo === '1'">
-                            <img class="switch" src="../assets/icons/switch-off.svg" v-show="p.fg_ativo === '2'">
-                          </div>
-                          <div class="d-inline-block ml-3 px-3 pointer" @click="toogleProduto(p)">
-                            <img src="../assets/icons/arrow-right.svg" style="width: 10px">
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <!--tabelas-->
-                  <div class="mb-4" v-show="selProduto.includes(p.id_produto)">
-                    <table class="table border">
-                      <thead class="bg-light">
-                      <tr>
-                        <th>Tabela</th>
-                        <th style="width: 250px">Valor</th>
-                        <th style="width: 150px">&nbsp;</th>
-                      </tr>
-                      </thead>
-                      <tr v-for="t in p.tabelas">
-                        <td class="align-middle">
-                          <div class="input-group mb-2">
-                            <input type="text" class="form-control" v-model="t.nome_tabela" :disabled="t.outros !== '1' || !adm"/>
-                            <div class="input-group-append" style="width: 100px" v-if="adm">
-                              <button :id="'btnTabela' + t.id_tabela_preco" class="btn btn-dark btn-edit" @click="editarValor(t, 'btnTabela')" v-show="t.outros === '1'">Salvar</button>
-                            </div>
-                          </div>
-                        </td>
-                        <td class="align-middle">
-                          <div class="input-group mb-2">
-                            <money class="form-control" v-model="t.valor" :disabled="!adm"/>
-                            <div class="input-group-append" style="width: 100px" v-if="adm">
-                              <button :id="'btn' + t.id_tabela_preco" class="btn btn-dark btn-edit" @click="editarValor(t, 'btn')">Salvar</button>
-                            </div>
-                          </div>
-                        </td>
-                        <td class="align-middle">
-                          <div class="p-2 pointer" @click="editarTabela(t, p)" :class="{'visibility': p.fg_ativo === '2' || c.delivery === '0'}">
-                            <span class="pr-2" :class="t.fg_ativo === '1' ? 'text-success' : 'text-secondary'">{{t.fg_ativo === '1' ? 'Ativado' : 'Desativado'}}</span>
-                            <img class="switch" src="../assets/icons/switch-on.svg" v-show="t.fg_ativo === '1'">
-                            <img class="switch" src="../assets/icons/switch-off.svg" v-show="t.fg_ativo === '2'">
-                          </div>
-                        </td>
-                      </tr>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="mb-3" v-if="searchResult.length">
-            <div v-for="p in searchResult">
-              <div class="border-top">
-                <div class="row">
-                  <div class="col-8 align-self-center pointer" @click="toogleProduto(p)">
-                    <div class="p-2">
-                      <div>{{p.nome_produto}}</div>
-                      <span class="badge badge-dark small mt-0">{{p.nome_categoria}}</span>
-                    </div>
-                  </div>
-                  <div class="col-4 text-right align-self-center">
-                    <div class="p-3">
-                      <div class="d-inline-block pointer" @click="editarProduto(p)">
-                        <span class="pr-2" :class="p.fg_ativo === '1' ? 'text-success' : 'text-secondary'">{{p.fg_ativo === '1' ? 'Ativado' : 'Desativado'}}</span>
-                        <img class="switch" src="../assets/icons/switch-on.svg" v-show="p.fg_ativo === '1'">
-                        <img class="switch" src="../assets/icons/switch-off.svg" v-show="p.fg_ativo === '2'">
-                      </div>
-                      <div class="d-inline-block ml-3 px-3 pointer" @click="toogleProduto(p)">
-                        <img src="../assets/icons/arrow-right.svg" style="width: 10px">
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <!--tabelas-->
-              <div class="mb-4" v-show="selProduto.includes(p.id_produto)">
-                <table class="table border">
-                  <thead class="bg-light">
-                  <tr>
-                    <th>Tabela</th>
-                    <th style="width: 250px">Valor</th>
-                    <th style="width: 150px">&nbsp;</th>
-                  </tr>
-                  </thead>
-                  <tr v-for="t in p.tabelas">
-                    <td class="align-middle">
-                      <div class="input-group mb-2">
-                        <input type="text" class="form-control" v-model="t.nome_tabela" :disabled="t.outros !== '1' || !adm"/>
-                        <div class="input-group-append" style="width: 100px" v-if="adm">
-                          <button :id="'btnTabela' + t.id_tabela_preco" class="btn btn-dark btn-edit" @click="editarValor(t, 'btnTabela')" v-show="t.outros === '1'">Salvar</button>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="align-middle">
-                      <div class="input-group mb-2">
-                        <money class="form-control" v-model="t.valor" :disabled="!adm"/>
-                        <div class="input-group-append" style="width: 100px" v-if="adm">
-                          <button :id="'btn' + t.id_tabela_preco" class="btn btn-dark btn-edit" @click="editarValor(t, 'btn')">Salvar</button>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="align-middle">
-                      <div class="p-2 pointer" @click="editarTabela(t, p)" :class="{'visibility': p.fg_ativo === '2'}">
-                        <span class="pr-2" :class="t.fg_ativo === '1' ? 'text-success' : 'text-secondary'">{{t.fg_ativo === '1' ? 'Ativado' : 'Desativado'}}</span>
-                        <img class="switch" src="../assets/icons/switch-on.svg" v-show="t.fg_ativo === '1'">
-                        <img class="switch" src="../assets/icons/switch-off.svg" v-show="t.fg_ativo === '2'">
-                      </div>
-                    </td>
-                  </tr>
-                </table>
+          <div v-else>
+            <div class="d-flex" style="padding-top: 18vh">
+              <div class="m-auto text-center">
+                <img src="../assets/logo-lecard.png" alt="Logo Lecard" style="width: 64px;">
+                <div class="small mt-3">Você ainda não tem cadastro de produtos neste cardápio</div>
               </div>
             </div>
           </div>
@@ -193,6 +207,10 @@
         searchResult: [],
         term: '',
 
+        pesquisa: {
+          id_cardapio: '1'
+        },
+
         options: {
           shouldSort: true,
           threshold: 0.2,
@@ -209,9 +227,14 @@
       }
     },
     methods: {
+      toggleCardapio() {
+        this.clear();
+        this.buscarProdutos();
+      },
+
       buscarProdutos() {
         this.loading = true;
-        this.$http.get('delivery/cardapio/'  + this.token)
+        this.$http.get('delivery/cardapio/'  + this.token, {params: this.pesquisa})
           .then(response => {
             this.categorias = response.data;
             this.atualizarTabelas();
@@ -262,7 +285,6 @@
         this.searchResult = [];
         this.selCategoria = [];
         this.selProduto = [];
-        this.buscarProdutos();
       },
 
       toogleCategoria(c) {
@@ -351,9 +373,11 @@
           });
       }
     },
+
     mounted() {
       this.buscarProdutos()
     },
+
     computed: {
       adm() {
         return this.$store.state.dataUser.id_funcao === '1'

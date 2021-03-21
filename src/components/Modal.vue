@@ -1,5 +1,5 @@
 <template>
-  <div id="modal" class="modal" :class="width" v-show="opened">
+  <div class="modal" :class="width" v-show="opened">
     <div class="modal-content" :class="width === 'small' ? 'animated bounceInUp' : ''">
       <slot></slot>
     </div>
@@ -9,7 +9,7 @@
 <script>
   export default {
     name: "Modal",
-    props: ['opened', 'width'],
+    props: ['opened', 'width']
   }
 </script>
 

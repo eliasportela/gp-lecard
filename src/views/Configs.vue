@@ -10,7 +10,7 @@
           </div>
         </div>
         <div v-show="!load">
-          <div class="row">
+          <div class="row justify-content-end">
             <div class="col-md-7" v-if="adm">
               <h4 class="font-weight-bold mb-3">Dados da Empresa</h4>
               <form @submit.prevent="salvar">
@@ -83,7 +83,7 @@
                 <button class="btn btn-dark btn-block mt-1 mb-3">Atualizar Dados</button>
               </form>
             </div>
-            <div :class="adm ? 'col-md-5' : 'col-md-6'">
+            <div class="col-md-5">
               <h4 class="font-weight-bold mb-3">Impressora</h4>
               <div>
                 <label for="configAutomatica">Impressão automática</label>
@@ -117,13 +117,17 @@
           <hr>
           <div class="row mb-5">
             <div class="col-md-6">
-              <h4 class="font-weight-bold mb-0">Sua Conta</h4>
-              <p>Para sair da sua conta use o botão abaixo</p>
-              <button class="btn btn-outline-dark" @click="confirmLogout" style="width: 200px">Sair</button>
+              <div class="card">
+                <div class="card-body">
+                  <h4 class="mb-0">Sua Conta</h4>
+                  <p class="m-0">Usuário: <span>{{user.email}}</span></p>
+                  <button class="btn btn-outline-dark mt-3" @click="confirmLogout" style="width: 200px">Sair</button>
+                </div>
+              </div>
             </div>
             <div class="col-md-6">
               <div class="text-right">
-                <h4 class="font-weight-bold text-danger mb-0">Danger zone</h4>
+                <h4 class="text-danger mb-0">Danger zone</h4>
                 <p>Limpar as configurações do sistema</p>
                 <button class="btn btn-danger" @click="resetar" style="width: 200px">Resetar sistema</button>
               </div>
@@ -261,11 +265,7 @@
           confirmButtonText: 'Sim',
           cancelButtonText: "Cancelar",
           showCancelButton: true,
-          customClass: {
-            cancelButton: 'btn btn-danger ml-3',
-            confirmButton: 'btn btn-success '
-          },
-          buttonsStyling: false
+          dangerMode: true
         }).then((result) => {
           if (result.value) {
             this.logout();
@@ -294,7 +294,11 @@
       //   this.load = false;
       // });
 
-      this.getDadosEmpresa();
+      if (this.adm) {
+        this.getDadosEmpresa();
+      } else {
+        this.load = false;
+      }
 
       this.config.automatica = localStorage.getItem('impressaoAutomatica');
       this.config.nCopias = localStorage.getItem('nCopias');
@@ -311,6 +315,10 @@
     computed: {
       adm() {
         return this.$store.state.dataUser.id_funcao === '1'
+      },
+
+      user() {
+        return this.$store.state.dataUser
       },
 
       master() {

@@ -37,8 +37,8 @@
       </div>
     </div>
     <div class="menu-lateral bg-dark">
-      <a href="javascript:" class="btn btn-block" v-if="page === 'Pdv'" style="position: relative" @click="$emit('openPedidos')">
-        <img src="../assets/icons/orders.svg" :class="bell ? 'animated bounceIn infinite' : ''" alt="">
+      <a href="javascript:" class="btn btn-block" v-if="page !== 'Pedidos' && bell" style="position: relative" @click="modalPedidos = true">
+        <img src="../assets/icons/orders.svg" class="animated bounceIn infinite" alt="">
         <span>Pedidos</span>
         <div style="position: absolute; top: 0; right: 0" v-if="bell">
           <span class="badge badge-danger p-1" style="width: 16px; height: 16px; border-radius: 50px;">1</span>
@@ -48,10 +48,6 @@
         <img src="../assets/icons/orders.svg" alt="">
         <span>Pedidos</span>
       </router-link>
-      <router-link to="/pdv" active-class="btn--active" class="btn btn-block">
-        <img src="../assets/icons/pos.svg" alt="">
-        <span>Comandas</span>
-      </router-link>
       <router-link to="/cardapio" active-class="btn--active" class="btn btn-block">
         <img src="../assets/icons/food-menu.svg" alt="">
         <span>Cardápio</span>
@@ -60,11 +56,15 @@
         <img src="../assets/icons/vantagens.svg" alt="">
         <span>Vantagens</span>
       </router-link>
+      <router-link to="/pdv" active-class="btn--active" class="btn btn-block" v-if="dados.master === '1'">
+        <img src="../assets/icons/pos.svg" alt="">
+        <span>Comandas</span>
+      </router-link>
       <div style="bottom: 8px; left: 8px; right: 8px; position: absolute">
-        <a :href="'https://portal.lecard.delivery/'" target="_blank" class="btn btn-block">
+        <router-link to="/portal" active-class="btn--active"  class="btn btn-block">
           <img src="../assets/icons/report.svg" alt="">
           <span>Portal</span>
-        </a>
+        </router-link>
         <router-link to="/impressora" active-class="btn--active" class="btn btn-block">
           <img src="../assets/icons/settings.svg" alt="">
           <span>Configs</span>
@@ -83,10 +83,19 @@
         <button class="btn btn-danger" @click="reloadPage">OK</button>
       </div>
     </modal>
+
+    <modal :opened="modalPedidos" width="full" v-if="page !== 'Pedidos'">
+      <div class="container-fluid border-bottom pb-2">
+        <button class="btn btn-outline-danger" style="margin-top: 10px" @click="modalPedidos = false">Voltar</button>
+      </div>
+      <container-pedidos/>
+    </modal>
+
   </div>
 </template>
 
 <script>
+import ContainerPedidos from "./ContainerPedidos";
 const Config = require('electron-config');
 const { ipcRenderer } = require('electron');
 const config = new Config();
@@ -94,7 +103,7 @@ import Modal from '../components/Modal'
 
 export default {
   name: 'TopBar',
-  components: {Modal},
+  components: {ContainerPedidos, Modal},
   props: {
     msg: String,
   },
@@ -107,10 +116,13 @@ export default {
         aberto: '0',
         entregas: [],
       },
+
       load: true,
+      modalOflline: false,
+      modalPedidos: false,
+
       empresaAtiva: false,
       connected: false,
-      modalOflline: false,
       notification: '',
       homologacao: config.get('base_server'),
       page: ''
@@ -123,13 +135,13 @@ export default {
       this.pauseNotification();
     },
 
-    statusEmpresa() {
+    statusEmpresa(aviso) {
       if (localStorage.getItem('token')) {
         this.$http.get(this.base_server + 'delivery/' + localStorage.getItem('token') + '/empresa/status/')
           .then(response => {
             this.empresa = response.data;
 
-            if (this.empresa.ativo === '0' && !sessionStorage.getItem('delivery_desativado')){
+            if (aviso && this.empresa.ativo === '0' && !sessionStorage.getItem('delivery_desativado')){
               this.$swal.fire({
                 title: 'O delivery está desativado!',
                 text: "Ative-o para receber seus pedidos.",
@@ -140,7 +152,7 @@ export default {
                 confirmButtonText: 'Sim, ativar delivery!'
               }).then((result) => {
                 if (result.value) {
-                  this.$emit('ativarDelivery');
+                  this.changeStatus();
                   this.$swal('', 'Delivery ativado!')
                 }
               });
@@ -245,7 +257,7 @@ export default {
   },
 
   mounted() {
-    this.statusEmpresa();
+    this.statusEmpresa(true);
     this.connected = this.$socket ? this.$socket.connected : false;
 
     this.page = this.$route.name;

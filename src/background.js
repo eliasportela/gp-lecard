@@ -36,6 +36,7 @@ function createWindow () {
     height: 600,
     minWidth: 1000,
     minHeight: 600,
+    show: false,
     webPreferences: {
       nodeIntegration: true,
       webviewTag: true
@@ -54,9 +55,9 @@ function createWindow () {
   // impressao de pedidos
   winPrint = new BrowserWindow({
     width: 1000,
+    show: false,
     webPreferences: {nodeIntegration: true}
   });
-  winPrint.hide();
   winPrint.loadURL(__static + "/print.html");
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
@@ -79,7 +80,9 @@ function createWindow () {
   });
 
   contents = win.webContents;
+
   win.maximize();
+  win.show();
 }
 
 // Quit when all windows are closed.
@@ -120,7 +123,8 @@ app.on('ready', async () => {
   createWindow()
 
   globalShortcut.register('CommandOrControl+L', () => {
-    win.webContents.openDevTools()
+    win.webContents.openDevTools();
+    win.webContents.send('openDevTools');
   })
 });
 

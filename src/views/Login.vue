@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="p-5">
+    <div style="padding-top: 20vh">
       <div class="text-center">
         <img src="../assets/logo-lecard.png" alt="" style="width: 70px">
         <h5 class="text-danger font-weight-bold mt-4">Gestor de Pedidos - Lecard</h5>

@@ -6,34 +6,24 @@
         <img src="../assets/logo-lecard.png" class="d-block m-auto animated flipInY infinite" alt="Logo Lecard" style="width: 72px;">
       </div>
       <div v-show="!loading">
-        <webview :src="src + 'auth/' + token" style="height: calc(100vh - 60px)" :preload="preload"></webview>
+        <!--<webview :src="src + 'auth/' + token" style="height: calc(100vh - 60px)"></webview>-->
+        <webview :src="src" style="height: calc(100vh - 60px)"></webview>
       </div>
     </div>
 
   </div>
 </template>
 <script>
-  const {ipcRenderer} = require('electron');
   import TopBar from "../components/TopBar";
-  import ContainerPedidos from "../components/ContainerPedidos";
 
   export default {
-    components: {ContainerPedidos, TopBar},
+    components: {TopBar},
     data() {
       return {
-        preload: `file://${require('path').join(__static, 'preload.js')}`,
-        src: process.env.VUE_APP_COMANDA,
+        src: "https://portal.lecard.delivery",
         loading: true,
         token: localStorage.getItem('key'),
         webview: ''
-      }
-    },
-
-    methods: {
-      openDevTools() {
-        if (this.webview && !this.loading) {
-          this.webview.openDevTools();
-        }
       }
     },
 
@@ -41,12 +31,6 @@
       this.webview = document.querySelector('webview');
       this.webview.addEventListener('dom-ready', () => {
         this.loading = false;
-      });
-    },
-
-    created() {
-      ipcRenderer.on("openDevTools", () => {
-        this.openDevTools();
       });
     }
   }

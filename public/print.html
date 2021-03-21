@@ -93,8 +93,8 @@
 </div>
 
 <div class="text-center" style="margin-top: 24px;">
-  <div class="credits">LeCard Delivery</div>
   <div class="credits">www.lecard.delivery</div>
+  <div class="credits">Uma comanda virtual para seu negócio real!</div>
 </div>
 
 <script>
@@ -102,7 +102,7 @@
 
   ipcRenderer.on("print", (event, data) => {
     let zoom = '7px';
-    console.log(data.zoom)
+
     switch (data.zoom) {
       case '2':
         zoom = '9px';

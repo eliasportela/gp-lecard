@@ -15,6 +15,7 @@
 <script>
   const Config = require('electron-config');
   const config = new Config();
+  const { ipcRenderer } = require('electron');
 
   export default {
     data() {
@@ -143,6 +144,17 @@
           this.$store.commit('setBell', false);
           this.pauseNotification();
         }
+      },
+
+      print(html) {
+        if (html) {
+          const options = {
+            content: html,
+            copies: localStorage.getItem('nCopias'),
+            zoom: localStorage.getItem('zoom')
+          };
+          ipcRenderer.send('print', options);
+        }
       }
     },
   }
@@ -150,7 +162,7 @@
 
 <style>
   .content {
-    margin-top: 55px;
+    margin-top: 60px;
     margin-left: 70px;
     position: relative;
   }

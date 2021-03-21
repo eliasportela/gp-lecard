@@ -8,6 +8,7 @@ import Login from '../views/Login.vue'
 import Cardapio from '../views/Cardapio.vue'
 import Vantagens from '../views/Vantagens.vue'
 import Pdv from '../views/Pdv.vue'
+import Portal from '../views/Portal.vue'
 
 Vue.use(VueRouter)
 
@@ -56,6 +57,11 @@ const routes = [
     path: '/pdv',
     name: 'Pdv',
     component: Pdv
+  },
+  {
+    path: '/portal',
+    name: 'Portal',
+    component: Portal
   }
 ];
 
