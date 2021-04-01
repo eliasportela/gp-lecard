@@ -6,143 +6,82 @@
         <div class="d-flex" style="height: 75vh" v-if="load">
           <div class="m-auto text-center">
             <img src="../assets/logo-lecard.png" class="animated flipInY infinite" alt="Logo Lecard" style="width: 64px;">
-            <div class="small mt-3 font-weight-bold">Carregando o cardápio..</div>
+            <div class="small mt-3 font-weight-bold">Carregando as configs..</div>
           </div>
         </div>
         <div v-show="!load">
           <div class="row justify-content-end">
-            <div class="col-md-7" v-if="adm">
-              <h4 class="font-weight-bold mb-3">Dados da Empresa</h4>
-              <form @submit.prevent="salvar">
-                <div class="row">
-                  <div class="col-md-4">
-                    <div class="form-group">
-                      <label for="tipo_delivery">Modo de Operação</label>
-                      <select id="tipo_delivery" class="form-control" v-model="dados.tipo_delivery" required>
-                        <option value="1">Entregas e retiradas</option>
-                        <option value="2">Apenas retiradas</option>
-                        <option value="3">Apenas entregas</option>
-                      </select>
-                    </div>
+            <div class="col-md-5">
+              <h4 class="font-weight-bold mb-3">Impressora</h4>
+              <div class="card">
+                <div class="card-body">
+                  <div>
+                    <label for="configAutomatica">Impressão automática</label>
+                    <select class="form-control" id="configAutomatica" v-model="config.automatica">
+                      <option value="1">Sim</option>
+                      <option value="0">Não</option>
+                    </select>
                   </div>
-                  <div class="col-md-4">
-                    <div class="form-group">
-                      <label for="agendamento">Pedidos Agendados</label>
-                      <select id="agendamento" class="form-control" v-model="dados.entrega_agendada" required>
-                        <option value="1">Ativado</option>
-                        <option value="0">Desativado</option>
-                      </select>
-                    </div>
+                  <div class="mt-2" v-if="config.automatica === '1'">
+                    <label for="nCopia">Número de cópias (Automáticas)</label>
+                    <select class="form-control" id="nCopia" v-model="config.nCopias">
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3">3</option>
+                    </select>
                   </div>
-                  <div class="col-md-4">
-                    <div class="form-group">
-                      <label>Pedido Mínimo</label>
-                      <money class="form-control" v-model="dados.pedido_minimo"></money>
-                    </div>
+                  <div class="mt-2">
+                    <label for="zoom">Tamanho da impressão</label>
+                    <select class="form-control" id="zoom" v-model="config.zoom">
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3">3</option>
+                    </select>
                   </div>
-                  <div class="col-md-4">
-                    <div class="form-group">
-                      <label>Entrega (minutos)</label>
-                      <the-mask typeof="number" :mask="['#', '##', '###']" class="form-control" v-model="dados.media_entrega" required/>
-                    </div>
+                  <div class="mt-4 mb-4">
+                    <button class="btn btn-dark btn-block mb-3" @click="atualizarConfig">{{atualizar ? 'Salvo' : 'Salvar Configurações'}}</button>
+                    <button class="btn btn-outline-dark btn-block" @click="testImpressao">Enviar teste impressão</button>
                   </div>
-                  <div class="col-md-4">
-                    <div class="form-group">
-                      <label>Retirada (minutos)</label>
-                      <the-mask typeof="number" :mask="['#', '##', '###']" class="form-control" v-model="dados.media_retirada" required/>
-                    </div>
-                  </div>
-                  <div class="col-md-4">
-                    <div class="form-group">
-                      <label>Desconto Fixo</label>
-                      <the-mask typeof="number" :mask="['#' + '%', '##' + '%']" class="form-control" v-model="dados.cashback_delivery" required/>
-                    </div>
-                  </div>
-                  <div class="col-md-4">
-                    <div class="form-group">
-                      <label for="entrega_gratis">Entrega Grátis</label>
-                      <select id="entrega_gratis" class="form-control" v-model="dados.entrega_gratis" required>
-                        <option value="1">Sim</option>
-                        <option value="0">Não</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="col-md-4" v-show="dados.entrega_gratis === '1'">
-                    <div class="form-group" title="Valor mínimo para entregas gratuitas, abaixo desse valor será cobrado o valor da entrega!">
-                      <label>Mínimo<span class="small"> (Ent. Grátis)</span></label>
-                      <money class="form-control" v-model="dados.entrega_gratis_minimo"></money>
-                    </div>
-                  </div>
-                  <div class="col-md-4">
-                    <div class="form-group">
-                      <label>Valor da Entrega</label>
-                      <money class="form-control" v-model="dados.valor_frete"></money>
+                </div>
+              </div>
+            </div>
+            <div class="col-7">
+              <h4 class="font-weight-bold mb-3">Sistema</h4>
+              <div class="row">
+                <div class="col-md-12 col-xl-6">
+                  <div class="card mb-3">
+                    <div class="card-body">
+                      <h6 class="mb-0">{{user.nome_fantasia}}</h6>
+                      <p class="m-0"><span>{{user.email}}</span></p>
+                      <button class="btn btn-outline-dark mt-3" @click="confirmLogout" style="width: 200px">Sair</button>
                     </div>
                   </div>
                 </div>
-                <button class="btn btn-dark btn-block mt-1 mb-3">Atualizar Dados</button>
-              </form>
-            </div>
-            <div class="col-md-5">
-              <h4 class="font-weight-bold mb-3">Impressora</h4>
-              <div>
-                <label for="configAutomatica">Impressão automática</label>
-                <select class="form-control" id="configAutomatica" v-model="config.automatica">
-                  <option value="1">Sim</option>
-                  <option value="0">Não</option>
-                </select>
+                <div class="col-md-12 col-xl-6">
+                  <div class="card mb-3">
+                    <div class="card-body">
+                      <h6 class="text-danger mb-0">Danger zone</h6>
+                      <p>Limpar as configurações do sistema</p>
+                      <button class="btn btn-danger" @click="resetar" style="width: 200px">Resetar sistema</button>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div class="mt-2" v-if="config.automatica === '1'">
-                <label for="nCopia">Número de cópias (Automáticas)</label>
-                <select class="form-control" id="nCopia" v-model="config.nCopias">
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                </select>
-              </div>
-              <div class="mt-2">
-                <label for="zoom">Tamanho da impressão</label>
-                <select class="form-control" id="zoom" v-model="config.zoom">
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                </select>
-              </div>
-              <div class="mt-4 mb-4">
-                <button class="btn btn-dark btn-block mb-3" @click="atualizarConfig">{{atualizar ? 'Salvo' : 'Salvar Configurações'}}</button>
-                <button class="btn btn-outline-dark btn-block" @click="testImpressao">Enviar teste impressão</button>
+              <div class="card" v-if="master">
+                <div class="card-body">
+                  <h6 class="mb-0">Modo Homologação</h6>
+                  <p>Alterar para o servidor de homologação</p>
+                  <div class="d-inline-block pointer" @click="toggleHomologacao()">
+                    <span class="pr-2">{{modo_homologacao ? 'Ativado' : 'Desativado'}}</span>
+                    <img class="switch" src="../assets/icons/switch-on.svg" v-show="modo_homologacao">
+                    <img class="switch" src="../assets/icons/switch-off.svg" v-show="!modo_homologacao">
+                  </div>
+                </div>
               </div>
             </div>
           </div>
           <hr>
-          <div class="row mb-5">
-            <div class="col-md-6">
-              <div class="card">
-                <div class="card-body">
-                  <h4 class="mb-0">Sua Conta</h4>
-                  <p class="m-0">Usuário: <span>{{user.email}}</span></p>
-                  <button class="btn btn-outline-dark mt-3" @click="confirmLogout" style="width: 200px">Sair</button>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="text-right">
-                <h4 class="text-danger mb-0">Danger zone</h4>
-                <p>Limpar as configurações do sistema</p>
-                <button class="btn btn-danger" @click="resetar" style="width: 200px">Resetar sistema</button>
-              </div>
-            </div>
-          </div>
-          <div class="mb-5" v-if="master">
-            <hr>
-            <h5 class="font-weight-bold mb-3">Modo Homologação</h5>
-            <div class="d-inline-block pointer" @click="toggleHomologacao()">
-              <span class="pr-2">{{modo_homologacao ? 'Ativado' : 'Desativado'}}</span>
-              <img class="switch" src="../assets/icons/switch-on.svg" v-show="modo_homologacao">
-              <img class="switch" src="../assets/icons/switch-off.svg" v-show="!modo_homologacao">
-            </div>
-          </div>
-          <div class="small font-weight-bold mb-3">Versão: {{version}}</div>
+          <div class="small font-weight-bold mb-3 text-right">Gestor de Pedido - LeCard Delivery - Versão: {{version}}</div>
         </div>
       </div>
     </div>
@@ -209,7 +148,6 @@
       },
 
       testImpressao() {
-        this.load = true;
         let options = {
           content: 'Este é um teste de impressão enviado pelo Gestor de pedidos Lecard',
           copies: 1
@@ -236,11 +174,6 @@
           confirmButtonText: 'Sim',
           cancelButtonText: "Cancelar",
           showCancelButton: true,
-          customClass: {
-            cancelButton: 'btn btn-danger ml-3',
-            confirmButton: 'btn btn-success '
-          },
-          buttonsStyling: false
         }).then((result) => {
           if (result.value) {
             config.clear();

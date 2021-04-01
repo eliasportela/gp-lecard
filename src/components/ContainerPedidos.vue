@@ -117,20 +117,6 @@
               <div v-if="selecionado.origin !== '3'">
                 Nº de Pedidos: {{selecionado.qtd_pedidos === '0' ? 'Primeiro pedido' : selecionado.qtd_pedidos + ' pedidos'}}
               </div>
-              <div class="mt-1" v-if="selecionado.tipo_pedido === '1'">
-                <h6 class="text-success font-weight-bold m-0">ENTREGAR EM:</h6>
-                <div>
-                  {{selecionado.cliente.endereco}}, {{selecionado.cliente.numero}}, {{selecionado.cliente.bairro}} - {{selecionado.cliente.nome_cidade}} <br>
-                  Cep: {{selecionado.cliente.cep}}
-                  <span v-show="selecionado.cliente.complemento">-</span>
-                  {{selecionado.cliente.complemento}}
-                  <br>
-                  <b>Telefone: </b>
-                  <a :href="'https://api.whatsapp.com/send?phone=+55'+ selecionado.cliente.telefone" class="text-info" target="_blank">
-                    <b>{{selecionado.cliente.telefone | phone}}</b>
-                  </a>
-                </div>
-              </div>
               <div class="mt-1" v-else-if="selecionado.tipo_pedido === '2'">
                 <h6 class="text-info font-weight-bold m-0">RETIRAR NO LOCAL</h6>
                 <div>
@@ -145,6 +131,32 @@
                 <h6 class="text-warning font-weight-bold m-0">CONSUMIR NO LOCAL</h6>
                 <div>
                   Cliente vai consumir o pedido no local
+                </div>
+              </div>
+            </div>
+            <div class="border p-2 mt-2 mb-2" v-if="selecionado.tipo_pedido === '1'">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="text-success font-weight-bold m-0">ENTREGAR EM:</h6>
+                  <div>
+                    <span v-if="!selecionado.version">{{selecionado.cliente.endereco}}</span>
+                    <span v-else>{{selecionado.cliente.logradouro}}</span>
+                    , {{selecionado.cliente.numero}}, {{selecionado.cliente.bairro}} <br>
+                    {{selecionado.cliente.nome_cidade}} - {{selecionado.cliente.sigla_estado}} | Cep: {{selecionado.cliente.cep}}
+                    <span v-show="selecionado.cliente.complemento">-</span>
+                    {{selecionado.cliente.complemento}}
+                    <br>
+                    <b>Telefone: </b>
+                    <a :href="'https://api.whatsapp.com/send?phone=+55'+ selecionado.cliente.telefone" class="text-info" target="_blank">
+                      <b>{{selecionado.cliente.telefone | phone}}</b>
+                    </a>
+                  </div>
+                </div>
+                <div class="text-center d-print-none" v-if="selecionado.cliente.lat_endereco">
+                  <a href="javascript:" class="btn btn-success mb-1" @click="openMapa()">
+                    <img src="../assets/icons/location-light.svg" style="width: 18px">
+                    <div class="small mt-1">Ver Mapa</div>
+                  </a>
                 </div>
               </div>
             </div>
@@ -232,6 +244,13 @@
           </div>
         </div>
       </modal>
+
+      <modal :opened="modalMapa" width="full">
+        <div class="container-fluid border-bottom pb-2">
+          <button class="btn btn-outline-danger" style="margin-top: 10px" @click="modalMapa = false">Voltar</button>
+        </div>
+        <map-leaflet />
+      </modal>
     </div>
   </div>
 </template>
@@ -245,10 +264,12 @@ const config = new Config();
 import TopBar from '@/components/TopBar.vue'
 import HelloWorld from '@/components/HelloWorld.vue'
 import Modal from '../components/Modal'
+import MapLeaflet from "./MapLeafleat";
 
 export default {
   name: 'ContainerPedidos',
   components: {
+    MapLeaflet,
     MsgHome,
     Modal,
     HelloWorld, TopBar
@@ -269,6 +290,7 @@ export default {
         total: 0
       },
       modalCancelamento: false,
+      modalMapa: false,
       motivoRecusa: '',
       socket: true,
       totais: {
@@ -457,6 +479,45 @@ export default {
       setTimeout(() => {
         document.getElementById('text-cancelamento').focus()
       }, 500)
+    },
+
+    openMapa() {
+      this.modalMapa = true;
+      const pedidos = [];
+      let pedido = null;
+
+      if (this.selecionado.cliente.lat_endereco) {
+        pedido = {
+          id_pedido: this.selecionado.id_pedido,
+          lat_endereco: this.selecionado.cliente.lat_endereco,
+          long_endereco: this.selecionado.cliente.long_endereco
+        }
+      }
+
+      this.pedidos.forEach((p) => {
+        if (p.cliente.lat_endereco) {
+          pedidos.push({
+            id_pedido: p.id_pedido,
+            status: p.status,
+            data_pedido: p.data_pedido,
+            origin: p.origin,
+            id_entrega: p.id_entrega,
+            nome_cliente: p.cliente.nome_cliente,
+            lat_endereco: p.cliente.lat_endereco,
+            long_endereco: p.cliente.long_endereco
+          });
+        }
+      });
+
+      const dados = {
+        lat_empresa: this.user.lat_empresa,
+        long_empresa: this.user.long_empresa,
+        nome_fantasia: this.user.nome_fantasia,
+        pedidos,
+        pedido
+      };
+
+      this.$emit('openModal', dados);
     }
   },
 
@@ -471,6 +532,12 @@ export default {
     });
 
     this.buscarPedidos(true);
+  },
+
+  computed: {
+    user() {
+      return this.$store.state.dataUser
+    },
   },
 
   sockets: {

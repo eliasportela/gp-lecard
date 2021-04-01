@@ -4,12 +4,14 @@ import App from './App.vue'
 import router from './router'
 import VueResource from 'vue-resource'
 import VueSocketIO from 'vue-socket.io'
-import 'bootstrap/dist/css/bootstrap.min.css'
-import 'animate.css/animate.css'
 import VueSweetalert2 from 'vue-sweetalert2'
 import store from './store'
 import VueTheMask from 'vue-the-mask'
 import VueFuse from 'vue-fuse'
+
+import 'bootstrap/dist/css/bootstrap.min.css'
+import 'animate.css/animate.css'
+import 'leaflet/dist/leaflet.css';
 
 const Config = require('electron-config');
 const config = new Config();

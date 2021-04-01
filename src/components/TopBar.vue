@@ -37,7 +37,7 @@
       </div>
     </div>
     <div class="menu-lateral bg-dark">
-      <a href="javascript:" class="btn btn-block" v-if="page !== 'Pedidos' && bell" style="position: relative" @click="modalPedidos = true">
+      <a href="javascript:" class="btn btn-block" v-if="page === 'Pdv' && bell" style="position: relative" @click="modalPedidos = true">
         <img src="../assets/icons/orders.svg" class="animated bounceIn infinite" alt="">
         <span>Pedidos</span>
         <div style="position: absolute; top: 0; right: 0" v-if="bell">
@@ -56,7 +56,7 @@
         <img src="../assets/icons/vantagens.svg" alt="">
         <span>Vantagens</span>
       </router-link>
-      <router-link to="/pdv" active-class="btn--active" class="btn btn-block" v-if="dados.master === '1'">
+      <router-link to="/pdv" active-class="btn--active" class="btn btn-block">
         <img src="../assets/icons/pos.svg" alt="">
         <span>Comandas</span>
       </router-link>
@@ -70,10 +70,6 @@
           <span>Configs</span>
         </router-link>
       </div>
-      <!--<a href="javascript:" @click="autoAtendimento" class="btn btn-block">-->
-        <!--<img src="../assets/icons/pos.svg" alt="">-->
-        <!--<span>Totem</span>-->
-      <!--</a>-->
     </div>
 
     <modal :opened="modalOflline">

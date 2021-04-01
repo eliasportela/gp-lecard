@@ -22,6 +22,7 @@
     "electron-config": "^2.0.0",
     "electron-fetch": "^1.7.1",
     "electron-updater": "^4.3.1",
+    "leaflet": "^1.7.1",
     "socket.io-client": "^2.3.0",
     "v-money": "^0.8.1",
     "vue": "^2.6.11",
@@ -31,6 +32,7 @@
     "vue-socket.io": "3.0.5",
     "vue-sweetalert2": "^3.0.3",
     "vue-the-mask": "^0.11.1",
+    "vue2-leaflet": "^2.7.0",
     "vuex": "^3.4.0"
   },
   "devDependencies": {

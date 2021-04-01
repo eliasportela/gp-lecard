@@ -28,7 +28,7 @@
             <div v-if="!searchResult.length && !term.length">
               <div class="mb-3" v-for="c in categorias" v-if="c.delivery === '1'">
                 <!--categorias-->
-                <div class="border pointer bg-light" @click="toogleCategoria(c)">
+                <div class="border pointer bg-light rounded-sm" @click="toogleCategoria(c)">
                   <div class="row">
                     <div class="col-9 align-self-center">
                       <div class="p-4">
@@ -73,21 +73,16 @@
                         <thead class="bg-light">
                         <tr>
                           <th>Tabela</th>
-                          <th style="width: 250px">Valor</th>
+                          <th class="text-center" style="width: 250px">{{p.delivery === '1' ? 'Valor' : ''}} &nbsp;</th>
                           <th style="width: 150px">&nbsp;</th>
                         </tr>
                         </thead>
                         <tr v-for="t in p.tabelas">
                           <td class="align-middle">
-                            <div class="input-group mb-2">
-                              <input type="text" class="form-control" v-model="t.nome_tabela" :disabled="t.outros !== '1' || !adm"/>
-                              <div class="input-group-append" style="width: 100px" v-if="adm">
-                                <button :id="'btnTabela' + t.id_tabela_preco" class="btn btn-dark btn-edit" @click="editarValor(t, 'btnTabela')" v-show="t.outros === '1'">Salvar</button>
-                              </div>
-                            </div>
+                            {{t.nome_tabela}}
                           </td>
                           <td class="align-middle">
-                            <div class="input-group mb-2">
+                            <div class="input-group mb-2" v-if="p.delivery === '1'">
                               <money class="form-control" v-model="t.valor" :disabled="!adm"/>
                               <div class="input-group-append" style="width: 100px" v-if="adm">
                                 <button :id="'btn' + t.id_tabela_preco" class="btn btn-dark btn-edit" @click="editarValor(t, 'btn')">Salvar</button>
@@ -138,21 +133,16 @@
                     <thead class="bg-light">
                     <tr>
                       <th>Tabela</th>
-                      <th style="width: 250px">Valor</th>
+                      <th class="text-center" style="width: 250px">{{p.delivery === '1' ? 'Valor' : ''}} &nbsp;</th>
                       <th style="width: 150px">&nbsp;</th>
                     </tr>
                     </thead>
                     <tr v-for="t in p.tabelas">
                       <td class="align-middle">
-                        <div class="input-group mb-2">
-                          <input type="text" class="form-control" v-model="t.nome_tabela" :disabled="t.outros !== '1' || !adm"/>
-                          <div class="input-group-append" style="width: 100px" v-if="adm">
-                            <button :id="'btnTabela' + t.id_tabela_preco" class="btn btn-dark btn-edit" @click="editarValor(t, 'btnTabela')" v-show="t.outros === '1'">Salvar</button>
-                          </div>
-                        </div>
+                        {{t.nome_tabela}}
                       </td>
                       <td class="align-middle">
-                        <div class="input-group mb-2">
+                        <div class="input-group mb-2" v-if="p.delivery === '1'">
                           <money class="form-control" v-model="t.valor" :disabled="!adm"/>
                           <div class="input-group-append" style="width: 100px" v-if="adm">
                             <button :id="'btn' + t.id_tabela_preco" class="btn btn-dark btn-edit" @click="editarValor(t, 'btn')">Salvar</button>

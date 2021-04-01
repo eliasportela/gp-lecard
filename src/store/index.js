@@ -30,6 +30,8 @@ export default new Vuex.Store({
         site: data.dados.site,
         master: data.dados.master,
         email: data.dados.email,
+        lat_empresa: data.dados.lat_empresa,
+        long_empresa: data.dados.long_empresa
       };
     },
 

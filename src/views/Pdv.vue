@@ -9,7 +9,6 @@
         <webview :src="src + 'auth/' + token" style="height: calc(100vh - 60px)" :preload="preload"></webview>
       </div>
     </div>
-
   </div>
 </template>
 <script>
@@ -25,14 +24,14 @@
         src: process.env.VUE_APP_COMANDA,
         loading: true,
         token: localStorage.getItem('key'),
-        webview: ''
+        webview: '',
       }
     },
 
     methods: {
       openDevTools() {
-        if (this.webview && !this.loading) {
-          this.webview.openDevTools();
+        if (this.webview && !this.webview.isLoading()) {
+          // this.webview.openDevTools();
         }
       }
     },
@@ -41,6 +40,8 @@
       this.webview = document.querySelector('webview');
       this.webview.addEventListener('dom-ready', () => {
         this.loading = false;
+        // console.log(this.webview)
+        // this.webview.openDevTools();
       });
     },
 

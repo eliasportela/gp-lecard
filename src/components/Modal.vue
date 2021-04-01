@@ -1,6 +1,6 @@
 <template>
   <div class="modal" :class="width" v-show="opened">
-    <div class="modal-content" :class="width === 'small' ? 'animated bounceInUp' : ''">
+    <div class="modal-content" :class="width === 'small' ? 'animated zoomIn' : ''">
       <slot></slot>
     </div>
   </div>
@@ -9,7 +9,13 @@
 <script>
   export default {
     name: "Modal",
-    props: ['opened', 'width']
+    props: ['opened', 'width'],
+
+    created() {
+      this.$parent.$on('openModal', (dados) => {
+        this.$emit('loadDadosModal', dados)
+      });
+    }
   }
 </script>
 
