@@ -48,9 +48,12 @@
             </div>
           </div>
           <div class="text-center mb-3" v-else>
-            <div class="img-bkg bg-light shadow-sm border">
+            <div style="margin-top: 22vh">
               <div class="img-bkg-container">
                 <div>
+                  <div class="p-3 bg-danger mx-auto rounded-sm shadow-sm mb-3" style="width: 80px">
+                    <img src="../assets/icons/vantagens.svg" style="width: 100%">
+                  </div>
                   <h3 class="font-weight-bolder text-danger mb-3">Programa de Vantagens</h3>
                   <p class="mb-0">Fidelize seus clientes com benefícios e vantagens. Quanto mais ele compra, mais ele ganha!</p>
                   <p class="mb-0">Habilite este módulo com a nossa equipe.</p>

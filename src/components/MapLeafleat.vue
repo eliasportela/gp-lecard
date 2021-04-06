@@ -21,31 +21,28 @@
           <l-icon :icon-size="[32, 32]" :icon-anchor="[16, 32]" :popupAnchor="[0,-32]"
                   :icon-url="require('../assets/icons/location.svg')"/>
           <l-popup>
-            <div class="">
-              <div class="mb-0" :class="p.status === '5' ? 'text-danger' : 'text-dark'">
-                Pedido: {{p.id_pedido}}
+            <div>
+              <div :class="p.status === '5' ? 'text-danger' : 'text-dark'">
+                Pedido: {{p.id_pedido}} - {{p.data_pedido}}
               </div>
-              <div>{{p.data_pedido}}</div>
               <div>
+                <b class="mr-1">Status:</b>
                 <span class="badge badge-danger" v-if="p.status === '1'">Aguardando</span>
                 <span class="badge badge-dark" v-if="p.status === '4'">Finalizado</span>
                 <span class="badge border border-danger text-danger" v-if="p.status === '5'">Cancelado</span>
-                <div v-if="!p.id_entrega && p.origin !== '4'">
+                <div class="d-inline-block" v-if="!p.id_entrega && p.origin !== '4'">
                   <span class="badge badge-info" v-show="p.status === '2'">Preparando</span>
                   <span class="badge badge-dark" v-show="p.status === '3'">Entregando</span>
                 </div>
-                <div v-else-if="p.id_entrega && p.status <= 3">
+                <div class="d-inline-block" v-else-if="p.id_entrega && p.status <= 3">
                   <span class="badge badge-warning">Agendado</span>
                 </div>
               </div>
-              <div class="mb-0" :class="p.status === '5' ? 'text-danger' : 'text-dark'">
-                {{p.nome_cliente}}
+              <div>
+                <b>Cliente:</b> {{p.nome_cliente}}
               </div>
               <div>
-                <span class="badge badge-light text-dark pr-1" v-if="p.origin === '1'">APP Corporativo</span>
-                <span class="badge badge-light text-danger" v-else-if="p.origin === '2'">APP Geral</span>
-                <span class="badge badge-success" v-else-if="p.origin === '5'">GO LeCard</span>
-                <span class="badge badge-warning pr-1" v-else-if="p.origin === '4'">{{p.obs_pedido}}</span>
+                {{p.logradouro}}, {{p.numero}}, {{p.bairro}}
               </div>
             </div>
           </l-popup>

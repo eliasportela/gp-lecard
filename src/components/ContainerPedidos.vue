@@ -28,31 +28,32 @@
         </div>
         <div class="bg-white coluna-1-1 border">
           <div v-show="!loading">
-            <div class="d-flex justify-content-between border-bottom p-2 pointer"
+            <div class="d-flex justify-content-between border-bottom px-2 py-2 pointer"
                  v-for="p in pedidos" @click="selecionado = p" :class="{'bg-selecionado' : selecionado.id_pedido === p.id_pedido}">
               <div>
                 <h6 class="mb-0" :class="p.status === '5' ? 'text-danger' : 'text-dark'">
                   Pedido: {{p.id_pedido}}
                 </h6>
-                <div class="small">{{p.data_pedido}}</div>
-                <div>
-                  <span class="badge badge-light text-dark pr-1" v-if="p.origin === '1'">APP Corporativo</span>
-                  <span class="badge badge-light text-danger" v-else-if="p.origin === '2'">APP Geral</span>
-                  <span class="badge badge-success" v-else-if="p.origin === '5'">GO LeCard</span>
-                  <span class="badge badge-warning pr-1" v-else-if="p.origin === '4'">{{p.obs_pedido}}</span>
+                <div class="small font-weight-bold">
+                  <span class="text-success" v-if="p.tipo_pedido === '1'">Entregar Pedido</span>
+                  <span class="text-info" v-if="p.tipo_pedido === '2'">Retirar no Local</span>
+                  <span class="text-warning" v-if="p.tipo_pedido === '3'">Consumir no local</span>
                 </div>
+                <div class="small">{{p.data_pedido}}</div>
+                <div class="small" v-if="p.origin === '4'">{{p.obs_pedido}}</div>
+                <span class="badge badge-light mr-1" v-if="p.origin === '2'">APP Geral</span>
+                <span class="badge badge-success mr-1" v-else-if="p.origin === '5'">GO LeCard</span>
+                <span class="badge badge-dark animated fadeIn" v-if="p.status === '2' && p.is_late === '1'">
+                  Pedido Atrasado | {{p.previsao}}
+                </span>
               </div>
               <div class="text-right">
                 <span class="badge badge-danger" v-if="p.status === '1'">Aguardando</span>
+                <span class="badge badge-info" v-if="p.status === '2'">Preparando</span>
+                <span class="badge badge-dark" v-if="!p.id_entrega && p.origin !== '4' && p.status === '3'">Entregando</span>
                 <span class="badge badge-dark" v-if="p.status === '4'">Finalizado</span>
-                <span class="badge border border-danger text-danger" v-if="p.status === '5'">Cancelado</span>
-                <div v-if="!p.id_entrega && p.origin !== '4'">
-                  <span class="badge badge-info" v-show="p.status === '2'">Preparando</span>
-                  <span class="badge badge-dark" v-show="p.status === '3'">Entregando</span>
-                </div>
-                <div v-else-if="p.id_entrega && p.status <= 3">
-                  <span class="badge badge-warning">Agendado</span>
-                </div>
+                <div v-else-if="p.id_entrega && p.status <= 3"><span class="badge badge-warning">Agendado</span></div>
+                <div v-else-if="p.status === '5'"><span class="badge border border-danger text-danger">Cancelado</span></div>
               </div>
             </div>
           </div>
@@ -93,7 +94,7 @@
               </div>
               <span class="badge badge-warning" v-else-if="selecionado.id_entrega">Pedido Agendado</span>
             </div>
-            <div class="mb-2">
+            <div>
               <h5 class="m-0" v-if="pesquisa.keys.length > 1">{{selecionado.nome_fantasia}}</h5>
               <div class="m-0 font-weight-bold">Pedido: {{selecionado.id_pedido}} - {{selecionado.data_pedido}}</div>
               <div class="font-weight-bold" v-if="selecionado.origin === '2'">
@@ -105,11 +106,11 @@
                   {{selecionado.obs_cancelamento ? selecionado.obs_cancelamento : 'Pedido cancelado pelo cliente'}}
                 </span>
             </div>
-            <h6 v-if="selecionado.id_entrega">
+            <h6 class="m-0" v-if="selecionado.id_entrega">
               <b class="text-danger">Agendado:</b> {{selecionado.data_agendamento}}
             </h6>
             <h6 class="m-0" v-if="selecionado.origin === '4'"><b>Local: </b> {{selecionado.obs_pedido}}</h6>
-            <h6 class="m-0" v-else-if="!selecionado.id_entrega && selecionado.previsao">
+            <h6 class="m-0" v-else-if="!selecionado.id_entrega && selecionado.previsao && selecionado.status < 4">
               Previsão de {{selecionado.tipo_pedido === '1' ? 'entrega' : 'retirada'}}: <b>{{selecionado.previsao}}</b>
             </h6>
             <div class="border p-2 mt-3 mb-2">
@@ -117,62 +118,59 @@
               <div v-if="selecionado.origin !== '3'">
                 Nº de Pedidos: {{selecionado.qtd_pedidos === '0' ? 'Primeiro pedido' : selecionado.qtd_pedidos + ' pedidos'}}
               </div>
-              <div class="mt-1" v-else-if="selecionado.tipo_pedido === '2'">
-                <h6 class="text-info font-weight-bold m-0">RETIRAR NO LOCAL</h6>
-                <div>
-                  Cliente vai retirar o pedido
-                </div>
-                <b>Telefone: </b>
-                <a :href="'https://api.whatsapp.com/send?phone=+55'+ selecionado.cliente.telefone" class="text-info" target="_blank">
-                  <b>{{selecionado.cliente.telefone | phone}}</b>
-                </a>
+              <b>Telefone: </b>
+              <a :href="'https://api.whatsapp.com/send?phone=+55'+ selecionado.cliente.telefone" class="text-info" target="_blank">
+                <b>{{selecionado.cliente.telefone | phone}}</b>
+              </a>
+            </div>
+            <div class="border p-2 mt-2 mb-2" v-if="selecionado.tipo_pedido === '2'">
+              <h6 class="text-info font-weight-bold m-0">RETIRAR NO LOCAL</h6>
+              <div>
+                Cliente vai retirar o pedido
               </div>
-              <div class="mt-1" v-else="selecionado.tipo_pedido === '3'">
-                <h6 class="text-warning font-weight-bold m-0">CONSUMIR NO LOCAL</h6>
-                <div>
-                  Cliente vai consumir o pedido no local
-                </div>
+            </div>
+            <div class="border p-2 mt-2 mb-2" v-if="selecionado.tipo_pedido === '3'">
+              <h6 class="text-warning font-weight-bold m-0">CONSUMIR NO LOCAL</h6>
+              <div>
+                Cliente vai consumir o pedido no local
               </div>
             </div>
             <div class="border p-2 mt-2 mb-2" v-if="selecionado.tipo_pedido === '1'">
               <div class="d-flex justify-content-between align-items-center">
                 <div>
-                  <h6 class="text-success font-weight-bold m-0">ENTREGAR EM:</h6>
+                  <h6 class="text-success font-weight-bold m-0">ENTREGAR PEDIDO</h6>
                   <div>
-                    <span v-if="!selecionado.version">{{selecionado.cliente.endereco}}</span>
-                    <span v-else>{{selecionado.cliente.logradouro}}</span>
-                    , {{selecionado.cliente.numero}}, {{selecionado.cliente.bairro}} <br>
-                    {{selecionado.cliente.nome_cidade}} - {{selecionado.cliente.sigla_estado}} | Cep: {{selecionado.cliente.cep}}
-                    <span v-show="selecionado.cliente.complemento">-</span>
-                    {{selecionado.cliente.complemento}}
-                    <br>
-                    <b>Telefone: </b>
-                    <a :href="'https://api.whatsapp.com/send?phone=+55'+ selecionado.cliente.telefone" class="text-info" target="_blank">
-                      <b>{{selecionado.cliente.telefone | phone}}</b>
-                    </a>
+                    <span v-if="!selecionado.version">{{selecionado.cliente.endereco}}</span><span v-else>{{selecionado.cliente.logradouro}}</span>,
+                    {{selecionado.cliente.numero}}, {{selecionado.cliente.bairro}} <span v-if="selecionado.cliente.distance"> - {{selecionado.cliente.distance | kilometer}}</span><br>
+                    <div>{{selecionado.cliente.nome_cidade}} - {{selecionado.cliente.sigla_estado}} | CEP: {{selecionado.cliente.cep | cep}}</div>
+                    <div v-if="selecionado.cliente.complemento">- {{selecionado.cliente.complemento}}</div>
                   </div>
                 </div>
                 <div class="text-center d-print-none" v-if="selecionado.cliente.lat_endereco">
                   <a href="javascript:" class="btn btn-success mb-1" @click="openMapa()">
                     <img src="../assets/icons/location-light.svg" style="width: 18px">
-                    <div class="small mt-1">Ver Mapa</div>
+                    <div class="small mt-1">Ver no mapa</div>
                   </a>
                 </div>
               </div>
             </div>
             <hr class="d-none">
             <div class="mb-3">
-              <div class="p-3 border-bottom" v-for="i in selecionado.produtos">
-                <span class="bg-dark text-white rounded-sm px-1 float-right small"><b>R$ {{(i.quantidade * i.valor) | valor}}</b></span>
-                <h6 class="mb-0 font-weight-bold">{{i.quantidade}}x - {{i.produto.nome_produto}}</h6>
-                <div v-for="d in i.divisoes">
-                  # {{d.nome_produto}}
+              <div class="d-flex justify-content-between align-items-center py-3 px-2 border-bottom" v-for="i in selecionado.produtos">
+                <div>
+                  <h6 class="mb-0 font-weight-bold">{{i.quantidade}}x - {{i.produto.nome_produto}}</h6>
+                  <div v-for="d in i.divisoes">
+                    # {{d.nome_produto}}
+                  </div>
+                  <div v-for="d in i.adicionais">
+                    + {{d.qtd}}x {{d.nome_produto}} <span v-show="d.valor > 0">R$ {{d.valor | valor}}</span>
+                  </div>
+                  <div class="font-weight-bold" v-show="i.observacao">
+                    Obs: {{i.observacao}}
+                  </div>
                 </div>
-                <div v-for="d in i.adicionais">
-                  + {{d.qtd}}x {{d.nome_produto}} <span v-show="d.valor > 0">R$ {{d.valor | valor}}</span>
-                </div>
-                <div class="font-weight-bold" v-show="i.observacao">
-                  Obs: {{i.observacao}}
+                <div>
+                  <span class="badge badge-dark">R$ {{(i.quantidade * i.valor) | valor}}</span>
                 </div>
               </div>
             </div>
@@ -503,6 +501,9 @@ export default {
             origin: p.origin,
             id_entrega: p.id_entrega,
             nome_cliente: p.cliente.nome_cliente,
+            logradouro: p.cliente.logradouro,
+            numero: p.cliente.numero,
+            bairro: p.cliente.bairro,
             lat_endereco: p.cliente.lat_endereco,
             long_endereco: p.cliente.long_endereco
           });
@@ -570,6 +571,19 @@ export default {
       }
 
       return phone
+    },
+
+    kilometer(value) {
+      if (value !== null || value !== undefined) {
+        const formated = parseFloat(value / 1000).toFixed(1);
+        return formated + ' km';
+      }
+    },
+
+    cep(value) {
+      if (value && value.length === 8) {
+        return value.substring(0,5) + '-' + value.substring(5);
+      }
     }
   }
 }

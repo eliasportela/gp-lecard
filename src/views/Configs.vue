@@ -81,7 +81,7 @@
             </div>
           </div>
           <hr>
-          <div class="small font-weight-bold mb-3 text-right">Gestor de Pedido - LeCard Delivery - Versão: {{version}}</div>
+          <div class="small font-weight-bold mb-3 text-right">Gestor de Pedidos - LeCard Delivery - Versão: {{version}}</div>
         </div>
       </div>
     </div>
