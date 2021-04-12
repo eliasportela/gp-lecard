@@ -3,13 +3,7 @@
     <top-bar/>
     <div class="content">
       <div class="container-fluid pt-3">
-        <div class="d-flex" style="height: 75vh" v-if="load">
-          <div class="m-auto text-center">
-            <img src="../assets/logo-lecard.png" class="animated flipInY infinite" alt="Logo Lecard" style="width: 64px;">
-            <div class="small mt-3 font-weight-bold">Carregando as configs..</div>
-          </div>
-        </div>
-        <div v-show="!load">
+        <div>
           <div class="row justify-content-end">
             <div class="col-md-5">
               <h4 class="font-weight-bold mb-3">Impressora</h4>
@@ -104,7 +98,6 @@
     data() {
       return {
         atualizar: false,
-        load: true,
         token: localStorage.getItem('key'),
         version: '',
         config: {
@@ -112,41 +105,10 @@
           nCopias: '1',
           zoom: '1',
         },
-        dados: {},
         modo_homologacao: false
       }
     },
     methods: {
-      getDadosEmpresa() {
-        this.load = true;
-        this.$http.get('empresa/' + this.token).then(response => {
-          this.dados = response.data;
-          this.load = false;
-
-        }, res => {
-          this.load = false;
-          //this.$swal(res.data.result,res.data.msg);
-        });
-      },
-
-      salvar() {
-        if (this.dados.entrega_gratis === '0' && this.dados.valor_frete <= 0) {
-          this.$swal("", "Atenção, a entrega deve ter um valor maior que R$0.00, para entregas sem valores colocar como \"Entrega Grátis\"");
-          return;
-        }
-
-        this.load = true;
-        this.$http.post('empresa/' + this.token, this.dados)
-          .then(res => {
-            this.load = false;
-            this.getDadosEmpresa();
-
-          }, res => {
-            this.load = false;
-            this.$swal(res.data.result,res.data.msg);
-          });
-      },
-
       testImpressao() {
         let options = {
           content: 'Este é um teste de impressão enviado pelo Gestor de pedidos Lecard',
@@ -223,16 +185,6 @@
       }
     },
     created() {
-      // ipcRenderer.on('print-return', (event, arg) => {
-      //   this.load = false;
-      // });
-
-      if (this.adm) {
-        this.getDadosEmpresa();
-      } else {
-        this.load = false;
-      }
-
       this.config.automatica = localStorage.getItem('impressaoAutomatica');
       this.config.nCopias = localStorage.getItem('nCopias');
       this.config.zoom = localStorage.getItem('zoom');

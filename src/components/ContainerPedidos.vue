@@ -35,22 +35,22 @@
                   Pedido: {{p.id_pedido}}
                 </h6>
                 <div class="small font-weight-bold">
-                  <span class="text-success" v-if="p.tipo_pedido === '1'">Entregar Pedido</span>
+                  <span v-if="p.tipo_pedido === '1'">Entregar Pedido</span>
                   <span class="text-info" v-if="p.tipo_pedido === '2'">Retirar no Local</span>
-                  <span class="text-warning" v-if="p.tipo_pedido === '3'">Consumir no local</span>
+                  <span class="text-info" v-if="p.tipo_pedido === '3'">Consumir no local</span>
                 </div>
                 <div class="small">{{p.data_pedido}}</div>
                 <div class="small" v-if="p.origin === '4'">{{p.obs_pedido}}</div>
                 <span class="badge badge-light mr-1" v-if="p.origin === '2'">APP Geral</span>
                 <span class="badge badge-success mr-1" v-else-if="p.origin === '5'">GO LeCard</span>
-                <span class="badge badge-dark animated fadeIn" v-if="p.status === '2' && p.is_late === '1'">
+                <span class="badge badge-dark animated fadeIn" v-if="p.status === '2' && p.is_late === '1' && !selecionado.id_entrega">
                   Pedido Atrasado | {{p.previsao}}
                 </span>
               </div>
               <div class="text-right">
                 <span class="badge badge-danger" v-if="p.status === '1'">Aguardando</span>
                 <span class="badge badge-info" v-if="p.status === '2'">Preparando</span>
-                <span class="badge badge-dark" v-if="!p.id_entrega && p.origin !== '4' && p.status === '3'">Entregando</span>
+                <span class="badge badge-dark" v-if="p.origin !== '4' && p.status === '3'">Entregando</span>
                 <span class="badge badge-dark" v-if="p.status === '4'">Finalizado</span>
                 <div v-else-if="p.id_entrega && p.status <= 3"><span class="badge badge-warning">Agendado</span></div>
                 <div v-else-if="p.status === '5'"><span class="badge border border-danger text-danger">Cancelado</span></div>
