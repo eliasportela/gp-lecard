@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 
-Vue.use(Vuex)
+Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
@@ -17,8 +17,11 @@ export default new Vuex.Store({
 
     bell: {
       status: false
-    }
+    },
+
+    empresas: []
   },
+
   mutations: {
     setDataUser: (state, data) => {
       state.dataUser = {

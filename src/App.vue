@@ -101,9 +101,10 @@
 
     mounted() {
       localStorage.clear();
+      this.key = config.get('key');
 
       this.empresas = config.get('empresas') ? config.get('empresas') : [];
-      this.key = config.get('key');
+      this.$store.state.empresas = this.empresas;
 
       if (this.key) {
         const ia = config.get('impressaoAutomatica') ? config.get('impressaoAutomatica') : 0;

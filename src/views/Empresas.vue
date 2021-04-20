@@ -72,6 +72,7 @@ export default {
       }
     }
   },
+
   created() {
     this.token = localStorage.getItem('token');
     this.empresas = config.get('empresas') ? config.get('empresas') : [];

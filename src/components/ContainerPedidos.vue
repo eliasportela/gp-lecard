@@ -31,20 +31,20 @@
             <div class="d-flex justify-content-between border-bottom px-2 py-2 pointer"
                  v-for="p in pedidos" @click="selecionado = p" :class="{'bg-selecionado' : selecionado.id_pedido === p.id_pedido}">
               <div>
-                <h6 class="mb-0" :class="p.status === '5' ? 'text-danger' : 'text-dark'">
-                  Pedido: {{p.id_pedido}}
-                </h6>
+                <h6 class="mb-0">{{p.cliente.nome_cliente}}</h6>
+                <div class="mb-0 small">
+                  Pedido: {{p.id_pedido}} | {{p.data_pedido}}
+                </div>
                 <div class="small font-weight-bold">
-                  <span v-if="p.tipo_pedido === '1'">Entregar Pedido</span>
+                  <span class="text-success" v-if="p.tipo_pedido === '1'">Entregar Pedido</span>
                   <span class="text-info" v-if="p.tipo_pedido === '2'">Retirar no Local</span>
                   <span class="text-info" v-if="p.tipo_pedido === '3'">Consumir no local</span>
                 </div>
-                <div class="small">{{p.data_pedido}}</div>
                 <div class="small" v-if="p.origin === '4'">{{p.obs_pedido}}</div>
                 <span class="badge badge-light mr-1" v-if="p.origin === '2'">APP Geral</span>
                 <span class="badge badge-success mr-1" v-else-if="p.origin === '5'">GO LeCard</span>
-                <span class="badge badge-dark animated fadeIn" v-if="p.status === '2' && p.is_late === '1' && !selecionado.id_entrega">
-                  Pedido Atrasado | {{p.previsao}}
+                <span class="badge badge-dark animated fadeIn infinite slower" v-if="p.status === '2' && p.is_late === '1' && !selecionado.id_entrega">
+                  Atrasado: {{p.previsao}}
                 </span>
               </div>
               <div class="text-right">
@@ -156,7 +156,10 @@
             </div>
             <hr class="d-none">
             <div class="mb-3">
-              <div class="d-flex justify-content-between align-items-center py-3 px-2 border-bottom" v-for="i in selecionado.produtos">
+              <div class="py-3 px-2 border-bottom" v-for="i in selecionado.produtos">
+                <div class="float-right">
+                  <span class="badge badge-dark">R$ {{(i.quantidade * i.valor) | valor}}</span>
+                </div>
                 <div>
                   <h6 class="mb-0 font-weight-bold">{{i.quantidade}}x - {{i.produto.nome_produto}}</h6>
                   <div v-for="d in i.divisoes">
@@ -168,9 +171,6 @@
                   <div class="font-weight-bold" v-show="i.observacao">
                     Obs: {{i.observacao}}
                   </div>
-                </div>
-                <div>
-                  <span class="badge badge-dark">R$ {{(i.quantidade * i.valor) | valor}}</span>
                 </div>
               </div>
             </div>

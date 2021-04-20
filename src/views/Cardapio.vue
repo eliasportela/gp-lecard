@@ -11,16 +11,14 @@
         </div>
         <div id="categorias" style="margin-bottom: 32px" v-show="!loading">
           <div class="row mb-4">
-            <div class="col-8 col-xl-9">
+            <div :class="empresas.length > 1 ? 'col-8 col-xl-9' : 'col-12'">
               <label for="search" class="mb-0 small">Pesquisar produto</label>
               <input id="search" type="search" class="form-control small" placeholder="Pesquisar" v-model="term" @keyup="pesquisar" @search="pesquisar">
             </div>
-            <div class="col-4 col-xl-3">
-              <label for="cardapio" class="mb-0 small">Cardápio</label>
-              <select id="cardapio" class="form-control" v-model="pesquisa.id_cardapio" @change="toggleCardapio()">
-                <option value="1">Principal</option>
-                <option value="2">Delivery</option>
-                <option value="3">PDV</option>
+            <div class="col-4 col-xl-3" v-if="empresas.length > 1">
+              <label for="empresa" class="mb-0 small">Empresa</label>
+              <select id="empresa" class="form-control" @change="acessarEmpresa()" v-model="token">
+                <option :value="e.key" v-for="e in empresas">{{e.nome_fantasia}}</option>
               </select>
             </div>
           </div>
@@ -32,6 +30,9 @@
                   <div class="row">
                     <div class="col-9 align-self-center">
                       <div class="p-4">
+                        <div v-if="c.id_cardapio !== '1'">
+                          <span class="badge badge-danger">{{c.id_cardapio | cardapio}}</span>
+                        </div>
                         {{c.nome_categoria}}
                       </div>
                     </div>
@@ -108,7 +109,7 @@
                 <div class="border-top">
                   <div class="row">
                     <div class="col-8 align-self-center pointer" @click="toogleProduto(p)">
-                      <div class="p-2">
+                      <div class="py-3 px-2">
                         <div>{{p.nome_produto}}</div>
                         <span class="badge badge-dark small mt-0">{{p.nome_categoria}}</span>
                       </div>
@@ -186,20 +187,19 @@
     components: {
       HelloWorld, TopBar, Money
     },
+
     data() {
       return {
         loading: true,
+        token: localStorage.getItem('key'),
+
         selCategoria: [],
         selProduto: [],
-        token: localStorage.getItem('key'),
         categorias: [],
         produtos: [],
         searchResult: [],
         term: '',
-
-        pesquisa: {
-          id_cardapio: '1'
-        },
+        empresas: [],
 
         options: {
           shouldSort: true,
@@ -216,19 +216,19 @@
         },
       }
     },
-    methods: {
-      toggleCardapio() {
-        this.clear();
-        this.buscarProdutos();
-      },
 
-      buscarProdutos() {
+    methods: {
+      buscarProdutos(callback) {
         this.loading = true;
-        this.$http.get('delivery/cardapio/'  + this.token, {params: this.pesquisa})
+        this.$http.get('delivery/cardapio/'  + this.token)
           .then(response => {
             this.categorias = response.data;
             this.atualizarTabelas();
             this.loading = false;
+
+            if (callback) {
+              callback()
+            }
 
           }, res => {
             console.log(res);
@@ -361,16 +361,44 @@
             console.log(res);
             this.$swal('', res.data.msg ? res.data.msg : 'Erro temporário');
           });
+      },
+
+      acessarEmpresa() {
+        this.loading = true;
+
+        const term = this.term;
+        this.clear();
+
+        this.buscarProdutos(() => {
+          if (term) {
+            this.term = term;
+            this.pesquisar();
+          }
+        });
       }
     },
 
     mounted() {
-      this.buscarProdutos()
+      this.empresas = this.$store.state.empresas;
+      this.buscarProdutos();
     },
 
     computed: {
       adm() {
         return this.$store.state.dataUser.id_funcao === '1'
+      }
+    },
+
+    filters: {
+      cardapio(val) {
+        switch (val) {
+          case "1":
+            return "Principal";
+          case "2":
+            return "Delivery";
+          case "3":
+            return "PDV"
+        }
       }
     }
   }

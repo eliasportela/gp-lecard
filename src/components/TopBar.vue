@@ -15,11 +15,16 @@
                 Silenciar
               </button>
             </div>
-            <button class="btn mr-3" :class="empresa.ativo === '1' ? 'btn-danger' : 'btn-dark'" @click="toogleStatus()" :disabled="load" v-if="!load">
+            <button class="btn mr-3 text-nowrap" :class="empresa.ativo === '1' ? 'btn-danger' : 'btn-dark'" @click="toogleStatus()" :disabled="load" v-if="!load">
               {{empresa.ativo === '1' ? 'Desativar agora' : 'Ativar Loja'}}
             </button>
             <div class="border rounded p-1 px-2 pointer" title="Clique para atualizar a pagina" @click="reloadPage" style="width: 250px; height: 50px">
-              <div v-show="!load">
+              <div class="text-center" v-if="load">
+                <div class="animated flipInY infinite mt-1">
+                  <img src="../assets/logo-lecard.png" alt="" style="width: 32px">
+                </div>
+              </div>
+              <div v-else>
                 <h6 class="m-0 text-danger" v-if="!connected">Você está offline</h6>
                 <h6 class="m-0 text-success" v-else-if="empresa.ativo === '1' && empresa.aberto === '1'">Loja Aberta</h6>
                 <h6 class="m-0 text-warning" v-else-if="empresa.ativo === '1' && empresa.entregas.length">Loja Fechada</h6>
@@ -32,6 +37,9 @@
                 </div>
               </div>
             </div>
+            <button class="btn btn-warning ml-3 text-nowrap" v-if="!load && $store.state.empresas.length > 1" @click="showModalEmpresas">
+              Trocar Empresa
+            </button>
           </div>
         </div>
       </div>
@@ -87,6 +95,37 @@
       <container-pedidos/>
     </modal>
 
+    <modal :opened="modalEmpresa">
+      <div v-if="!loadEmpresas">
+        <h6 class="text-center pb-3">Selecione uma empresa</h6>
+        <div class="border rounded p-2 w-100 pointer mb-2" @click="acessarEmpresa(e)" v-for="e in empresas">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="m-0">{{e.nome_fantasia}}</h6>
+              <div class="small">
+                <span v-if="e.ativo === '1' && e.aberto === '1'">Dentro do horário de expediente</span>
+                <span v-else-if="e.ativo === '1' && e.entregas.length">Aceitando apenas pedidos agendados</span>
+                <span v-else>{{e.ativo === '1' ? 'Fora do horário de expediente' : 'Ative a loja para receber pedidos'}}</span>
+              </div>
+              <span class="badge badge-success" v-if="e.ativo === '1' && e.aberto === '1'">Loja Aberta</span>
+              <span class="badge badge-warning" v-else-if="e.ativo === '1' && e.entregas.length">Pedidos Agendados</span>
+              <span class="badge badge-dark" v-else>{{e.ativo === '1' ? 'Loja Fechada' : 'Loja Desativada'}}</span>
+            </div>
+            <div class="btn btn-sm btn-outline-danger">Trocar</div>
+          </div>
+        </div>
+      </div>
+      <div class="text-center my-4" v-else>
+        <div class="animated flipInY infinite">
+          <img src="../assets/logo-lecard.png" alt="" style="width: 48px">
+        </div>
+        <div class="mt-2">Carregando empresas..</div>
+      </div>
+      <div class="mt-5 text-center">
+        <button class="btn btn-dark" @click="modalEmpresa = false">Voltar</button>
+      </div>
+    </modal>
+
   </div>
 </template>
 
@@ -117,6 +156,10 @@ export default {
       modalOflline: false,
       modalPedidos: false,
 
+      modalEmpresa: false,
+      loadEmpresas: true,
+      empresas: [],
+
       empresaAtiva: false,
       connected: false,
       notification: '',
@@ -136,6 +179,7 @@ export default {
         this.$http.get(this.base_server + 'delivery/' + localStorage.getItem('token') + '/empresa/status/')
           .then(response => {
             this.empresa = response.data;
+            this.empresa.token = localStorage.getItem('token');
 
             if (aviso && this.empresa.ativo === '0' && !sessionStorage.getItem('delivery_desativado')){
               this.$swal.fire({
@@ -180,15 +224,14 @@ export default {
 
       if (this.empresa.ativo === '1') {
         this.$swal({
-          icon: 'warning',
           title: 'Atenção!',
           text: "Ao desativar sua loja seus clientes não poderão realizar mais pedidos ao menos que você ative novamente a empresa. Deseja realmente desativar?",
           confirmButtonText: 'Sim',
           cancelButtonText: "Cancelar",
           showCancelButton: true,
           customClass: {
-            cancelButton: 'btn btn-danger w-25 m-2',
-            confirmButton: 'btn btn-primary w-25 m-2'
+            cancelButton: 'btn btn-secondary w-25 m-2',
+            confirmButton: 'btn btn-danger w-25 m-2'
           },
           buttonsStyling: false
         }).then((result) => {
@@ -221,7 +264,52 @@ export default {
     reloadPage() {
       // this.dialogNotify()
       ipcRenderer.send('reload');
-    }
+    },
+
+    showModalEmpresas() {
+      this.loadEmpresas = true;
+      this.modalEmpresa = true;
+      this.empresas = [];
+      let i = 0;
+      const empresas = [];
+
+      const storeEmpresa = this.$store.state.empresas.filter(e => e.token !== this.empresa.token);
+      storeEmpresa.forEach(e => {
+        i++;
+
+        this.$http.get(this.base_server + 'delivery/' + e.token + '/empresa/status/').then(res => {
+          const dados = res.data;
+          dados.nome_fantasia = e.nome_fantasia;
+          dados.key = e.key;
+          dados.token = e.token;
+          empresas.push(dados);
+
+          if (i === storeEmpresa.length) {
+            this.empresas = empresas;
+            this.loadEmpresas = false;
+          }
+        });
+      });
+    },
+
+    acessarEmpresa(empresa) {
+      if (this.load) {
+        return;
+      }
+
+      this.load = true;
+      this.modalEmpresa = false;
+
+      const empresas = this.$store.state.empresas;
+      empresas.forEach(e => {
+        e.isDefault = false
+      });
+
+      empresas.find(e => e.token === empresa.token).isDefault = true;
+      config.set('empresas', this.$store.state.empresas);
+
+      ipcRenderer.send('reload');
+    },
   },
 
   computed: {
@@ -255,7 +343,6 @@ export default {
   mounted() {
     this.statusEmpresa(true);
     this.connected = this.$socket ? this.$socket.connected : false;
-
     this.page = this.$route.name;
   },
 

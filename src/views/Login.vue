@@ -12,8 +12,7 @@
           </div>
           <form @submit.prevent="logar">
             <div>
-              <input type="email" id="usuario" v-model="dados.email" class="form-control mb-3" placeholder="E-mail"
-                     minlength="4" required>
+              <input type="email" id="usuario" v-model="dados.email" class="form-control mb-3" placeholder="Usuário" minlength="4" required>
             </div>
             <div>
               <div class="form-control input-senha p-0 mb-3">

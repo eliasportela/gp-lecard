@@ -20,7 +20,7 @@
     components: {TopBar},
     data() {
       return {
-        src: "https://portal.lecard.delivery",
+        src: process.env.VUE_APP_PORTAL,
         loading: true,
         token: localStorage.getItem('key'),
         webview: ''
