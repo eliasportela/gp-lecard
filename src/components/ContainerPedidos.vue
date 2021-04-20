@@ -38,7 +38,7 @@
                 <div class="small font-weight-bold">
                   <span class="text-success" v-if="p.tipo_pedido === '1'">Entregar Pedido</span>
                   <span class="text-info" v-if="p.tipo_pedido === '2'">Retirar no Local</span>
-                  <span class="text-info" v-if="p.tipo_pedido === '3'">Consumir no local</span>
+                  <span class="text-warning" v-if="p.tipo_pedido === '3'">Consumir no local</span>
                 </div>
                 <div class="small" v-if="p.origin === '4'">{{p.obs_pedido}}</div>
                 <span class="badge badge-light mr-1" v-if="p.origin === '2'">APP Geral</span>
@@ -109,7 +109,6 @@
             <h6 class="m-0" v-if="selecionado.id_entrega">
               <b class="text-danger">Agendado:</b> {{selecionado.data_agendamento}}
             </h6>
-            <h6 class="m-0" v-if="selecionado.origin === '4'"><b>Local: </b> {{selecionado.obs_pedido}}</h6>
             <h6 class="m-0" v-else-if="!selecionado.id_entrega && selecionado.previsao && selecionado.status < 4">
               Previsão de {{selecionado.tipo_pedido === '1' ? 'entrega' : 'retirada'}}: <b>{{selecionado.previsao}}</b>
             </h6>
@@ -127,12 +126,14 @@
               <h6 class="text-info font-weight-bold m-0">RETIRAR NO LOCAL</h6>
               <div>
                 Cliente vai retirar o pedido
+                <h6 class="m-0" v-if="selecionado.origin === '4'"><b></b> {{selecionado.obs_pedido}}</h6>
               </div>
             </div>
             <div class="border p-2 mt-2 mb-2" v-if="selecionado.tipo_pedido === '3'">
               <h6 class="text-warning font-weight-bold m-0">CONSUMIR NO LOCAL</h6>
               <div>
                 Cliente vai consumir o pedido no local
+                <h6 class="m-0" v-if="selecionado.origin === '4'"><b></b> {{selecionado.obs_pedido}}</h6>
               </div>
             </div>
             <div class="border p-2 mt-2 mb-2" v-if="selecionado.tipo_pedido === '1'">
