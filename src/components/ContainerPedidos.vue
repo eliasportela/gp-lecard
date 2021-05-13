@@ -28,8 +28,8 @@
         </div>
         <div class="bg-white coluna-1-1 border">
           <div v-show="!loading">
-            <div class="d-flex justify-content-between border-bottom px-2 py-2 pointer"
-                 v-for="p in pedidos" @click="selecionado = p" :class="{'bg-selecionado' : selecionado.id_pedido === p.id_pedido}">
+            <a href="javascript:" :id="'listPedido' + p.id_pedido" class="d-flex justify-content-between border-bottom px-2 py-2 text-decoration-none text-dark"
+                 v-for="(p, i) in pedidos" :key="i" @click="selecionado = p" :class="{'bg-selecionado' : selecionado.id_pedido === p.id_pedido}">
               <div>
                 <h6 class="mb-0">{{p.cliente.nome_cliente}}</h6>
                 <div class="mb-0 small">
@@ -55,7 +55,7 @@
                 <div v-else-if="p.id_entrega && p.status <= 3"><span class="badge badge-warning">Agendado</span></div>
                 <div v-else-if="p.status === '5'"><span class="badge border border-danger text-danger">Cancelado</span></div>
               </div>
-            </div>
+            </a>
           </div>
         </div>
         <div class="container-aceitar bg-white" style="left: 0; right: 8px; width: auto" v-if="!loading">
@@ -156,7 +156,7 @@
               </div>
             </div>
             <hr class="d-none">
-            <div class="mb-3">
+            <div class="mb-2">
               <div class="py-3 px-2 border-bottom" v-for="i in selecionado.produtos">
                 <div class="float-right">
                   <span class="badge badge-dark">R$ {{(i.quantidade * i.valor) | valor}}</span>
@@ -176,6 +176,10 @@
               </div>
             </div>
             <hr class="d-none">
+            <div class="border p-2 mb-2" v-if="selecionado.id_pagamento === '15'">
+              <h6 class="text-info font-weight-bold m-0">Pagamento via PIX</h6>
+              <div class="small">Confira se o valor foi creditado em sua conta</div>
+            </div>
             <div class="border p-2">
               <div>
                 <span class="float-right">R$ {{(parseFloat(selecionado.total) - parseFloat(selecionado.valor_frete)) + parseFloat(selecionado.valor_desconto) | valor}}</span>
@@ -335,7 +339,7 @@ export default {
       this.buscarPedidos(false);
     },
 
-    buscarPedidos(play, callback) {
+    buscarPedidos(play, callback, scroll) {
       if (this.pesquisa.nolocal === '2') {
         this.pesquisa.nolocal = '1';
       }
@@ -366,6 +370,8 @@ export default {
                 existe = true;
                 this.selecionado = pedido;
                 this.$nextTick(function () {
+                  this.scrollPedido();
+
                   if (callback) {
                     callback();
                   }
@@ -374,7 +380,10 @@ export default {
             }
 
             if (!existe) {
-              this.selecionado = this.pedidos[0];
+              this.selecionado = this.pedidos[scroll ? (this.pedidos.length - 1) : 0];
+              this.$nextTick(function () {
+                this.scrollPedido();
+              });
             }
 
             this.$emit('ativarEmpresa');
@@ -398,6 +407,11 @@ export default {
             this.$swal("Atenção!", "Não conseguimos acessar sua conexão com a internet. Por favor verifique se seu computador tem uma conexão estável.");
           }
         });
+    },
+
+    scrollPedido() {
+      const el = document.getElementById('listPedido' + this.selecionado.id_pedido);
+      if (el) el.scrollIntoView(false);
     },
 
     acaoPedido(status) {
@@ -433,7 +447,7 @@ export default {
               if (status === 2 && localStorage.getItem('impressaoAutomatica') === '1') {
                 this.imprimir(localStorage.getItem('nCopias'));
               }
-            });
+            }, true);
           }
 
           dados.socket_id = this.selecionado.cliente.id_cliente + (this.selecionado.origin === '2' ? 'lecard_app_geral' : empresa.token);
