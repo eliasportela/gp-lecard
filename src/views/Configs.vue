@@ -9,15 +9,31 @@
               <h4 class="font-weight-bold mb-3">Impressora</h4>
               <div class="card">
                 <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-6 mb-2">
+                      <label class="mb-0" for="impressoraPedidos">Pedidos</label>
+                      <select class="form-control" id="impressoraPedidos" v-model="config.device">
+                        <option value="">Impressora Default</option>
+                        <option :value="p.name" v-for="p in printers">{{p.name}}</option>
+                      </select>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                      <label class="mb-0" for="impressoraComanda">Comanda</label>
+                      <select class="form-control" id="impressoraComanda" v-model="config.devicePdv">
+                        <option value="">Impressora Default</option>
+                        <option :value="p.name" v-for="p in printers">{{p.name}}</option>
+                      </select>
+                    </div>
+                  </div>
                   <div>
-                    <label for="configAutomatica">Impressão automática</label>
+                    <label class="mb-0" for="configAutomatica">Impressão automática</label>
                     <select class="form-control" id="configAutomatica" v-model="config.automatica">
                       <option value="1">Sim</option>
                       <option value="0">Não</option>
                     </select>
                   </div>
                   <div class="mt-2" v-if="config.automatica === '1'">
-                    <label for="nCopia">Número de cópias (Automáticas)</label>
+                    <label class="mb-0" for="nCopia">Número de cópias (Automáticas)</label>
                     <select class="form-control" id="nCopia" v-model="config.nCopias">
                       <option value="1">1</option>
                       <option value="2">2</option>
@@ -25,7 +41,7 @@
                     </select>
                   </div>
                   <div class="mt-2">
-                    <label for="zoom">Tamanho da impressão</label>
+                    <label class="mb-0" for="zoom">Tamanho da impressão</label>
                     <select class="form-control" id="zoom" v-model="config.zoom">
                       <option value="1">1</option>
                       <option value="2">2</option>
@@ -101,24 +117,35 @@
         token: localStorage.getItem('key'),
         version: '',
         config: {
+          device: '',
+          devicePdv: '',
           automatica: '1',
           nCopias: '1',
           zoom: '1',
         },
-        modo_homologacao: false
+        modo_homologacao: false,
+        printers: []
       }
     },
     methods: {
       testImpressao() {
         let options = {
           content: 'Este é um teste de impressão enviado pelo Gestor de pedidos Lecard',
-          copies: 1
+          copies: 1,
+          zoom: this.config.zoom,
+          device: this.config.device,
         };
         ipcRenderer.send("print", options);
       },
 
       atualizarConfig() {
         this.atualizar = true;
+
+        config.set('device', this.config.device);
+        localStorage.setItem('device', this.config.device);
+
+        config.set('devicePdv', this.config.devicePdv);
+        localStorage.setItem('devicePdv', this.config.devicePdv);
 
         config.set('impressaoAutomatica', this.config.automatica);
         localStorage.setItem('impressaoAutomatica', this.config.automatica);
@@ -184,6 +211,11 @@
         ipcRenderer.send('reload');
       }
     },
+
+    mounted() {
+      ipcRenderer.send('getPrinters');
+    },
+
     created() {
       this.config.automatica = localStorage.getItem('impressaoAutomatica');
       this.config.nCopias = localStorage.getItem('nCopias');
@@ -191,10 +223,18 @@
       this.version = require('electron').remote.app.getVersion();
       this.modo_homologacao = config.get('base_server');
 
-      // ipcRenderer.send('print-list');
-      // ipcRenderer.on('print-list', (event, arg) => {
-      //   this.printers = arg;
-      // });
+      if (localStorage.getItem('device')) {
+        this.config.device = localStorage.getItem('device');
+      }
+
+      if (localStorage.getItem('devicePdv')) {
+        this.config.devicePdv = localStorage.getItem('devicePdv');
+      }
+
+      ipcRenderer.on('getPrinters', (event, arg) => {
+        // console.log(arg)
+        this.printers = arg;
+      });
     },
 
     computed: {

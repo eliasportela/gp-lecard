@@ -60,7 +60,7 @@
         </div>
         <div class="container-aceitar bg-white" style="left: 0; right: 8px; width: auto" v-if="!loading">
           <div class="card p-2 small">
-            <div class="d-flex justify-content-between">
+            <div class="d-flex justify-content-between" v-if="pesquisa.nolocal !== '3'">
               <div>
                 <div class="font-weight-bold m-0">APP Delivery ({{totais.quantidade}})</div>
                 <div class="text-muted">R$ {{totais.total | valor}}</div>
@@ -69,6 +69,11 @@
                 <div class="font-weight-bold m-0">No Local ({{nolocal.quantidade}})</div>
                 <div class="text-muted">R$ {{nolocal.total | valor}}</div>
               </div>
+            </div>
+            <div class="text-right" v-else>
+              <button class="btn btn-dark" @click="imprimirResumo()" :disabled="!pedidos.length || loadResumo" style="width: 100px">
+                {{loadResumo ? 'Aguarde..' : 'Imprimir'}}
+              </button>
             </div>
           </div>
         </div>
@@ -254,6 +259,49 @@
         </div>
         <map-leaflet />
       </modal>
+
+      <div id="resumoDiario">
+        <div class="text-center mb-2">
+          <h5 class="m-0 font-weight-bold">Resumo Diário</h5>
+          <div>Data: {{resumo.data_pedido}}</div>
+        </div>
+        <hr>
+        <div class="border p-2 mb-3">
+          <div>
+            <span class="float-right">{{resumo.operacao.delivery}}</span>
+            Entregas:
+          </div>
+          <div>
+            <span class="float-right">{{resumo.operacao.retirada}}</span>
+            Retiradas:
+          </div>
+          <div>
+            <span class="float-right">{{resumo.operacao.nolocal}}</span>
+            No Local:
+          </div>
+        </div>
+        <div class="font-weight-bold mb-2">Pagamentos</div>
+        <div class="border p-2 mb-2">
+          <div v-for="p in resumo.pagamentos">
+            <span class="float-right">R$ {{p.total}}</span>
+            {{p.nome_pagamento}}:
+          </div>
+          <hr>
+          <div>
+            <span class="float-right">{{resumo.cancelados.qtd}}</span>
+            Cancelados:
+          </div>
+          <div>
+            <span class="float-right font-weight-bold">{{resumo.finalizados.qtd}}</span>
+            Pedidos:
+          </div>
+          <div>
+            <span class="float-right font-weight-bold">R$ {{resumo.finalizados.total}}</span>
+            <b>Total:</b>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </template>
@@ -304,7 +352,25 @@ export default {
         total: 0,
         quantidade: 0
       },
-      empresas: []
+      empresas: [],
+
+      loadResumo: false,
+      resumo: {
+        data_pedido: "22/06/2021",
+        finalizados: { total:"107.50", qtd:"3" },
+        cancelados: { total:"147.00", qtd:"8" },
+        operacao: { delivery:"3", retirada:"0", nolocal:"0" },
+        pagamentos: [
+          {
+            nome_pagamento: "Cartão de Débito",
+            total: "52.50"
+          },
+          {
+            nome_pagamento: "Pix",
+            total: "55.00"
+          }
+        ]
+      }
     }
   },
 
@@ -479,9 +545,56 @@ export default {
       let options = {
         content: document.getElementById('containerPedido').innerHTML,
         copies: ncopias ? ncopias : 1,
-        zoom: localStorage.getItem('zoom')
+        zoom: localStorage.getItem('zoom'),
+        device: localStorage.getItem('device'),
       };
+
       ipcRenderer.send('print', options);
+    },
+
+    imprimirResumo() {
+      if (!this.pedidos.length) {
+        this.$swal("","Não há pedidos neste dia");
+        return;
+      }
+
+      if (this.loadResumo) {
+        return;
+      }
+
+      this.loadResumo = true;
+      this.$http.get('delivery/relatorio-gestor', {params: this.pesquisa})
+        .then(response => {
+          if (!response.data) {
+            return;
+          }
+
+          this.resumo = response.data;
+          this.$nextTick(() => {
+            if (this.resumo.data_pedido) {
+              const options = {
+                content: document.getElementById('resumoDiario').innerHTML,
+                copies: 1,
+                zoom: localStorage.getItem('zoom'),
+                device: localStorage.getItem('device'),
+              };
+
+              ipcRenderer.send('print', options);
+
+              setTimeout(() => {
+                this.loadResumo = false;
+              }, 1000);
+
+            } else {
+              this.$swal("","Não há pedidos neste dia");
+              this.loadResumo = false;
+            }
+          });
+
+        }, res => {
+          console.log(res);
+          this.loadResumo = false;
+        });
     },
 
     openModalCancelamento() {
@@ -641,6 +754,10 @@ export default {
   }
   .bg-selecionado {
     background-color: #e9ecef;
+  }
+
+  #resumoDiario {
+    display: none;
   }
 
   @media (min-width:1200px) {

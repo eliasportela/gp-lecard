@@ -55,9 +55,16 @@
 
           }, res => {
             this.load = false;
+
             if (res.status === 401) {
               this.nao_atenticou = true;
               this.empresas = this.empresas.filter(el => el !== e);
+
+              if (e.isDefault) {
+                config.delete('key');
+                localStorage.clear();
+              }
+
               callback(res);
 
             } else if (!navigator.onLine) {
@@ -118,6 +125,14 @@
         config.set('zoom', zoom);
         localStorage.setItem('zoom', zoom);
 
+        if (config.get('device')) {
+          localStorage.setItem('device', config.get('device'));
+        }
+
+        if (config.get('devicePdv')) {
+          localStorage.setItem('devicePdv', config.get('devicePdv'));
+        }
+
         this.autenticarEmpresas(0);
 
       } else {
@@ -152,6 +167,7 @@
           const options = {
             content: html,
             copies: localStorage.getItem('nCopias'),
+            device: localStorage.getItem('devicePdv'),
             zoom: localStorage.getItem('zoom')
           };
           ipcRenderer.send('print', options);

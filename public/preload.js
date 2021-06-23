@@ -11,8 +11,12 @@ const options = {
 
 document.addEventListener("print", (e) => {
   const zoom = config.get('zoom');
+  const device = config.get('devicePdv');
+
   options.content = e.detail;
   options.zoom = zoom ? zoom : 1;
+  options.device = device;
+
   ipcRenderer.send('print', options);
 }, false);
 

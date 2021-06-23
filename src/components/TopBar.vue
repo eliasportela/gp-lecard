@@ -3,19 +3,22 @@
     <div class="fixed-top shadow-sm bg-white">
       <div class="container-fluid">
         <div class="row py-1 align-items-center">
-          <div class="col-5">
+          <div class="col-4">
             <router-link to="/empresas" class="text-dark">
               <img src="../assets/logo-lecard.png" alt="" style="width: 32px" id="imgEmpresa">
               <span class="font-weight-bold small pl-3">{{dados.nome_fantasia}} {{homologacao ? '(Teste)' : ''}}</span>
             </router-link>
           </div>
-          <div class="col-7 d-flex justify-content-end align-items-center">
+          <div class="col-8 d-flex justify-content-end align-items-center">
             <div class="mr-3" v-show="bell">
               <button class="btn btn-outline-danger" @click="silenciar">
                 Silenciar
               </button>
             </div>
-            <button class="btn mr-3 text-nowrap" :class="empresa.ativo === '1' ? 'btn-danger' : 'btn-dark'" @click="toogleStatus()" :disabled="load" v-if="!load">
+            <button class="btn btn-dark mr-2 text-nowrap" @click="openTempo()" :disabled="load" v-if="!load">
+              Taxa e Tempo
+            </button>
+            <button class="btn mr-2 text-nowrap" :class="empresa.ativo === '1' ? 'btn-danger' : 'btn-dark'" @click="toogleStatus()" :disabled="load" v-if="!load">
               {{empresa.ativo === '1' ? 'Desativar agora' : 'Ativar Loja'}}
             </button>
             <div class="border rounded p-1 px-2 pointer" title="Clique para atualizar a pagina" @click="reloadPage" style="width: 250px; height: 50px">
@@ -37,7 +40,7 @@
                 </div>
               </div>
             </div>
-            <button class="btn btn-warning ml-3 text-nowrap" v-if="!load && $store.state.empresas.length > 1" @click="showModalEmpresas">
+            <button class="btn btn-warning ml-2 text-nowrap" v-if="!load && $store.state.empresas.length > 1" @click="showModalEmpresas">
               Trocar Empresa
             </button>
           </div>
@@ -126,6 +129,43 @@
       </div>
     </modal>
 
+
+    <modal :opened="modalTempo">
+      <div>
+        <h6 class="text-center pb-2">{{dados.nome_fantasia}}</h6>
+        <div class="card border">
+          <div class="card-body">
+            <div class="height-card text-center">
+              <div v-if="!loadTempo">
+                <div class="row no-gutters py-2 border-bottom small font-weight-bold d-none d-md-flex">
+                  <div class="col-3 col-md-4">Alcance</div>
+                  <div class="col-5 col-md-4">Taxa</div>
+                  <div class="col-4 col-md-4">Tempo (mins)</div>
+                </div>
+                <div class="row no-gutters align-items-center py-2 border-bottom" v-for="(e, index) in entrega.raios" :key="index">
+                  <div class="col-3 col-md-4 small pr-2">Até {{e.raio_entrega / 1000}} km</div>
+                  <div class="col-5 col-md-4 pr-2"><money class="form-control" v-model="e.taxa_entrega"/></div>
+                  <div class="col-4 col-md-4 pr-1">
+                    <input type="number" min="0" max="300" class="form-control" v-model="e.tempo_entrega">
+                  </div>
+                </div>
+              </div>
+              <div class="text-center my-4" v-else>
+                <div class="animated flipInY infinite">
+                  <img src="../assets/logo-lecard.png" alt="" style="width: 48px">
+                </div>
+                <div class="mt-2">Por favor aguarde..</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mt-4 text-center d-flex justify-content-between">
+        <button class="btn btn-dark mr-2" @click="modalTempo = false">Voltar</button>
+        <button class="btn btn-danger" @click="salvarTempo()">Salvar</button>
+      </div>
+    </modal>
+
   </div>
 </template>
 
@@ -135,10 +175,11 @@ const Config = require('electron-config');
 const { ipcRenderer } = require('electron');
 const config = new Config();
 import Modal from '../components/Modal'
+import {Money} from 'v-money'
 
 export default {
   name: 'TopBar',
-  components: {ContainerPedidos, Modal},
+  components: {ContainerPedidos, Modal, Money},
   props: {
     msg: String,
   },
@@ -164,7 +205,13 @@ export default {
       connected: false,
       notification: '',
       homologacao: config.get('base_server'),
-      page: ''
+      page: '',
+
+      modalTempo: false,
+      loadTempo: false,
+      entrega: {
+        raios: []
+      }
     }
   },
 
@@ -310,6 +357,36 @@ export default {
 
       ipcRenderer.send('reload');
     },
+
+    openTempo() {
+      this.modalTempo = true;
+      this.loadTempo = true;
+
+      this.$http.get('entrega/config/' + this.token)
+        .then(response => {
+          this.entrega = response.data;
+          this.loadTempo = false;
+
+        }, res => {
+          this.loadTempo = false;
+          this.$swal(res.data.result, res.data.msg);
+        })
+    },
+
+    salvarTempo() {
+      this.loadTempo = true;
+      this.$http.post('entrega/config/' + this.token, this.entrega)
+        .then(res => {
+          this.$swal("Sucesso!","Taxa e tempo editado com sucesso");
+          this.loadTempo = false;
+          this.modalTempo = false;
+
+        }, res => {
+          console.log(res);
+          this.loadTempo = false;
+          this.$swal(res.data.result,res.data.msg);
+        });
+    }
   },
 
   computed: {
@@ -386,5 +463,10 @@ export default {
   }
   .menu-lateral .btn--active {
     background-color: rgba(255,255,255,0.1);
+  }
+  .height-card {
+    height: 210px;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 </style>

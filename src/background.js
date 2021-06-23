@@ -2,10 +2,7 @@
 /* global __static */
 
 import { app, protocol, BrowserWindow, ipcMain, globalShortcut, dialog, Menu } from 'electron'
-import {
-createProtocol,
-/* installVueDevtools */
-} from 'vue-cli-plugin-electron-builder/lib'
+import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import path from 'path'
 const isDevelopment = process.env.NODE_ENV !== 'production';
 import { autoUpdater } from "electron-updater"
@@ -21,6 +18,7 @@ let contents;
 protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }])
 app.commandLine.appendSwitch('--autoplay-policy','no-user-gesture-required');
 app.setAppUserModelId('delivery.lecard.gplecard');
+Menu.setApplicationMenu(null);
 
 if (!isDevelopment) {
   app.setLoginItemSettings({
@@ -43,7 +41,6 @@ function createWindow () {
     },
     icon: path.join(__static, 'icon.png')
   });
-  win.setMenu(null);
 
   win.once('focus', () => win.flashFrame(false));
 
@@ -56,7 +53,9 @@ function createWindow () {
   winPrint = new BrowserWindow({
     width: 1000,
     show: false,
-    webPreferences: {nodeIntegration: true}
+    webPreferences: {
+      nodeIntegration: true
+    }
   });
   winPrint.loadURL(__static + "/print.html");
 
@@ -169,16 +168,19 @@ ipcMain.on('reloud-icon', (evt, option) => {
 /// impresao
 let copies = 1;
 
-ipcMain.on('print-list', (event, arg) => {
-  event.sender.send('print-list', contents.getPrinters());
+ipcMain.on('getPrinters', (event, arg) => {
+  event.reply('getPrinters', contents.getPrinters());
 });
 
 ipcMain.on('print', (event, option) => {
   printData(event, option, winPrint);
 });
 
-ipcMain.on('readyToPrint', (event) => {
-  winPrint.webContents.print({silent: true});
+ipcMain.on('readyToPrint', (event, data) => {
+  winPrint.webContents.print({
+    silent: true,
+    deviceName: data ? data : ''
+  });
 });
 
 ipcMain.on('autoatendimento', () => {
@@ -201,14 +203,20 @@ ipcMain.on('autoatendimento', () => {
 });
 
 function printData(event, option, wind) {
-  copies = option.copies ? option.copies : 1;
+  const copies = option.copies ? option.copies : 1;
   const zoom = option.zoom ? option.zoom : 1;
+
   const data = {
     content: option.content,
     zoom
   };
 
+  if (option.device) {
+    data.device = option.device;
+  }
+
   wind.webContents.send('print', data);
+
   for (let i = 1; i < copies; i++) {
     setTimeout(() => {
       wind.webContents.send('print', data);
