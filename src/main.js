@@ -13,6 +13,8 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import 'animate.css/animate.css'
 import 'leaflet/dist/leaflet.css';
 
+import sound from './assets/audio/bell.mp3'
+
 const Config = require('electron-config');
 const config = new Config();
 
@@ -32,6 +34,9 @@ Vue.http.options.emulateJSON = true;
 Vue.http.options.emulateHTTP = true;
 Vue.http.options.root = base_server + 'api/';
 
+const audio = new Audio(sound);
+audio.loop = true;
+
 Vue.mixin({
   data() {
     return { base_server }
@@ -49,6 +54,7 @@ Vue.mixin({
       ipcRenderer.send('reloud-icon', false);
       if (!audio.paused) {
         audio.pause();
+        audio.currentTime = 0;
       }
     },
 

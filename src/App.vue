@@ -156,7 +156,7 @@
           this.$store.commit('setBell', true);
           this.playNotification(res.nome_fantasia);
 
-        } else if (!audio.paused) {
+        } else {
           this.$store.commit('setBell', false);
           this.pauseNotification();
         }
