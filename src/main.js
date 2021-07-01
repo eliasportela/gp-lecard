@@ -13,8 +13,6 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import 'animate.css/animate.css'
 import 'leaflet/dist/leaflet.css';
 
-import sound from './assets/audio/bell.mp3'
-
 const Config = require('electron-config');
 const config = new Config();
 
@@ -34,7 +32,7 @@ Vue.http.options.emulateJSON = true;
 Vue.http.options.emulateHTTP = true;
 Vue.http.options.root = base_server + 'api/';
 
-const audio = new Audio(sound);
+const audio = new Audio("https://lecard-cdn.nyc3.digitaloceanspaces.com/lecard-gestor/bell.mp3");
 audio.loop = true;
 
 Vue.mixin({
