@@ -177,10 +177,14 @@ ipcMain.on('print', (event, option) => {
 });
 
 ipcMain.on('readyToPrint', (event, data) => {
-  winPrint.webContents.print({
-    silent: true,
-    deviceName: data ? data : ''
-  });
+  try {
+    winPrint.webContents.print({
+      silent: true,
+      deviceName: data ? data : ''
+    });
+  } catch (err) {
+    dialogMsg("Não foi possível imprimir este documento!","Verifique se a impressora selecionada está disponível e tente novamente.")
+  }
 });
 
 ipcMain.on('autoatendimento', () => {
@@ -234,4 +238,14 @@ function checkUpdate() {
       autoUpdater.quitAndInstall();
     }, 4000);
   })
+}
+
+function dialogMsg(title, message) {
+  dialog.showMessageBox(win, {
+    type: 'info',
+    buttons: ['OK'],
+    title,
+    message
+  }, null);
+
 }
