@@ -34,17 +34,24 @@
             if (res.data.success) {
               const token = res.data.empresa;
 
+              e.token = token;
+              e.nome_fantasia = res.data.dados.nome_fantasia;
+              e.email = res.data.dados.email;
+
               if (e.isDefault) {
                 this.$store.commit('setDataUser', res.data);
                 config.set("key", e.key);
                 config.set("token", token);
                 localStorage.setItem("key", e.key);
                 localStorage.setItem("token", token);
-              }
 
-              e.token = token;
-              e.nome_fantasia = res.data.dados.nome_fantasia;
-              e.email = res.data.dados.email;
+                Tawk_API.visitor = {
+                  name : e.nome_fantasia,
+                  email : e.email
+                };
+
+                let Tawk_LoadStart = new Date();
+              }
 
               callback(res);
 
@@ -77,6 +84,7 @@
         config.delete('key');
         config.delete('empresa');
         localStorage.clear();
+
         if (this.$route.name !== 'Login') {
           this.$router.push("/")
         }
@@ -139,6 +147,8 @@
         this.load = false;
         this.clear();
       }
+
+      Tawk_API.onLoad = function(){ Tawk_API.hideWidget() };
     },
 
     sockets: {

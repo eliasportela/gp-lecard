@@ -63,14 +63,19 @@
         <img src="../assets/icons/food-menu.svg" alt="">
         <span>Cardápio</span>
       </router-link>
-      <router-link to="/vantagens" active-class="btn--active" class="btn btn-block">
-        <img src="../assets/icons/vantagens.svg" alt="">
-        <span>Vantagens</span>
-      </router-link>
+      <!--<router-link to="/vantagens" active-class="btn&#45;&#45;active" class="btn btn-block">-->
+        <!--<img src="../assets/icons/vantagens.svg" alt="">-->
+        <!--<span>Vantagens</span>-->
+      <!--</router-link>-->
       <router-link to="/pdv" active-class="btn--active" class="btn btn-block">
         <img src="../assets/icons/pos.svg" alt="">
         <span>Comandas</span>
       </router-link>
+      <button class="btn btn-block" @click="callTawkTo">
+        <img src="../assets/icons/information.svg" alt="Ajuda">
+        <span>Ajuda</span>
+      </button>
+
       <div style="bottom: 8px; left: 8px; right: 8px; position: absolute">
         <router-link to="/portal" active-class="btn--active"  class="btn btn-block">
           <img src="../assets/icons/report.svg" alt="">
@@ -386,6 +391,11 @@ export default {
           this.loadTempo = false;
           this.$swal(res.data.result,res.data.msg);
         });
+    },
+
+    callTawkTo() {
+      // Tawk_API.popup();
+      Tawk_API.maximize()
     }
   },
 

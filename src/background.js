@@ -12,6 +12,7 @@ import { autoUpdater } from "electron-updater"
 let win;
 let winPrint;
 let winAuto;
+let winTawk;
 let contents;
 
 // Scheme must be registered before the app is ready
@@ -44,9 +45,33 @@ function createWindow () {
 
   win.once('focus', () => win.flashFrame(false));
 
-   win.webContents.on('new-window', function(e, url) {
+  win.webContents.on('new-window', function(e, url) {
     e.preventDefault();
-    require('electron').shell.openExternal(url);
+
+    if (url.startsWith("https://tawk.to")) {
+
+      if (winTawk) {
+        winTawk.show();
+        return;
+      }
+
+      winTawk = new BrowserWindow({
+        width: 500,
+        height: 600,
+        icon: path.join(__static, 'icon.png')
+      });
+
+      winTawk.setMenu(null);
+      winTawk.loadURL(url);
+
+      winTawk.on('closed', () => {
+        winTawk = null;
+      });
+
+    } else {
+      require('electron').shell.openExternal(url);
+    }
+
   });
 
   // impressao de pedidos
