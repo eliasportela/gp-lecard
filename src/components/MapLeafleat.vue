@@ -17,7 +17,7 @@
               :icon-url="require('../assets/icons/restaurant-icon.svg')"
           />
         </l-marker>
-        <l-marker :lat-lng="p.coordinates" v-for="p in pedidos" v-if="pedidos.length">
+        <l-marker :lat-lng="p.coordinates" v-for="(p, index) in pedidos" v-if="pedidos.length" :key="index">
           <l-icon :icon-size="[32, 32]" :icon-anchor="[16, 32]" :popupAnchor="[0,-32]"
                   :icon-url="require('../assets/icons/location.svg')"/>
           <l-popup>

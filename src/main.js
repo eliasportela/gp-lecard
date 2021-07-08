@@ -8,7 +8,6 @@ import VueSweetalert2 from 'vue-sweetalert2'
 import store from './store'
 import VueTheMask from 'vue-the-mask'
 import VueFuse from 'vue-fuse'
-import Tawk from 'vue-tawk'
 
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'animate.css/animate.css'
@@ -83,10 +82,6 @@ Date.prototype.toDateInputValue = (function() {
   let local = new Date(this);
   local.setMinutes(this.getMinutes() - this.getTimezoneOffset());
   return local.toJSON().slice(0,10);
-});
-
-Vue.use(Tawk, {
-  tawkSrc: 'https://embed.tawk.to/5ea3225a35bcbb0c9ab45dca/default'
 });
 
 new Vue({

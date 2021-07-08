@@ -6,13 +6,17 @@ import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import path from 'path'
 const isDevelopment = process.env.NODE_ENV !== 'production';
 import { autoUpdater } from "electron-updater"
+import * as Sentry from "@sentry/electron";
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win;
 let winPrint;
 let winAuto;
+let winChat;
 let contents;
+
+Sentry.init({ dsn: "https://d0b9e4f31c3e48c59436bdc93ee8685d@o449432.ingest.sentry.io/5855240" });
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }])
@@ -35,6 +39,7 @@ function createWindow () {
     minWidth: 1100,
     minHeight: 700,
     show: false,
+    title: 'Gestor de Pedidos',
     webPreferences: {
       nodeIntegration: true,
       webviewTag: true
@@ -250,5 +255,27 @@ function dialogMsg(title, message) {
     title,
     message
   }, null);
-
 }
+
+ipcMain.on('openChat', () => {
+  if (winChat) {
+    winChat.show();
+    return;
+  }
+
+  winChat = new BrowserWindow({
+    width: 525,
+    height: 700,
+    minWidth: 525,
+    minHeight: 700,
+    icon: path.join(__static, 'icon.png'),
+    title: 'LeCard - Ajuda'
+  });
+
+  winChat.setMenu(null);
+  winChat.loadURL('https://tawk.to/chat/5ea3225a35bcbb0c9ab45dca/default');
+
+  winChat.on('closed', () => {
+    winChat = null;
+  });
+});

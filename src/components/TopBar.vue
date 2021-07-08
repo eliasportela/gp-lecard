@@ -394,8 +394,7 @@ export default {
     },
 
     callTawkTo() {
-      // Tawk_API.popup();
-      Tawk_API.maximize()
+      ipcRenderer.send('openChat');
     }
   },
 

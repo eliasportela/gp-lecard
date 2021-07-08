@@ -44,13 +44,6 @@
                 config.set("token", token);
                 localStorage.setItem("key", e.key);
                 localStorage.setItem("token", token);
-
-                Tawk_API.visitor = {
-                  name : e.nome_fantasia,
-                  email : e.email
-                };
-
-                let Tawk_LoadStart = new Date();
               }
 
               callback(res);
@@ -147,8 +140,6 @@
         this.load = false;
         this.clear();
       }
-
-      Tawk_API.onLoad = function(){ Tawk_API.hideWidget() };
     },
 
     sockets: {
