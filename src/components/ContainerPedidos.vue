@@ -228,7 +228,7 @@
                 <button class="btn btn-success btn-block" @click="acaoPedido(2)" :disabled="loading">Aceitar</button>
               </div>
               <div class="w-50 ml-auto" v-if="selecionado.status === '2'">
-                <button class="btn btn-dark btn-block" @click="acaoPedido(3)" :disabled="loading">Despachar</button>
+                <button class="btn btn-secondary btn-block" @click="acaoPedido(3)" :disabled="loading">Despachar</button>
               </div>
               <div class="w-50 ml-auto" v-if="selecionado.status === '3'">
                 <button class="btn btn-info btn-block" @click="acaoPedido(4)" :disabled="loading">Finalizar</button>

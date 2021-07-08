@@ -30,10 +30,10 @@ if (!isDevelopment) {
 function createWindow () {
   // Create the browser window.
   win = new BrowserWindow({
-    width: 1000,
-    height: 600,
-    minWidth: 1000,
-    minHeight: 600,
+    width: 1100,
+    height: 700,
+    minWidth: 1100,
+    minHeight: 700,
     show: false,
     webPreferences: {
       nodeIntegration: true,
