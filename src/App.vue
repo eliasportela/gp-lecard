@@ -22,7 +22,6 @@
       return {
         load: true,
         empresas: [],
-        key: '',
         nao_atenticou: false
       }
     },
@@ -49,7 +48,7 @@
               callback(res);
 
             } else {
-              this.$swal("Atenção!", "Não conseguimos autenticar sua empresa. Por favor tente novamente!");
+              this.$swal("Não conseguimos autenticar sua empresa. Por favor tente novamente!");
               this.load = false;
             }
 
@@ -68,7 +67,7 @@
               callback(res);
 
             } else if (!navigator.onLine) {
-              this.$swal("Atenção!", "Não conseguimos acessar sua conexão com a internet. Por favor verifique se seu computador tem uma conexão estável.");
+              this.$swal("Não conseguimos acessar sua conexão com a internet. Por favor verifique se seu computador tem uma conexão estável.");
             }
           });
       },
@@ -109,31 +108,11 @@
 
     mounted() {
       localStorage.clear();
-      this.key = config.get('key');
 
       this.empresas = config.get('empresas') ? config.get('empresas') : [];
       this.$store.state.empresas = this.empresas;
 
-      if (this.key) {
-        const ia = config.get('impressaoAutomatica') ? config.get('impressaoAutomatica') : 0;
-        const nCopias = config.get('nCopias') ? config.get('nCopias') : 1;
-        const zoom = config.get('zoom') ? config.get('zoom') : 1;
-
-        config.set('impressaoAutomatica', ia);
-        localStorage.setItem('impressaoAutomatica', ia);
-        config.set('nCopias', nCopias);
-        localStorage.setItem('nCopias', nCopias);
-        config.set('zoom', zoom);
-        localStorage.setItem('zoom', zoom);
-
-        if (config.get('device')) {
-          localStorage.setItem('device', config.get('device'));
-        }
-
-        if (config.get('devicePdv')) {
-          localStorage.setItem('devicePdv', config.get('devicePdv'));
-        }
-
+      if (this.empresas.length) {
         this.autenticarEmpresas(0);
 
       } else {
@@ -165,13 +144,10 @@
 
       print(html) {
         if (html) {
-          const options = {
+          ipcRenderer.send('print', {
             content: html,
-            copies: localStorage.getItem('nCopias'),
-            device: localStorage.getItem('devicePdv'),
-            zoom: localStorage.getItem('zoom')
-          };
-          ipcRenderer.send('print', options);
+            pdv: true
+          });
         }
       }
     },
@@ -191,5 +167,9 @@
 
   .switch {
     width: 32px;
+  }
+
+  .swal-button--danger, .swal-button--confirm {
+    background-color: var(--danger) !important;
   }
 </style>

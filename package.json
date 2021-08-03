@@ -1,6 +1,6 @@
 {
   "name": "gp-lecard",
-  "version": "1.5.6",
+  "version": "1.5.7",
   "private": true,
   "description": "Gestor de Pedidos - LeCard",
   "author": "storkdigital.com.br",
@@ -31,7 +31,7 @@
     "vue-resource": "^1.5.1",
     "vue-router": "^3.1.6",
     "vue-socket.io": "3.0.5",
-    "vue-sweetalert2": "^3.0.3",
+    "vue-swal": "^1.0.0",
     "vue-the-mask": "^0.11.1",
     "vue2-leaflet": "^2.7.0",
     "vuex": "^3.4.0"

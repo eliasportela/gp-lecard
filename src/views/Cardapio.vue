@@ -11,9 +11,16 @@
         </div>
         <div id="categorias" style="margin-bottom: 32px" v-show="!loading">
           <div class="row mb-4">
-            <div :class="empresas.length > 1 ? 'col-8 col-xl-9' : 'col-12'">
+            <div :class="empresas.length > 1 ? 'col-6 col-xl-7' : 'col-10'">
               <label for="search" class="mb-0 small">Pesquisar produto</label>
-              <input id="search" type="search" class="form-control small" placeholder="Pesquisar" v-model="term" @keyup="pesquisar" @search="pesquisar">
+              <input id="search" type="search" class="form-control small" placeholder="Pesquisar" v-model="term" @keyup="pesquisar()" @search="pesquisar">
+            </div>
+            <div class="col-2">
+              <label for="desativado" class="mb-0 small">Status</label>
+              <select id="desativado" class="form-control" @change="buscarProdutos()" v-model="desativado">
+                <option value="1">Todos</option>
+                <option value="2">Desativados</option>
+              </select>
             </div>
             <div class="col-4 col-xl-3" v-if="empresas.length > 1">
               <label for="empresa" class="mb-0 small">Empresa</label>
@@ -167,7 +174,7 @@
             <div class="d-flex" style="padding-top: 18vh">
               <div class="m-auto text-center">
                 <img src="../assets/logo-lecard.png" alt="Logo Lecard" style="width: 64px;">
-                <div class="small mt-3">Você ainda não tem cadastro de produtos neste cardápio</div>
+                <div class="small mt-3">Não encontramos nenhum produto</div>
               </div>
             </div>
           </div>
@@ -214,13 +221,17 @@
             "tabelas.nome_tabela",
           ],
         },
+
+        desativado: '2'
       }
     },
 
     methods: {
       buscarProdutos(callback) {
+        this.clear();
         this.loading = true;
-        this.$http.get('delivery/cardapio/'  + this.token)
+
+        this.$http.get('delivery/cardapio/'  + this.token, {params: { fg_ativo: this.desativado } })
           .then(response => {
             this.categorias = response.data;
             this.atualizarTabelas();
@@ -299,7 +310,7 @@
         }
 
         if (t.valor < 0) {
-          this.$swal('','A tabela de preço não pode ser menor que R$0,00');
+          this.$swal('A tabela de preço não pode ser menor que R$0,00');
           return;
         }
 
@@ -318,7 +329,7 @@
 
           }, res => {
             console.log(res);
-            this.$swal('', res.data.msg ? res.data.msg : 'Erro temporário');
+            this.$swal(res.data.msg ? res.data.msg : 'Erro temporário');
           });
       },
 
@@ -359,7 +370,7 @@
 
           }, res => {
             console.log(res);
-            this.$swal('', res.data.msg ? res.data.msg : 'Erro temporário');
+            this.$swal(res.data.msg ? res.data.msg : 'Erro temporário');
           });
       },
 
@@ -380,6 +391,7 @@
 
     mounted() {
       this.empresas = this.$store.state.empresas;
+      this.desativado = this.$route.query.desativados ? '2' : '1';
       this.buscarProdutos();
     },
 

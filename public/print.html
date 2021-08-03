@@ -5,7 +5,7 @@
   <meta name="viewport" content= "width=device-width, initial-scale=1.0">
   <style>
     html, body {
-      margin: 0;
+      margin: auto;
       line-height: 22px;
     }
     @page {
@@ -111,23 +111,36 @@
 
 <script>
   const ipcRenderer = require("electron").ipcRenderer;
+  const Config = require('electron-config');
+
+  let device = "";
+  let devicePdv = "";
+
+  init();
 
   ipcRenderer.on("print", (event, data) => {
-    let zoom = '7px';
-
-    switch (data.zoom) {
-      case '2':
-        zoom = '9px';
-        break;
-      case '3':
-        zoom = '11px';
-        break;
-    }
-
-    document.body.style.fontSize = zoom;
     document.getElementById('content').innerHTML = data.content;
-    ipcRenderer.send("readyToPrint", data.device);
+    ipcRenderer.send("readyToPrint", data.pdv ? devicePdv : device);
   });
+
+  ipcRenderer.on("printConfig", () => {
+    init();
+  });
+
+  function init() {
+    let config = new Config();
+    let print = config.get('impressora');
+
+    if (print) {
+      device = print.device ? print.device : "";
+      devicePdv = print.devicePdv ? print.devicePdv : "";
+      document.body.style.fontSize = print.zoom ? print.zoom : "7px";
+
+      if (print.largura) {
+        document.body.style.width = print.largura;
+      }
+    }
+  }
 </script>
 </body>
 </html>

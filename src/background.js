@@ -8,6 +8,8 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
 import { autoUpdater } from "electron-updater"
 import * as Sentry from "@sentry/electron";
 
+const Config = require('electron-config');
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win;
@@ -32,7 +34,6 @@ if (!isDevelopment) {
 }
 
 function createWindow () {
-  // Create the browser window.
   win = new BrowserWindow({
     width: 1100,
     height: 700,
@@ -107,31 +108,49 @@ app.on('activate', () => {
   if (win === null) {
     createWindow()
   }
-})
+});
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
-  if (isDevelopment && !process.env.IS_TEST) {
-    // Install Vue Devtools
-    // Devtools extensions are broken in Electron 6.0.0 and greater
-    // See https://github.com/nklayman/vue-cli-plugin-electron-builder/issues/378 for more info
-    // Electron will not launch with Devtools extensions installed on Windows 10 with dark mode
-    // If you are not using Windows 10 dark mode, you may uncomment these lines
-    // In addition, if the linked issue is closed, you can upgrade electron and uncomment these lines
-    // try {
-    //   await installVueDevtools()
-    // } catch (e) {
-    //   console.error('Vue Devtools failed to install:', e.toString())
-    // }
+  const config = new Config();
 
+  if (!config.get('impressora')) {
+    const zoom = config.get('zoom') ? config.get('zoom') : "";
+
+    switch (zoom) {
+      case "1":
+        config.set('zoom', "7px");
+        break;
+      case "2":
+        config.set('zoom', "9px");
+        break;
+      case "3":
+        config.set('zoom', "11px");
+        break;
+      default:
+        config.set('zoom', "9px");
+        break;
+    }
+
+    config.set('impressora', {
+      automatico: config.get("impressaoAutomatica") ? config.get("impressaoAutomatica") : "0",
+      nCopias: config.get('nCopias') ? config.get('nCopias') : "1",
+      zoom: config.get('zoom'),
+      device: config.get('device') ? config.get('device') : "",
+      devicePdv: config.get('devicePdv') ? config.get('devicePdv') : "",
+      largura: config.get('largura') ? config.get('largura') : ""
+    });
+
+    config.delete('impressaoAutomatica');
+    config.delete('nCopias');
+    config.delete('zoom');
+    config.delete('device');
+    config.delete('devicePdv');
   }
-  createWindow()
 
+  createWindow();
   globalShortcut.register('CommandOrControl+L', () => {
     win.webContents.openDevTools();
-    win.webContents.send('openDevTools');
+    // winPrint.webContents.openDevTools();
   })
 });
 
@@ -156,6 +175,7 @@ ipcMain.on('relaunch-app', () => {
 
 ipcMain.on('reload', () => {
   win.reload();
+  winPrint.webContents.send('printConfig');
 });
 
 ipcMain.on('focus', () => {
@@ -172,9 +192,6 @@ ipcMain.on('reloud-icon', (evt, option) => {
     win.setOverlayIcon(null, '');
   }
 });
-
-/// impresao
-let copies = 1;
 
 ipcMain.on('getPrinters', (event, arg) => {
   event.reply('getPrinters', contents.getPrinters());
@@ -216,22 +233,11 @@ ipcMain.on('autoatendimento', () => {
 
 function printData(event, option, wind) {
   const copies = option.copies ? option.copies : 1;
-  const zoom = option.zoom ? option.zoom : 1;
-
-  const data = {
-    content: option.content,
-    zoom
-  };
-
-  if (option.device) {
-    data.device = option.device;
-  }
-
-  wind.webContents.send('print', data);
+  wind.webContents.send('print', option);
 
   for (let i = 1; i < copies; i++) {
     setTimeout(() => {
-      wind.webContents.send('print', data);
+      wind.webContents.send('print', option);
     }, 2000)
   }
 

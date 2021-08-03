@@ -102,7 +102,7 @@
         if (this.empresas.length) {
           if (this.empresas.find(e => e.token === token || e.key === key)) {
             this.loading = false;
-            this.$swal('Atenção!', 'Você já está logado nesta empresa/e-mail, faça o login em outra conta ou volte ao menu principal.');
+            this.$swal('Você já está logado nesta empresa/e-mail, faça o login em outra conta ou volte ao menu principal.');
             return;
           }
 

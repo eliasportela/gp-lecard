@@ -4,14 +4,14 @@
       <div class="coluna-1">
         <div class="row no-gutters mb-2" v-if="pesquisa.nolocal !== '3'">
           <div class="col-6 pr-1">
-            <select class="form-control" v-model="pesquisa.status" @change="buscarPedidos(false)">
+            <select class="form-control" v-model="pesquisa.status" @change="buscarPedidos(false)" :disabled="loading">
               <option value="1">Em andamento</option>
               <option value="4">Finalizados</option>
               <option value="5">Cancelados</option>
             </select>
           </div>
           <div class="col-6 pl-1">
-            <select class="form-control" v-model="pesquisa.nolocal" @change="buscarNoLocal()">
+            <select class="form-control" v-model="pesquisa.nolocal" @change="buscarNoLocal()" :disabled="loading">
               <option value="1">Todos</option>
               <option value="2">No Local</option>
               <option value="3">Filtrar data</option>
@@ -80,139 +80,139 @@
       </div>
       <div class="coluna-2">
         <div class="conteudo-c2 border">
-          <div v-show="selecionado.produtos.length === 0">
-            <div v-if="loading" style="padding-top: 28vh">
-              <img src="../assets/logo-lecard.png" class="d-block m-auto animated flipInY infinite" alt="Logo Lecard" style="width: 72px;">
-            </div>
-            <div v-else class="container-produtos">
+          <div v-if="loading" style="padding-top: 28vh">
+            <img src="../assets/logo-lecard.png" class="d-block m-auto animated flipInY infinite" alt="Logo Lecard" style="width: 72px;">
+          </div>
+          <div v-show="!loading">
+            <div class="container-produtos" v-show="!selecionado.cliente">
               <msg-home class="mt-1"/>
             </div>
-          </div>
-          <div id="containerPedido" class="container-produtos" v-if="selecionado.cliente" v-show="!loading && selecionado.produtos.length > 0">
-            <div id="andamento" class="font-weight-bold float-right">
-              <div v-if="!selecionado.id_entrega">
-                <span class="badge badge-danger" v-if="selecionado.status === '1'">Aguardando</span>
-                <span class="badge badge-info" v-if="selecionado.status === '2'">Preparando</span>
-                <span class="badge badge-dark" v-if="selecionado.status === '3'">Entregando</span>
-                <span class="badge badge-dark" v-if="selecionado.status === '4'">Pedido Finalizado</span>
-                <span class="badge badge-danger" v-if="selecionado.status === '5'">Pedido Cancelado</span>
+            <div id="containerPedido" class="container-produtos" v-if="selecionado.cliente">
+              <div id="andamento" class="font-weight-bold float-right">
+                <div v-if="!selecionado.id_entrega">
+                  <span class="badge badge-danger" v-if="selecionado.status === '1'">Aguardando</span>
+                  <span class="badge badge-info" v-if="selecionado.status === '2'">Preparando</span>
+                  <span class="badge badge-dark" v-if="selecionado.status === '3'">Entregando</span>
+                  <span class="badge badge-dark" v-if="selecionado.status === '4'">Pedido Finalizado</span>
+                  <span class="badge badge-danger" v-if="selecionado.status === '5'">Pedido Cancelado</span>
+                </div>
+                <span class="badge badge-warning" v-else-if="selecionado.id_entrega">Pedido Agendado</span>
               </div>
-              <span class="badge badge-warning" v-else-if="selecionado.id_entrega">Pedido Agendado</span>
-            </div>
-            <div>
-              <h5 class="m-0" v-if="pesquisa.keys.length > 1">{{selecionado.nome_fantasia}}</h5>
-              <div class="m-0 font-weight-bold">Pedido: {{selecionado.id_pedido}} - {{selecionado.data_pedido}}</div>
-              <div class="font-weight-bold" v-if="selecionado.origin === '2'">
-                <span class="badge badge-info">Realizado pelo LeCard Geral</span>
+              <div>
+                <h5 class="m-0" v-if="pesquisa.keys.length > 1">{{selecionado.nome_fantasia}}</h5>
+                <div class="m-0 font-weight-bold">Pedido: {{selecionado.id_pedido}} - {{selecionado.data_pedido}}</div>
+                <div class="font-weight-bold" v-if="selecionado.origin === '2'">
+                  <span class="badge badge-info">Realizado pelo LeCard Geral</span>
+                </div>
               </div>
-            </div>
-            <div v-show="selecionado.status === '5'">
+              <div v-show="selecionado.status === '5'">
                 <span><b class="text-danger">Cancelado:</b>
                   {{selecionado.obs_cancelamento ? selecionado.obs_cancelamento : 'Pedido cancelado pelo cliente'}}
                 </span>
-            </div>
-            <h6 class="m-0" v-if="selecionado.id_entrega">
-              <b class="text-danger">Agendado:</b> {{selecionado.data_agendamento}}
-            </h6>
-            <h6 class="m-0" v-else-if="!selecionado.id_entrega && selecionado.previsao && selecionado.status < 4">
-              Previsão de {{selecionado.tipo_pedido === '1' ? 'entrega' : 'retirada'}}: <b>{{selecionado.previsao}}</b>
-            </h6>
-            <div class="border p-2 mt-3 mb-2">
-              <h5 class="font-weight-bold m-0">{{selecionado.cliente.nome_cliente}}</h5>
-              <div v-if="selecionado.origin !== '3'">
-                Nº de Pedidos: {{selecionado.qtd_pedidos === '0' ? 'Primeiro pedido' : selecionado.qtd_pedidos + ' pedidos'}}
               </div>
-              <b>Telefone: </b>
-              <a :href="'https://api.whatsapp.com/send?phone=+55'+ selecionado.cliente.telefone" class="text-info" target="_blank">
-                <b>{{selecionado.cliente.telefone | phone}}</b>
-              </a>
-            </div>
-            <div class="border p-2 mt-2 mb-2" v-if="selecionado.tipo_pedido === '2'">
-              <h6 class="text-info font-weight-bold m-0">RETIRAR NO LOCAL</h6>
-              <div>
-                Cliente vai retirar o pedido
-                <h6 class="m-0" v-if="selecionado.origin === '4'"><b></b> {{selecionado.obs_pedido}}</h6>
+              <h6 class="m-0" v-if="selecionado.id_entrega">
+                <b class="text-danger">Agendado:</b> {{selecionado.data_agendamento}}
+              </h6>
+              <h6 class="m-0" v-else-if="!selecionado.id_entrega && selecionado.previsao && selecionado.status < 4">
+                Previsão de {{selecionado.tipo_pedido === '1' ? 'entrega' : 'retirada'}}: <b>{{selecionado.previsao}}</b>
+              </h6>
+              <div class="border p-2 mt-3 mb-2">
+                <h5 class="font-weight-bold m-0">{{selecionado.cliente.nome_cliente}}</h5>
+                <div v-if="selecionado.origin !== '3'">
+                  Nº de Pedidos: {{selecionado.qtd_pedidos === '0' ? 'Primeiro pedido' : selecionado.qtd_pedidos + ' pedidos'}}
+                </div>
+                <b>Telefone: </b>
+                <a :href="'https://api.whatsapp.com/send?phone=+55'+ selecionado.cliente.telefone" class="text-info" target="_blank">
+                  <b>{{selecionado.cliente.telefone | phone}}</b>
+                </a>
               </div>
-            </div>
-            <div class="border p-2 mt-2 mb-2" v-if="selecionado.tipo_pedido === '3'">
-              <h6 class="text-warning font-weight-bold m-0">CONSUMIR NO LOCAL</h6>
-              <div>
-                Cliente vai consumir o pedido no local
-                <h6 class="m-0" v-if="selecionado.origin === '4'"><b></b> {{selecionado.obs_pedido}}</h6>
-              </div>
-            </div>
-            <div class="border p-2 mt-2 mb-2" v-if="selecionado.tipo_pedido === '1'">
-              <div class="d-flex justify-content-between align-items-center">
+              <div class="border p-2 mt-2 mb-2" v-if="selecionado.tipo_pedido === '2'">
+                <h6 class="text-info font-weight-bold m-0">RETIRAR NO LOCAL</h6>
                 <div>
-                  <h6 class="text-success font-weight-bold m-0">ENTREGAR PEDIDO</h6>
+                  Cliente vai retirar o pedido
+                  <h6 class="m-0" v-if="selecionado.origin === '4'"><b></b> {{selecionado.obs_pedido}}</h6>
+                </div>
+              </div>
+              <div class="border p-2 mt-2 mb-2" v-if="selecionado.tipo_pedido === '3'">
+                <h6 class="text-warning font-weight-bold m-0">CONSUMIR NO LOCAL</h6>
+                <div>
+                  Cliente vai consumir o pedido no local
+                  <h6 class="m-0" v-if="selecionado.origin === '4'"><b></b> {{selecionado.obs_pedido}}</h6>
+                </div>
+              </div>
+              <div class="border p-2 mt-2 mb-2" v-if="selecionado.tipo_pedido === '1'">
+                <div class="d-flex justify-content-between align-items-center">
                   <div>
-                    <span v-if="!selecionado.version">{{selecionado.cliente.endereco}}</span><span v-else>{{selecionado.cliente.logradouro}}</span>,
-                    {{selecionado.cliente.numero}}, {{selecionado.cliente.bairro}} <span v-if="selecionado.cliente.distance"> - {{selecionado.cliente.distance | kilometer}}</span><br>
-                    <div>{{selecionado.cliente.nome_cidade}} - {{selecionado.cliente.sigla_estado}} | CEP: {{selecionado.cliente.cep | cep}}</div>
-                    <div v-if="selecionado.cliente.complemento">- {{selecionado.cliente.complemento}}</div>
+                    <h6 class="text-success font-weight-bold m-0">ENTREGAR PEDIDO</h6>
+                    <div>
+                      <span v-if="!selecionado.version">{{selecionado.cliente.endereco}}</span><span v-else>{{selecionado.cliente.logradouro}}</span>,
+                      {{selecionado.cliente.numero}}, {{selecionado.cliente.bairro}} <span v-if="selecionado.cliente.distance"> - {{selecionado.cliente.distance | kilometer}}</span><br>
+                      <div>{{selecionado.cliente.nome_cidade}} - {{selecionado.cliente.sigla_estado}} | CEP: {{selecionado.cliente.cep | cep}}</div>
+                      <div v-if="selecionado.cliente.complemento">- {{selecionado.cliente.complemento}}</div>
+                    </div>
+                  </div>
+                  <div class="text-center d-print-none" v-if="selecionado.cliente.lat_endereco">
+                    <a href="javascript:" class="btn btn-success mb-1" @click="openMapa()">
+                      <img src="../assets/icons/location-light.svg" style="width: 18px">
+                      <div class="small mt-1">Ver no mapa</div>
+                    </a>
                   </div>
                 </div>
-                <div class="text-center d-print-none" v-if="selecionado.cliente.lat_endereco">
-                  <a href="javascript:" class="btn btn-success mb-1" @click="openMapa()">
-                    <img src="../assets/icons/location-light.svg" style="width: 18px">
-                    <div class="small mt-1">Ver no mapa</div>
-                  </a>
+              </div>
+              <hr class="d-none">
+              <div class="mb-2">
+                <div class="py-3 px-2 border-bottom" v-for="i in selecionado.produtos">
+                  <div class="float-right">
+                    <span class="badge badge-dark">R$ {{(i.quantidade * i.valor) | valor}}</span>
+                  </div>
+                  <div>
+                    <h6 class="mb-0 font-weight-bold">{{i.quantidade}}x - {{i.produto.nome_produto}}</h6>
+                    <div v-for="d in i.divisoes">
+                      # {{d.nome_produto}}
+                    </div>
+                    <div v-for="d in i.adicionais">
+                      + {{d.qtd}}x {{d.nome_produto}} <span v-show="d.valor > 0">R$ {{d.valor | valor}}</span>
+                    </div>
+                    <div class="font-weight-bold" v-show="i.observacao">
+                      Obs: {{i.observacao}}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-            <hr class="d-none">
-            <div class="mb-2">
-              <div class="py-3 px-2 border-bottom" v-for="i in selecionado.produtos">
-                <div class="float-right">
-                  <span class="badge badge-dark">R$ {{(i.quantidade * i.valor) | valor}}</span>
+              <hr class="d-none">
+              <div class="border p-2 mb-2" v-if="selecionado.id_pagamento === '15'">
+                <h6 class="text-info font-weight-bold m-0">Pagamento via PIX</h6>
+                <div class="small">Confira se o valor foi creditado em sua conta</div>
+              </div>
+              <div class="border p-2">
+                <div>
+                  <span class="float-right">R$ {{(parseFloat(selecionado.total) - parseFloat(selecionado.valor_frete)) + parseFloat(selecionado.valor_desconto) | valor}}</span>
+                  SubTotal:
                 </div>
                 <div>
-                  <h6 class="mb-0 font-weight-bold">{{i.quantidade}}x - {{i.produto.nome_produto}}</h6>
-                  <div v-for="d in i.divisoes">
-                    # {{d.nome_produto}}
-                  </div>
-                  <div v-for="d in i.adicionais">
-                    + {{d.qtd}}x {{d.nome_produto}} <span v-show="d.valor > 0">R$ {{d.valor | valor}}</span>
-                  </div>
-                  <div class="font-weight-bold" v-show="i.observacao">
-                    Obs: {{i.observacao}}
-                  </div>
+                  <span class="float-right">R$ {{selecionado.valor_frete | valor}}</span>
+                  Taxa de Entrega:
+                </div>
+                <div>
+                  <span class="float-right">R$ {{selecionado.valor_desconto | valor}}</span>
+                  Desconto:
+                </div>
+                <div>
+                  <span class="float-right">{{selecionado.nome_pagamento}}</span>
+                  Forma de Pagamento:
+                </div>
+                <div v-if="selecionado.troco && (parseFloat(selecionado.troco) > selecionado.total)">
+                  <span class="float-right">R$ {{(selecionado.troco - selecionado.total) | valor}}</span>
+                  Troco:
+                </div>
+                <div>
+                  <span class="float-right font-weight-bold">R$ {{selecionado.total | valor}}</span>
+                  <b>Cobrar do Cliente:</b>
                 </div>
               </div>
+              <div v-if="selecionado.origin !== '4' && selecionado.obs_pedido"><b>Obs:</b> {{selecionado.obs_pedido}}</div>
+              <div v-if="selecionado.troco > 0"><b>Obs:</b> Troco para R${{(selecionado.troco) | valor}}</div>
             </div>
-            <hr class="d-none">
-            <div class="border p-2 mb-2" v-if="selecionado.id_pagamento === '15'">
-              <h6 class="text-info font-weight-bold m-0">Pagamento via PIX</h6>
-              <div class="small">Confira se o valor foi creditado em sua conta</div>
-            </div>
-            <div class="border p-2">
-              <div>
-                <span class="float-right">R$ {{(parseFloat(selecionado.total) - parseFloat(selecionado.valor_frete)) + parseFloat(selecionado.valor_desconto) | valor}}</span>
-                SubTotal:
-              </div>
-              <div>
-                <span class="float-right">R$ {{selecionado.valor_frete | valor}}</span>
-                Taxa de Entrega:
-              </div>
-              <div>
-                <span class="float-right">R$ {{selecionado.valor_desconto | valor}}</span>
-                Desconto:
-              </div>
-              <div>
-                <span class="float-right">{{selecionado.nome_pagamento}}</span>
-                Forma de Pagamento:
-              </div>
-              <div v-if="selecionado.troco && (parseFloat(selecionado.troco) > selecionado.total)">
-                <span class="float-right">R$ {{(selecionado.troco - selecionado.total) | valor}}</span>
-                Troco:
-              </div>
-              <div>
-                <span class="float-right font-weight-bold">R$ {{selecionado.total | valor}}</span>
-                <b>Cobrar do Cliente:</b>
-              </div>
-            </div>
-            <div v-if="selecionado.origin !== '4' && selecionado.obs_pedido"><b>Obs:</b> {{selecionado.obs_pedido}}</div>
-            <div v-if="selecionado.troco > 0"><b>Obs:</b> Troco para R${{(selecionado.troco) | valor}}</div>
           </div>
         </div>
         <div class="container-aceitar bg-white" style="left: 0; right: 0; width: auto">
@@ -239,15 +239,23 @@
       </div>
 
       <modal :opened="modalCancelamento" width="small">
-        <label class="small"><b>Motivo do cancelamento (min 6 letras) *</b></label>
-        <textarea id="text-cancelamento" class="form-control mb-4" rows="5" placeholder="Informe o motivo de ter recusado este pedido" style="resize: none" v-model="motivoRecusa"></textarea>
+        <div class="mb-2">
+          <label for="motivoCancelamento" class="small mb-0"><b>Motivo do cancelamento*</b></label>
+          <select id="motivoCancelamento" class="form-control" style="max-width: 300px" v-model="cancelamento.tipo_cancelamento" @change="changeCancelamento">
+            <option :value="r.id" v-for="r in motivosRecusa">{{r.obs}}</option>
+          </select>
+        </div>
+        <div>
+          <label class="small mb-0"><b>Motivo do cancelamento (min 6 letras)*</b></label>
+          <textarea id="textCancelamento" class="form-control mb-4" rows="5" placeholder="Informe o motivo para recusar este pedido" style="resize: none" v-model="cancelamento.obs_cancelamento" :disabled="!cancelamento.tipo_cancelamento"></textarea>
+        </div>
         <div class="container-fluid">
           <div class="row">
             <div class="col-md-6">
               <button class="btn btn-dark btn-block rounded-sm" @click="modalCancelamento = false">Voltar</button>
             </div>
             <div class="col-md-6">
-              <button class="btn btn-danger btn-block rounded-sm" @click="acaoPedido(5)" :disabled="motivoRecusa.length < 6"><b>Confirmar</b></button>
+              <button class="btn btn-danger btn-block rounded-sm" @click="acaoPedido(5)" :disabled="cancelamento.obs_cancelamento.length < 6"><b>Confirmar</b></button>
             </div>
           </div>
         </div>
@@ -342,7 +350,21 @@ export default {
       },
       modalCancelamento: false,
       modalMapa: false,
-      motivoRecusa: '',
+
+      motivosRecusa: [
+        {id: null, obs: 'Selecione um motivo'},
+        {id: '10', obs: 'Cliente solicitou cancelamento'},
+        {id: '11', obs: 'Produto(s) em falta'},
+        {id: '12', obs: 'A loja já está fechada'},
+        {id: '13', obs: 'Duplicidade de pedidos'},
+        {id: '1', obs: 'Outros'}
+      ],
+
+      cancelamento: {
+        tipo_cancelamento: null,
+        obs_cancelamento: ''
+      },
+
       socket: true,
       totais: {
         total: 0,
@@ -370,6 +392,11 @@ export default {
             total: "55.00"
           }
         ]
+      },
+
+      impressora: {
+        automatico: '',
+        nCopias: ''
       }
     }
   },
@@ -470,7 +497,7 @@ export default {
             ipcRenderer.send('reload');
 
           } else if (!navigator.onLine) {
-            this.$swal("Atenção!", "Não conseguimos acessar sua conexão com a internet. Por favor verifique se seu computador tem uma conexão estável.");
+            this.$swal("Não conseguimos acessar sua conexão com a internet. Por favor verifique se seu computador tem uma conexão estável.");
           }
         });
     },
@@ -491,7 +518,8 @@ export default {
       let dados = {
         id_pedido: this.selecionado.id_pedido,
         status: status,
-        obs_cancelamento: this.motivoRecusa
+        tipo_cancelamento: this.cancelamento.tipo_cancelamento,
+        obs_cancelamento: this.cancelamento.obs_cancelamento
       };
 
       if (status === 2) {
@@ -510,22 +538,30 @@ export default {
 
           if (res.data) {
             this.buscarPedidos(false, () => {
-              if (status === 2 && localStorage.getItem('impressaoAutomatica') === '1') {
-                this.imprimir(localStorage.getItem('nCopias'));
+              if (status === 2 && this.impressora.automatico === '1') {
+                this.imprimir(this.impressora.nCopias);
               }
             }, true);
           }
 
-          dados.socket_id = this.selecionado.cliente.id_cliente + (this.selecionado.origin === '2' ? 'lecard_app_geral' : empresa.token);
-          this.$socket.emit('delivery_status', dados);
-          this.motivoRecusa = '';
+          if (this.selecionado.cliente) {
+            dados.socket_id = this.selecionado.cliente.id_cliente + (this.selecionado.origin === '2' ? 'lecard_app_geral' : empresa.token);
+            this.$socket.emit('delivery_status', dados);
+          }
+
+          this.cancelamento.tipo_cancelamento = null;
+          this.cancelamento.obs_cancelamento = '';
+
+          if (status === 5) {
+            this.$swal("Cancelamento realizado com sucesso!");
+          }
 
         }, res => {
           this.loading = false;
           const data = res.data;
 
           if (data && data.status == 1) {
-            this.$swal("", data.msg).then(() => {
+            this.$swal(data.msg).then(() => {
               this.buscarPedidos(false);
             });
           }
@@ -542,19 +578,15 @@ export default {
         return;
       }
 
-      let options = {
+      ipcRenderer.send('print', {
         content: document.getElementById('containerPedido').innerHTML,
-        copies: ncopias ? ncopias : 1,
-        zoom: localStorage.getItem('zoom'),
-        device: localStorage.getItem('device'),
-      };
-
-      ipcRenderer.send('print', options);
+        copies: ncopias ? ncopias : 1
+      });
     },
 
     imprimirResumo() {
       if (!this.pedidos.length) {
-        this.$swal("","Não há pedidos neste dia");
+        this.$swal("Não há pedidos neste dia");
         return;
       }
 
@@ -574,9 +606,7 @@ export default {
             if (this.resumo.data_pedido) {
               const options = {
                 content: document.getElementById('resumoDiario').innerHTML,
-                copies: 1,
-                zoom: localStorage.getItem('zoom'),
-                device: localStorage.getItem('device'),
+                copies: 1
               };
 
               ipcRenderer.send('print', options);
@@ -586,7 +616,7 @@ export default {
               }, 1000);
 
             } else {
-              this.$swal("","Não há pedidos neste dia");
+              this.$swal("Não há pedidos neste dia");
               this.loadResumo = false;
             }
           });
@@ -599,12 +629,24 @@ export default {
 
     openModalCancelamento() {
       this.modalCancelamento = true;
+      this.cancelamento.tipo_cancelamento = null;
+      this.cancelamento.obs_cancelamento = '';
+
       this.$store.commit('setBell', false);
       this.pauseNotification();
 
       setTimeout(() => {
-        document.getElementById('text-cancelamento').focus()
+        document.getElementById('textCancelamento').focus()
       }, 500)
+    },
+
+    changeCancelamento() {
+      const motivo = this.motivosRecusa.find(m => m.id === this.cancelamento.tipo_cancelamento);
+      this.cancelamento.obs_cancelamento = motivo && this.cancelamento.tipo_cancelamento !== '1' ? motivo.obs : '';
+
+      setTimeout(() => {
+        document.getElementById("textCancelamento").focus();
+      }, 200);
     },
 
     openMapa() {
@@ -656,6 +698,8 @@ export default {
     }
 
     this.empresas = config.get('empresas') ? config.get('empresas') : [];
+    this.impressora = config.get('impressora') ? config.get('impressora') : {};
+
     this.pesquisa.keys = this.empresas.map(e => {
       return e.key
     });

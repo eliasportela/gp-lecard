@@ -4,7 +4,7 @@ import App from './App.vue'
 import router from './router'
 import VueResource from 'vue-resource'
 import VueSocketIO from 'vue-socket.io'
-import VueSweetalert2 from 'vue-sweetalert2'
+import VueSwal from 'vue-swal'
 import store from './store'
 import VueTheMask from 'vue-the-mask'
 import VueFuse from 'vue-fuse'
@@ -17,7 +17,7 @@ const Config = require('electron-config');
 const config = new Config();
 
 Vue.use(VueResource);
-Vue.use(VueSweetalert2);
+Vue.use(VueSwal);
 Vue.use(VueTheMask);
 Vue.use(VueFuse);
 

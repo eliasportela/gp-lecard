@@ -11,28 +11,28 @@
                 <div class="card-body">
                   <div class="row">
                     <div class="col-md-6 mb-2">
-                      <label class="mb-0" for="impressoraPedidos">Pedidos</label>
+                      <label class="mb-0" for="impressoraPedidos">Impressora pedidos</label>
                       <select class="form-control" id="impressoraPedidos" v-model="config.device">
-                        <option value="">Impressora Default</option>
+                        <option value="">Default</option>
                         <option :value="p.name" v-for="p in printers">{{p.name}}</option>
                       </select>
                     </div>
                     <div class="col-md-6 mb-2">
-                      <label class="mb-0" for="impressoraComanda">Comanda</label>
+                      <label class="mb-0" for="impressoraComanda">Impressora comanda</label>
                       <select class="form-control" id="impressoraComanda" v-model="config.devicePdv">
-                        <option value="">Impressora Default</option>
+                        <option value="">Default</option>
                         <option :value="p.name" v-for="p in printers">{{p.name}}</option>
                       </select>
                     </div>
                   </div>
                   <div>
                     <label class="mb-0" for="configAutomatica">Impressão automática</label>
-                    <select class="form-control" id="configAutomatica" v-model="config.automatica">
+                    <select class="form-control" id="configAutomatica" v-model="config.automatico">
                       <option value="1">Sim</option>
                       <option value="0">Não</option>
                     </select>
                   </div>
-                  <div class="mt-2" v-if="config.automatica === '1'">
+                  <div class="mt-2" v-if="config.automatico === '1'">
                     <label class="mb-0" for="nCopia">Número de cópias (Automáticas)</label>
                     <select class="form-control" id="nCopia" v-model="config.nCopias">
                       <option value="1">1</option>
@@ -40,13 +40,27 @@
                       <option value="3">3</option>
                     </select>
                   </div>
-                  <div class="mt-2">
-                    <label class="mb-0" for="zoom">Tamanho da impressão</label>
-                    <select class="form-control" id="zoom" v-model="config.zoom">
-                      <option value="1">1</option>
-                      <option value="2">2</option>
-                      <option value="3">3</option>
-                    </select>
+                  <div class="row mt-2">
+                    <div class="col-md-6">
+                      <label class="mb-0" for="zoom">Tamanho da fonte</label>
+                      <select class="form-control" id="zoom" v-model="config.zoom">
+                        <option value="7px">1</option>
+                        <option value="9px">2</option>
+                        <option value="11px">3</option>
+                      </select>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="mb-0" for="zoom">Largura do papel</label>
+                      <select class="form-control" id="largura" v-model="config.largura">
+                        <option value="">Automático</option>
+                        <option value="80mm">80mm</option>
+                        <option value="70mm">70mm</option>
+                        <option value="60mm">60mm</option>
+                        <option value="50mm">50mm</option>
+                        <option value="40mm">40mm</option>
+                        <option value="30mm">30mm</option>
+                      </select>
+                    </div>
                   </div>
                   <div class="mt-4 mb-4">
                     <button class="btn btn-dark btn-block mb-3" @click="atualizarConfig">{{atualizar ? 'Salvo' : 'Salvar Configurações'}}</button>
@@ -119,9 +133,10 @@
         config: {
           device: '',
           devicePdv: '',
-          automatica: '1',
+          automatico: '1',
           nCopias: '1',
           zoom: '1',
+          largura: '',
         },
         modo_homologacao: false,
         printers: []
@@ -129,42 +144,27 @@
     },
     methods: {
       testImpressao() {
-        let options = {
+        ipcRenderer.send("print", {
           content: 'Este é um teste de impressão enviado pelo Gestor de pedidos Lecard',
           copies: 1,
-          zoom: this.config.zoom,
           device: this.config.device,
-        };
-        ipcRenderer.send("print", options);
+        });
       },
 
       atualizarConfig() {
         this.atualizar = true;
+        config.set('impressora', this.config);
 
-        config.set('device', this.config.device);
-        localStorage.setItem('device', this.config.device);
-
-        config.set('devicePdv', this.config.devicePdv);
-        localStorage.setItem('devicePdv', this.config.devicePdv);
-
-        config.set('impressaoAutomatica', this.config.automatica);
-        localStorage.setItem('impressaoAutomatica', this.config.automatica);
-
-        config.set('nCopias', this.config.nCopias);
-        localStorage.setItem('nCopias', this.config.nCopias);
-
-        config.set('zoom', this.config.zoom);
-        localStorage.setItem('zoom', this.config.zoom);
+        ipcRenderer.send('reload');
       },
 
       resetar() {
         this.$swal({
           text: "Deseja resetar o sistema?",
-          confirmButtonText: 'Sim',
-          cancelButtonText: "Cancelar",
-          showCancelButton: true,
+          buttons: ["Cancelar", "Sim"],
+          dangerMode: true
         }).then((result) => {
-          if (result.value) {
+          if (result) {
             config.clear();
             localStorage.clear();
             this.$router.push('/');
@@ -184,12 +184,10 @@
       confirmLogout() {
         this.$swal({
           text: "Deseja sair do sistema?",
-          confirmButtonText: 'Sim',
-          cancelButtonText: "Cancelar",
-          showCancelButton: true,
+          buttons: ["Cancelar", "Sim"],
           dangerMode: true
         }).then((result) => {
-          if (result.value) {
+          if (result) {
             this.logout();
             this.$router.push("/");
           }
@@ -217,22 +215,21 @@
     },
 
     created() {
-      this.config.automatica = localStorage.getItem('impressaoAutomatica');
-      this.config.nCopias = localStorage.getItem('nCopias');
-      this.config.zoom = localStorage.getItem('zoom');
+      const cf = config.get('impressora') ? config.get('impressora') : {};
+
+      this.config = {
+        device: cf.device ? cf.device : '',
+        devicePdv: cf.devicePdv ? cf.devicePdv : '',
+        automatico: cf.automatico ? cf.automatico : '1',
+        nCopias: cf.nCopias ? cf.nCopias : '1',
+        zoom: cf.zoom ? cf.zoom : '1',
+        largura: cf.largura ? cf.largura : ''
+      };
+
       this.version = require('electron').remote.app.getVersion();
       this.modo_homologacao = config.get('base_server');
 
-      if (localStorage.getItem('device')) {
-        this.config.device = localStorage.getItem('device');
-      }
-
-      if (localStorage.getItem('devicePdv')) {
-        this.config.devicePdv = localStorage.getItem('devicePdv');
-      }
-
       ipcRenderer.on('getPrinters', (event, arg) => {
-        // console.log(arg)
         this.printers = arg;
       });
     },

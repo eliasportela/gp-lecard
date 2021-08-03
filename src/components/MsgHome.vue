@@ -1,5 +1,14 @@
 <template>
   <div class="hello">
+    <router-link to="/cardapio?desativados=true" class="card mb-3 pointer text-decoration-none text-dark" v-if="desativados">
+      <div class="card-body d-flex justify-content-between align-items-center">
+        <div>
+          <h6 class="font-weight-bold mb-1">Produtos desativados</h6>
+          <p class="mb-1">Você atualmente tem <b>{{desativados}}</b> produtos desativados</p>
+        </div>
+        <a href="#" class="text-danger font-weight-bold small">Ver produtos</a>
+      </div>
+    </router-link>
     <div class="img-bkg mb-3">
       <div class="img-bkg-container text-light">
         <h5 class="font-weight-bolder text-info">Precisa de ajuda?</h5>
@@ -28,6 +37,28 @@
 <script>
 export default {
   name: 'MsgHome',
+  data() {
+    return {
+      desativados: null
+    }
+  },
+
+  methods: {
+    getDesativados() {
+      this.$http.get('delivery/produtos/desativados/' + localStorage.getItem('key'))
+        .then(res => {
+          this.load = false;
+          this.desativados = res.data ? res.data.desativados : 0;
+
+        }, res => {
+          console.log(res);
+        });
+    }
+  },
+
+  mounted() {
+    this.getDesativados();
+  }
 }
 </script>
 <style scoped>

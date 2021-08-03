@@ -40,9 +40,6 @@
                 </div>
               </div>
             </div>
-            <button class="btn btn-warning ml-2 text-nowrap" v-if="!load && $store.state.empresas.length > 1" @click="showModalEmpresas">
-              Trocar Empresa
-            </button>
           </div>
         </div>
       </div>
@@ -63,10 +60,10 @@
         <img src="../assets/icons/food-menu.svg" alt="">
         <span>Cardápio</span>
       </router-link>
-      <!--<router-link to="/vantagens" active-class="btn&#45;&#45;active" class="btn btn-block">-->
-        <!--<img src="../assets/icons/vantagens.svg" alt="">-->
-        <!--<span>Vantagens</span>-->
-      <!--</router-link>-->
+      <router-link to="/vantagens" active-class="btn--active" class="btn btn-block">
+        <img src="../assets/icons/vantagens.svg" alt="">
+        <span>Fidelidade</span>
+      </router-link>
       <router-link to="/pdv" active-class="btn--active" class="btn btn-block">
         <img src="../assets/icons/pos.svg" alt="">
         <span>Comandas</span>
@@ -100,48 +97,31 @@
       <div class="container-fluid border-bottom pb-2">
         <button class="btn btn-outline-danger" style="margin-top: 10px" @click="modalPedidos = false">Voltar</button>
       </div>
-      <container-pedidos/>
+      <container-pedidos v-if="modalPedidos"/>
     </modal>
-
-    <modal :opened="modalEmpresa">
-      <div v-if="!loadEmpresas">
-        <h6 class="text-center pb-3">Selecione uma empresa</h6>
-        <div class="border rounded p-2 w-100 pointer mb-2" @click="acessarEmpresa(e)" v-for="e in empresas">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <h6 class="m-0">{{e.nome_fantasia}}</h6>
-              <div class="small">
-                <span v-if="e.ativo === '1' && e.aberto === '1'">Dentro do horário de expediente</span>
-                <span v-else-if="e.ativo === '1' && e.entregas.length">Aceitando apenas pedidos agendados</span>
-                <span v-else>{{e.ativo === '1' ? 'Fora do horário de expediente' : 'Ative a loja para receber pedidos'}}</span>
-              </div>
-              <span class="badge badge-success" v-if="e.ativo === '1' && e.aberto === '1'">Loja Aberta</span>
-              <span class="badge badge-warning" v-else-if="e.ativo === '1' && e.entregas.length">Pedidos Agendados</span>
-              <span class="badge badge-dark" v-else>{{e.ativo === '1' ? 'Loja Fechada' : 'Loja Desativada'}}</span>
-            </div>
-            <div class="btn btn-sm btn-outline-danger">Trocar</div>
-          </div>
-        </div>
-      </div>
-      <div class="text-center my-4" v-else>
-        <div class="animated flipInY infinite">
-          <img src="../assets/logo-lecard.png" alt="" style="width: 48px">
-        </div>
-        <div class="mt-2">Carregando empresas..</div>
-      </div>
-      <div class="mt-5 text-center">
-        <button class="btn btn-dark" @click="modalEmpresa = false">Voltar</button>
-      </div>
-    </modal>
-
 
     <modal :opened="modalTempo">
       <div>
-        <h6 class="text-center pb-2">{{dados.nome_fantasia}}</h6>
+        <div class="row">
+          <div class="col-md-5" v-if="empresas.length > 1">
+            <div class="mb-3">
+              <label class="m-0 font-weight-bold small" for="empresaTempo">Selecione a empresa</label>
+              <select class="form-control bg-light" id="empresaTempo" v-model="token" @change="openTempo">
+                <option :value="e.key" v-for="e in empresas">{{e.nome_fantasia}}</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="mb-3">
+              <label class="m-0 font-weight-bold small" for="tempoRetirada">Retirada (mins)</label>
+              <input type="number" id="tempoRetirada" min="0" max="300" class="form-control m-0" v-model="entrega.media_retirada" placeholder="Minutos">
+            </div>
+          </div>
+        </div>
         <div class="card border">
           <div class="card-body">
-            <div class="height-card text-center">
-              <div v-if="!loadTempo">
+            <div class="height-card">
+              <div class="text-center" v-if="!loadTempo">
                 <div class="row no-gutters py-2 border-bottom small font-weight-bold d-none d-md-flex">
                   <div class="col-3 col-md-4">Alcance</div>
                   <div class="col-5 col-md-4">Taxa</div>
@@ -202,11 +182,6 @@ export default {
       modalOflline: false,
       modalPedidos: false,
 
-      modalEmpresa: false,
-      loadEmpresas: true,
-      empresas: [],
-
-      empresaAtiva: false,
       connected: false,
       notification: '',
       homologacao: config.get('base_server'),
@@ -215,7 +190,8 @@ export default {
       modalTempo: false,
       loadTempo: false,
       entrega: {
-        raios: []
+        raios: [],
+        media_retirada: ''
       }
     }
   },
@@ -234,18 +210,13 @@ export default {
             this.empresa.token = localStorage.getItem('token');
 
             if (aviso && this.empresa.ativo === '0' && !sessionStorage.getItem('delivery_desativado')){
-              this.$swal.fire({
-                title: 'O delivery está desativado!',
-                text: "Ative-o para receber seus pedidos.",
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                cancelButtonText: 'Voltar',
-                confirmButtonText: 'Sim, ativar delivery!'
+              this.$swal({
+                text: "O delivery está desativado! Ative-o para receber seus pedidos.",
+                buttons: ["Cancelar", "Ativar"],
+                dangerMode: true
               }).then((result) => {
-                if (result.value) {
+                if (result) {
                   this.changeStatus();
-                  this.$swal('', 'Delivery ativado!')
                 }
               });
 
@@ -275,19 +246,13 @@ export default {
       }
 
       if (this.empresa.ativo === '1') {
+        const msg = this.empresas.length > 1 ? "Você está preste a desativar todas as empresas que está logado." : "Ao desativar sua loja seus clientes não poderão realizar mais pedidos ao menos que você ative novamente a empresa.";
         this.$swal({
-          title: 'Atenção!',
-          text: "Ao desativar sua loja seus clientes não poderão realizar mais pedidos ao menos que você ative novamente a empresa. Deseja realmente desativar?",
-          confirmButtonText: 'Sim',
-          cancelButtonText: "Cancelar",
-          showCancelButton: true,
-          customClass: {
-            cancelButton: 'btn btn-secondary w-25 m-2',
-            confirmButton: 'btn btn-danger w-25 m-2'
-          },
-          buttonsStyling: false
+          text: msg + " Deseja realmente desativar?",
+          buttons: ["Não", "Sim"],
+          dangerMode: true
         }).then((result) => {
-          if (result.value) {
+          if (result) {
             this.changeStatus();
           }
         });
@@ -298,68 +263,28 @@ export default {
     },
 
     changeStatus() {
-      this.load = true;
       const dados = { status: this.empresa.ativo === '1' ? '0' : '1' };
       this.empresa.ativo = dados.status;
+      this.load = true;
 
-      this.$http.post('delivery/empresa/status/' + this.token, dados)
-        .then(response => {
-          this.statusEmpresa();
+      this.empresas.forEach(e => {
+        this.$http.post('delivery/empresa/status/' + e.key, dados)
+          .then(response => {
 
-        }, res => {
-          console.log(res);
-          this.empresa.ativo = dados.status === '1' ? '0' : '1';
-          this.$swal('', res.data.msg ? res.data.msg : 'Erro temporário');
-        });
+            if (e.isDefault) {
+              this.statusEmpresa();
+            }
+
+          }, res => {
+            console.log(res);
+            this.empresa.ativo = dados.status === '1' ? '0' : '1';
+            this.$swal(res.data.msg ? res.data.msg : 'Erro temporário');
+          });
+      });
     },
 
     reloadPage() {
       // this.dialogNotify()
-      ipcRenderer.send('reload');
-    },
-
-    showModalEmpresas() {
-      this.loadEmpresas = true;
-      this.modalEmpresa = true;
-      this.empresas = [];
-      let i = 0;
-      const empresas = [];
-
-      const storeEmpresa = this.$store.state.empresas.filter(e => e.token !== this.empresa.token);
-      storeEmpresa.forEach(e => {
-        i++;
-
-        this.$http.get(this.base_server + 'delivery/' + e.token + '/empresa/status/').then(res => {
-          const dados = res.data;
-          dados.nome_fantasia = e.nome_fantasia;
-          dados.key = e.key;
-          dados.token = e.token;
-          empresas.push(dados);
-
-          if (i === storeEmpresa.length) {
-            this.empresas = empresas;
-            this.loadEmpresas = false;
-          }
-        });
-      });
-    },
-
-    acessarEmpresa(empresa) {
-      if (this.load) {
-        return;
-      }
-
-      this.load = true;
-      this.modalEmpresa = false;
-
-      const empresas = this.$store.state.empresas;
-      empresas.forEach(e => {
-        e.isDefault = false
-      });
-
-      empresas.find(e => e.token === empresa.token).isDefault = true;
-      config.set('empresas', this.$store.state.empresas);
-
       ipcRenderer.send('reload');
     },
 
@@ -382,7 +307,7 @@ export default {
       this.loadTempo = true;
       this.$http.post('entrega/config/' + this.token, this.entrega)
         .then(res => {
-          this.$swal("Sucesso!","Taxa e tempo editado com sucesso");
+          this.$swal("Taxa e tempo editado com sucesso!");
           this.loadTempo = false;
           this.modalTempo = false;
 
@@ -406,6 +331,10 @@ export default {
     bell() {
       return this.$store.state.bell.status
     },
+
+    empresas() {
+      return this.$store.state.empresas
+    }
   },
 
   sockets: {

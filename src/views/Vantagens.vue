@@ -112,11 +112,11 @@
             this.loadVoucher = false;
 
             if (res.data.result) {
-              this.$swal("Sucesso", res.data.msg, "success");
+              this.$swal("Sucesso", res.data.msg);
               this.dados.voucher = '';
 
             } else {
-              this.$swal(res.data.result, res.data.msg, "warning");
+              this.$swal(res.data.result, res.data.msg);
             }
 
           }, res => {
