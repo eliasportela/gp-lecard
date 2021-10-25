@@ -56,9 +56,14 @@
                   <div v-for="p in c.produtos">
                     <div class="border-top">
                       <div class="row">
-                        <div class="col-8 align-self-center pointer" @click="toogleProduto(p)">
-                          <div class="p-3">
-                            {{p.nome_produto}}
+                        <div class="col-8 align-self-center pointer">
+                          <div class="d-flex align-items-center">
+                            <div class="pl-3 text-center" v-if="adm">
+                              <button class="btn btn-sm" @click="openModalEdit(p)" title="Editar Produto">
+                                <img src="../assets/icons/edit.svg" class="ico-edit" alt="Editar">
+                              </button>
+                            </div>
+                            <div class="p-3 w-100" @click="toogleProduto(p)">{{p.nome_produto}}</div>
                           </div>
                         </div>
                         <div class="col-4 text-right align-self-center">
@@ -115,10 +120,17 @@
               <div v-for="p in searchResult">
                 <div class="border-top">
                   <div class="row">
-                    <div class="col-8 align-self-center pointer" @click="toogleProduto(p)">
-                      <div class="py-3 px-2">
-                        <div>{{p.nome_produto}}</div>
-                        <span class="badge badge-dark small mt-0">{{p.nome_categoria}}</span>
+                    <div class="col-8 align-self-center pointer">
+                      <div class="d-flex align-items-center">
+                        <div class="pl-3 text-center" v-if="adm">
+                          <button class="btn btn-sm" @click="openModalEdit(p)" title="Editar Produto">
+                            <img src="../assets/icons/edit.svg" class="ico-edit" alt="Editar">
+                          </button>
+                        </div>
+                        <div class="p-3 w-100" @click="toogleProduto(p)">
+                          <div>{{p.nome_produto}}</div>
+                          <span class="badge badge-dark small mt-0">{{p.nome_categoria}}</span>
+                        </div>
                       </div>
                     </div>
                     <div class="col-4 text-right align-self-center">
@@ -181,6 +193,28 @@
         </div>
       </div>
     </div>
+
+    <modal :opened="modalEdit">
+      <div class="mb-2">
+        <label for="nomeProduto" class="small mb-0"><b>Nome do Produto*</b></label>
+        <input id="nomeProduto" class="form-control" :value="dados.nome_produto" disabled/>
+      </div>
+      <div>
+        <label class="small mb-0" for="descricaoProduto"><b>Descrição do Produto</b></label>
+        <textarea id="descricaoProduto" class="form-control mb-4" rows="5" placeholder="Informe a descrição deste produto" style="resize: none" v-model="dados.descricao_produto"></textarea>
+      </div>
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-md-6">
+            <button class="btn btn-dark btn-block rounded-sm" @click="closeModalEdit()">Voltar</button>
+          </div>
+          <div class="col-md-6">
+            <button class="btn btn-danger btn-block rounded-sm" @click="editar(dados, 2, true)"><b>Salvar</b></button>
+          </div>
+        </div>
+      </div>
+    </modal>
+
   </div>
 </template>
 
@@ -188,10 +222,12 @@
   import TopBar from '@/components/TopBar.vue'
   import HelloWorld from '@/components/HelloWorld.vue'
   import {Money} from 'v-money'
+  import Modal from "../components/Modal";
 
   export default {
     name: 'Cardapio',
     components: {
+      Modal,
       HelloWorld, TopBar, Money
     },
 
@@ -207,6 +243,11 @@
         searchResult: [],
         term: '',
         empresas: [],
+        modalEdit: false,
+        dados: {
+          nome_produto: '',
+          descricao_produto: ''
+        },
 
         options: {
           shouldSort: true,
@@ -343,18 +384,24 @@
         }
       },
 
-      editar(c, tipo) {
+      editar(c, tipo, editProd) {
         let dados;
+        let delivery = c.fg_ativo;
 
-        let delivery = c.fg_ativo === '1' ? '2' : '1';
-        c.fg_ativo = delivery;
+        if (!editProd) {
+          delivery = c.fg_ativo === '1' ? '2' : '1';
+          c.fg_ativo = delivery;
+        }
 
         if (tipo === 2) {
           dados = {
             id_produto: c.id_produto,
             delivery: delivery,
-            tipo: tipo
-          }
+            tipo: tipo,
+            descricao_produto: c.descricao_produto
+          };
+
+          this.modalEdit = false;
 
         } else {
           dados = {
@@ -366,12 +413,37 @@
 
         this.$http.post('delivery/produto/status/' + this.token, dados)
           .then(response => {
+            this.loading = false;
             this.atualizarTabelas();
 
           }, res => {
             console.log(res);
+            this.loading = false;
             this.$swal(res.data.msg ? res.data.msg : 'Erro temporário');
           });
+      },
+
+      openModalEdit(p) {
+        this.dados = p;
+        this.produtoTemp = {
+          id_produto: p.id_produto,
+          nome_produto: p.nome_produto,
+          descricao_produto: p.descricao_produto,
+          delivery: p.delivery,
+          fg_ativo: p.fg_ativo,
+          tabelas: p.tabelas
+        };
+
+        this.modalEdit = true;
+
+        setTimeout(() => {
+          document.getElementById("descricaoProduto").focus()
+        }, 500);
+      },
+
+      closeModalEdit() {
+        this.dados.descricao_produto = this.produtoTemp.descricao_produto;
+        this.modalEdit = false;
       },
 
       acessarEmpresa() {
@@ -427,5 +499,10 @@
   .salved {
     background-color: #28a745!important;
     border-color: #28a745!important;;
+  }
+
+  .ico-edit {
+    display: block;
+    width: 14px;
   }
 </style>

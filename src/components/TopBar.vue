@@ -101,27 +101,52 @@
     </modal>
 
     <modal :opened="modalTempo">
-      <div>
-        <div class="row">
-          <div class="col-md-5" v-if="empresas.length > 1">
-            <div class="mb-3">
-              <label class="m-0 font-weight-bold small" for="empresaTempo">Selecione a empresa</label>
-              <select class="form-control bg-light" id="empresaTempo" v-model="token" @change="openTempo">
-                <option :value="e.key" v-for="e in empresas">{{e.nome_fantasia}}</option>
-              </select>
-            </div>
+      <div class="row justify-content-end">
+        <div class="col-md-6" v-if="empresas.length > 1">
+          <div class="mb-3">
+            <select class="form-control bg-light" id="empresaTempo" v-model="token" @change="openTempo">
+              <option :value="e.key" v-for="e in empresas">{{e.nome_fantasia}}</option>
+            </select>
           </div>
-          <div class="col-md-4">
-            <div class="mb-3">
-              <label class="m-0 font-weight-bold small" for="tempoRetirada">Retirada (mins)</label>
-              <input type="number" id="tempoRetirada" min="0" max="300" class="form-control m-0" v-model="entrega.media_retirada" placeholder="Minutos">
+        </div>
+      </div>
+      <div v-if="!loadTempo">
+        <div class="card border">
+          <div style="padding: 4px 12px 8px">
+            <div class="row no-gutters align-items-end">
+              <div class="col-md-4">
+                <label class="m-0 font-weight-bold small" for="tempoRetirada">Entregas</label>
+                <div>
+                  <div class="d-inline-block pointer" @click="toogleOperacao(true)">
+                    <span class="pr-2 small" :class="entrega.tipo_delivery !== '2' ? 'text-success' : 'text-secondary'">{{entrega.tipo_delivery !== '2' ? 'Habilitado' : 'Desativado'}}</span>
+                    <img class="switch" src="../assets/icons/switch-on.svg" v-show="entrega.tipo_delivery !== '2'">
+                    <img class="switch" src="../assets/icons/switch-off.svg" v-show="entrega.tipo_delivery === '2'">
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <label class="m-0 font-weight-bold small" for="tempoRetirada">Retiradas</label>
+                <div>
+                  <div class="d-inline-block pointer" @click="toogleOperacao(false)">
+                    <span class="pr-2 small" :class="entrega.tipo_delivery <= 2 ? 'text-success' : 'text-secondary'">{{entrega.tipo_delivery <= 2 ? 'Habilitado' : 'Desativado'}}</span>
+                    <img class="switch" src="../assets/icons/switch-on.svg" v-show="entrega.tipo_delivery <= 2">
+                    <img class="switch" src="../assets/icons/switch-off.svg" v-show="entrega.tipo_delivery === '3'">
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4" :class="{'invisible': entrega.tipo_delivery > 2}">
+                <div>
+                  <label class="m-0 font-weight-bold small" for="tempoRetirada">Retirada (minutos)</label>
+                  <input type="number" id="tempoRetirada" min="0" max="300" class="form-control m-0" v-model="entrega.media_retirada" placeholder="Minutos">
+                </div>
+              </div>
             </div>
           </div>
         </div>
-        <div class="card border">
+        <div class="card border mt-2" v-show="entrega.tipo_delivery !== '2'">
           <div class="card-body">
             <div class="height-card">
-              <div class="text-center" v-if="!loadTempo">
+              <div class="text-center">
                 <div class="row no-gutters py-2 border-bottom small font-weight-bold d-none d-md-flex">
                   <div class="col-3 col-md-4">Alcance</div>
                   <div class="col-5 col-md-4">Taxa</div>
@@ -135,19 +160,19 @@
                   </div>
                 </div>
               </div>
-              <div class="text-center my-4" v-else>
-                <div class="animated flipInY infinite">
-                  <img src="../assets/logo-lecard.png" alt="" style="width: 48px">
-                </div>
-                <div class="mt-2">Por favor aguarde..</div>
-              </div>
             </div>
           </div>
         </div>
       </div>
-      <div class="mt-4 text-center d-flex justify-content-between">
+      <div class="text-center" style="padding: 120px 0" v-else>
+        <div class="animated flipInY infinite">
+          <img src="../assets/logo-lecard.png" alt="" style="width: 48px">
+        </div>
+        <div class="mt-2">Por favor aguarde..</div>
+      </div>
+      <div class="text-center d-flex justify-content-between pt-4">
         <button class="btn btn-dark mr-2" @click="modalTempo = false">Voltar</button>
-        <button class="btn btn-danger" @click="salvarTempo()">Salvar</button>
+        <button class="btn btn-danger" @click="salvarTempo()" v-show="!loadTempo">Salvar</button>
       </div>
     </modal>
 
@@ -191,12 +216,32 @@ export default {
       loadTempo: false,
       entrega: {
         raios: [],
-        media_retirada: ''
+        media_retirada: '',
+        tipo_delivery: '1'
       }
     }
   },
 
   methods: {
+    toogleOperacao(entrega) {
+      if (entrega) {
+        if (this.entrega.tipo_delivery === '2') {
+          this.entrega.tipo_delivery = '1';
+
+        } else {
+          this.entrega.tipo_delivery = ['1','3'].includes(this.entrega.tipo_delivery) ? '2' : '1';
+        }
+
+      } else {
+        if (this.entrega.tipo_delivery === '3') {
+          this.entrega.tipo_delivery = '1';
+
+        } else {
+          this.entrega.tipo_delivery = ['1','2'].includes(this.entrega.tipo_delivery) ? '3' : '2';
+        }
+      }
+    },
+
     silenciar() {
       this.$store.commit('setBell', false);
       this.pauseNotification();

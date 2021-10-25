@@ -1,6 +1,6 @@
 <template>
   <div class="modal" :class="width" v-show="opened">
-    <div class="modal-content" :class="width === 'small' ? 'animated zoomIn' : ''">
+    <div class="modal-content">
       <slot></slot>
     </div>
   </div>

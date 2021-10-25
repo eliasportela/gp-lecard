@@ -4,34 +4,35 @@
       <div class="coluna-1">
         <div class="row no-gutters mb-2" v-if="pesquisa.nolocal !== '3'">
           <div class="col-6 pr-1">
-            <select class="form-control" v-model="pesquisa.status" @change="buscarPedidos(false)" :disabled="loading">
+            <select class="form-control" v-model="pesquisa.status" @change="filtrarPedidos()" :disabled="loadPedidos">
               <option value="1">Em andamento</option>
               <option value="4">Finalizados</option>
               <option value="5">Cancelados</option>
             </select>
           </div>
           <div class="col-6 pl-1">
-            <select class="form-control" v-model="pesquisa.nolocal" @change="buscarNoLocal()" :disabled="loading">
+            <select class="form-control" v-model="pesquisa.nolocal" @change="buscarNoLocal()" :disabled="loadPedidos">
               <option value="1">Todos</option>
               <option value="2">No Local</option>
-              <option value="3">Filtrar data</option>
+              <option value="3">Filtrar Data</option>
+              <option value="4">Finalizar em Massa</option>
             </select>
           </div>
         </div>
         <div class="row no-gutters mb-2" v-else>
           <div class="col-7 pr-1">
-            <input type="date" id="noLocal" class="form-control" v-model="pesquisa.data" @change="buscarPedidos(false)">
+            <input type="date" id="noLocal" class="form-control" v-model="pesquisa.data" @change="filtrarPedidos()">
           </div>
           <div class="col-5 pl-1">
             <button class="btn btn-dark btn-block" @click="clearPesquisa()">Voltar</button>
           </div>
         </div>
         <div class="bg-white coluna-1-1 border">
-          <div v-show="!loading">
+          <div>
             <a href="javascript:" :id="'listPedido' + p.id_pedido" class="d-flex justify-content-between border-bottom px-2 py-2 text-decoration-none text-dark"
-                 v-for="(p, i) in pedidos" :key="i" @click="selecionado = p" :class="{'bg-selecionado' : selecionado.id_pedido === p.id_pedido}">
+                 v-for="(p, i) in pedidos" :key="i" @click="buscarPedidoId(p)" :class="{'bg-selecionado' : selecionado.id_pedido === p.id_pedido}">
               <div>
-                <h6 class="mb-0">{{p.cliente.nome_cliente}}</h6>
+                <h6 class="mb-0">{{p.nome_cliente}}</h6>
                 <div class="mb-0 small">
                   Pedido: {{p.id_pedido}} | {{p.data_pedido}}
                 </div>
@@ -58,7 +59,7 @@
             </a>
           </div>
         </div>
-        <div class="container-aceitar bg-white" style="left: 0; right: 8px; width: auto" v-if="!loading">
+        <div class="container-aceitar bg-white" style="left: 0; right: 8px; width: auto" v-if="!loadPedidos">
           <div class="card p-2 small">
             <div class="d-flex justify-content-between" v-if="pesquisa.nolocal !== '3'">
               <div>
@@ -126,6 +127,12 @@
                   <b>{{selecionado.cliente.telefone | phone}}</b>
                 </a>
               </div>
+              <div class="border p-2 mt-2 mb-2 d-print-none" v-if="selecionado.tags && selecionado.tags.length">
+                <h6 class="font-weight-bold m-0">ETIQUETAS</h6>
+                <div>
+                  <span class="badge mr-2" :class="'badge-' + t.color" v-for="t in selecionado.tags">{{t.nome_tag}}</span>
+                </div>
+              </div>
               <div class="border p-2 mt-2 mb-2" v-if="selecionado.tipo_pedido === '2'">
                 <h6 class="text-info font-weight-bold m-0">RETIRAR NO LOCAL</h6>
                 <div>
@@ -189,13 +196,17 @@
                   <span class="float-right">R$ {{(parseFloat(selecionado.total) - parseFloat(selecionado.valor_frete)) + parseFloat(selecionado.valor_desconto) | valor}}</span>
                   SubTotal:
                 </div>
-                <div>
+                <div v-if="selecionado.tipo_pedido === '1'">
                   <span class="float-right">R$ {{selecionado.valor_frete | valor}}</span>
                   Taxa de Entrega:
                 </div>
                 <div>
                   <span class="float-right">R$ {{selecionado.valor_desconto | valor}}</span>
                   Desconto:
+                </div>
+                <div v-if="selecionado.ref_cupom">
+                  <b class="float-right">{{selecionado.ref_cupom}}</b>
+                  Cupom:
                 </div>
                 <div>
                   <span class="float-right">{{selecionado.nome_pagamento}}</span>
@@ -228,7 +239,7 @@
                 <button class="btn btn-success btn-block" @click="acaoPedido(2)" :disabled="loading">Aceitar</button>
               </div>
               <div class="w-50 ml-auto" v-if="selecionado.status === '2'">
-                <button class="btn btn-secondary btn-block" @click="acaoPedido(3)" :disabled="loading">Despachar</button>
+                <button class="btn btn-dark btn-block" @click="acaoPedido(3)" :disabled="loading">Despachar</button>
               </div>
               <div class="w-50 ml-auto" v-if="selecionado.status === '3'">
                 <button class="btn btn-info btn-block" @click="acaoPedido(4)" :disabled="loading">Finalizar</button>
@@ -333,14 +344,16 @@ export default {
     Modal,
     HelloWorld, TopBar
   },
+
   data() {
     return {
-      loading: true,
+      loadPedidos: false,
+      loading: false,
       pedidos: [],
       pesquisa: {
-        status: 1,
+        status: '1',
+        nolocal: '1',
         keys: [],
-        nolocal: 1,
         data: ''
       },
       selecionado: {
@@ -402,43 +415,68 @@ export default {
   },
 
   methods: {
-    buscarNoLocal() {
-      if (this.pesquisa.nolocal === '2') {
-        this.pedidos = this.pedidos.filter(p => p.origin === '4');
-        if (this.pedidos.length) {
-          this.selecionado = this.pedidos[0];
-        } else {
-          this.selecionado = {
-            produtos: [],
-            total: 0
-          }
-        }
-      } else if (this.pesquisa.nolocal === '1') {
-        this.buscarPedidos();
+    filtrarPedidos() {
+      this.clearPedido();
+      this.buscarPedidos(false);
+    },
 
-      } else {
-        this.pesquisa.data = new Date().toDateInputValue();
-        setTimeout(() => {
-          document.getElementById("noLocal").focus()
-        }, 200);
-        this.buscarPedidos(false);
+    buscarNoLocal() {
+      switch (this.pesquisa.nolocal) {
+        case '1':
+          this.clearPedido();
+          this.buscarPedidos(false);
+          break;
+
+        case '2':
+          this.clearPedido();
+          this.pedidos = this.pedidos.filter(p => p.origin === '4');
+          break;
+
+        case '3':
+          this.clearPedido();
+          this.pesquisa.status = '4';
+          this.pesquisa.data = new Date().toDateInputValue();
+          setTimeout(() => { document.getElementById("noLocal").focus() }, 200);
+          this.buscarPedidos(false);
+          break;
+
+        case '4':
+          this.pesquisa.nolocal = '1';
+
+          this.$swal({
+            text: "Deseja finalizar todos os pedidos que estão com o status 'Preparando' ou 'Entregando'?",
+            buttons: ["Cancelar", "Sim"],
+            dangerMode: true
+          }).then(res => {
+            if (res) {
+              this.finalizarEmMassa();
+            }
+          });
+
+          break;
       }
     },
 
     clearPesquisa() {
-      this.pesquisa.status = 1;
-      this.pesquisa.nolocal = 1;
+      this.pesquisa.status = '1';
+      this.pesquisa.nolocal = '1';
       this.pesquisa.data = '';
       this.buscarPedidos(false);
     },
 
-    buscarPedidos(play, callback, scroll) {
+    buscarPedidos(play) {
+      if (this.loadPedidos || this.loading) {
+        return;
+      }
+
       if (this.pesquisa.nolocal === '2') {
         this.pesquisa.nolocal = '1';
       }
 
+      this.loadPedidos = true;
       this.loading = true;
-      this.$http.get('delivery/pedidos', {params: this.pesquisa})
+
+      this.$http.get('v2/pedidos', {params: this.pesquisa})
         .then(response => {
           if (!response.data) {
             return;
@@ -446,9 +484,13 @@ export default {
 
           this.pedidos = response.data.pedidos;
           this.totais = response.data.totais;
+
           if (response.data.nolocal) {
             this.nolocal = response.data.nolocal;
           }
+
+          this.loadPedidos = false;
+          this.loading = false;
 
           if (this.pedidos.length > 0) {
             if (play && this.pedidos.find(p => p.status === '1' && !p.id_entrega)) {
@@ -456,43 +498,21 @@ export default {
               this.playNotification();
             }
 
-            let existe = false;
             if (this.selecionado.id_pedido) {
-              const pedido = this.pedidos.find(p => p.id_pedido === this.selecionado.id_pedido);
-              if (pedido) {
-                existe = true;
-                this.selecionado = pedido;
-                this.$nextTick(function () {
-                  this.scrollPedido();
-
-                  if (callback) {
-                    callback();
-                  }
-                });
-              }
-            }
-
-            if (!existe) {
-              this.selecionado = this.pedidos[scroll ? (this.pedidos.length - 1) : 0];
-              this.$nextTick(function () {
-                this.scrollPedido();
-              });
+              this.buscarPedidoId(this.selecionado);
             }
 
             this.$emit('ativarEmpresa');
 
           } else {
-            this.selecionado = {
-              produtos: [],
-              total: 0
-            }
+            this.clearPedido();
           }
-
-          this.loading = false;
 
         }, res => {
           console.log(res);
           this.loading = false;
+          this.loadPedidos = false;
+
           if (res.status === 401) {
             ipcRenderer.send('reload');
 
@@ -500,6 +520,80 @@ export default {
             this.$swal("Não conseguimos acessar sua conexão com a internet. Por favor verifique se seu computador tem uma conexão estável.");
           }
         });
+    },
+
+    buscarPedidoId(dados, callback, scroll) {
+      if (this.loading) {
+        return;
+      }
+
+      const empresa = this.empresas.find(e => e.token === dados.token);
+
+      if (!empresa) {
+        return;
+      }
+
+      this.selecionado.id_pedido = dados.id_pedido;
+      this.loading = true;
+
+      this.$http.get('delivery/pedidos/' + empresa.key + '/' + dados.id_pedido)
+        .then(response => {
+          this.loading = false;
+
+          if (!response.data) {
+            return;
+          }
+
+          this.selecionado = response.data;
+          this.$nextTick(() => {
+            if (callback) {
+              callback()
+            }
+          });
+
+          const p = this.pedidos.find(p => p.id_pedido === dados.id_pedido);
+
+          if (p) {
+            p.status = this.selecionado.status;
+            p.is_late = this.selecionado.is_late;
+            p.previsao = this.selecionado.previsao;
+          }
+
+          if (this.pesquisa.status === '1' && this.selecionado.status === '4') {
+
+            this.pedidos = this.pedidos.filter(p => p.id_pedido !== dados.id_pedido);
+
+            if (this.pedidos.length) {
+              const p = this.pedidos[scroll ? (this.pedidos.length - 1) : 0];
+
+              this.buscarPedidoId(p, () => {
+                this.scrollPedido();
+              });
+
+            } else {
+              this.clearPedido()
+            }
+          }
+
+        }, res => {
+          console.log(res);
+          this.loading = false;
+
+          if (res.status === 401) {
+            ipcRenderer.send('reload');
+
+          } else if (!navigator.onLine) {
+            this.$swal("Não conseguimos acessar sua conexão com a internet. Por favor verifique se seu computador tem uma conexão estável.");
+          }
+        });
+    },
+
+    clearPedido() {
+      this.selecionado = {
+        produtos: [],
+        troco: 0,
+        total: 0
+      };
     },
 
     scrollPedido() {
@@ -534,15 +628,8 @@ export default {
 
       this.$http.post('delivery/pedidos/' + empresa.key, dados, {emulateJSON: true})
         .then(res => {
+          this.loading = false;
           this.$socket.emit('notification', {token: empresa.token, play: false});
-
-          if (res.data) {
-            this.buscarPedidos(false, () => {
-              if (status === 2 && this.impressora.automatico === '1') {
-                this.imprimir(this.impressora.nCopias);
-              }
-            }, true);
-          }
 
           if (this.selecionado.cliente) {
             dados.socket_id = this.selecionado.cliente.id_cliente + (this.selecionado.origin === '2' ? 'lecard_app_geral' : empresa.token);
@@ -552,8 +639,16 @@ export default {
           this.cancelamento.tipo_cancelamento = null;
           this.cancelamento.obs_cancelamento = '';
 
-          if (status === 5) {
-            this.$swal("Cancelamento realizado com sucesso!");
+          if (res.data) {
+            if (status === 5) {
+              this.$swal("Cancelamento realizado com sucesso!");
+            }
+
+            this.buscarPedidoId(this.selecionado, () => {
+              if (status === 2 && this.impressora.automatico === '1') {
+                this.imprimir(this.impressora.nCopias);
+              }
+            }, true);
           }
 
         }, res => {
@@ -570,6 +665,27 @@ export default {
           if (res.status === 401) {
             ipcRenderer.send('reload');
           }
+        });
+    },
+
+    finalizarEmMassa() {
+      if (this.loading) {
+        return;
+      }
+
+      this.loading = true;
+
+      this.$http.post('v2/pedidos/finalizar', this.pesquisa)
+        .then(res => {
+          this.loading = false;
+          this.$swal("Pedidos finalizados com sucesso!");
+          this.clearPedido();
+          this.buscarPedidos(false);
+
+        }, res => {
+          console.log(res);
+          this.loading = false;
+          this.$swal(res.data.msg ? res.data.msg : 'Erro temporário');
         });
     },
 
@@ -651,7 +767,7 @@ export default {
 
     openMapa() {
       this.modalMapa = true;
-      const pedidos = [];
+      const pedidos = []; // TODO buscar no BD todos os pedidos com latotude
       let pedido = null;
 
       if (this.selecionado.cliente.lat_endereco) {
@@ -663,19 +779,19 @@ export default {
       }
 
       this.pedidos.forEach((p) => {
-        if (p.cliente.lat_endereco) {
+        if (p.lat_endereco) {
           pedidos.push({
             id_pedido: p.id_pedido,
             status: p.status,
             data_pedido: p.data_pedido,
             origin: p.origin,
             id_entrega: p.id_entrega,
-            nome_cliente: p.cliente.nome_cliente,
-            logradouro: p.cliente.logradouro,
-            numero: p.cliente.numero,
-            bairro: p.cliente.bairro,
-            lat_endereco: p.cliente.lat_endereco,
-            long_endereco: p.cliente.long_endereco
+            nome_cliente: p.nome_cliente,
+            logradouro: p.logradouro,
+            numero: p.numero,
+            bairro: p.bairro,
+            lat_endereco: p.lat_endereco,
+            long_endereco: p.long_endereco
           });
         }
       });
