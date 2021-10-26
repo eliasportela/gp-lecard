@@ -19,7 +19,8 @@ export default new Vuex.Store({
       status: false
     },
 
-    empresas: []
+    empresas: [],
+    modalOflline: false
   },
 
   mutations: {

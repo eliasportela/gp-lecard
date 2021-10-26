@@ -4,14 +4,14 @@
       <div class="coluna-1">
         <div class="row no-gutters mb-2" v-if="pesquisa.nolocal !== '3'">
           <div class="col-6 pr-1">
-            <select class="form-control" v-model="pesquisa.status" @change="filtrarPedidos()" :disabled="loadPedidos">
+            <select class="form-control" v-model="pesquisa.status" @change="filtrarPedidos()" :disabled="loading">
               <option value="1">Em andamento</option>
               <option value="4">Finalizados</option>
               <option value="5">Cancelados</option>
             </select>
           </div>
           <div class="col-6 pl-1">
-            <select class="form-control" v-model="pesquisa.nolocal" @change="buscarNoLocal()" :disabled="loadPedidos">
+            <select class="form-control" v-model="pesquisa.nolocal" @change="buscarNoLocal()" :disabled="loading">
               <option value="1">Todos</option>
               <option value="2">No Local</option>
               <option value="3">Filtrar Data</option>
@@ -117,6 +117,12 @@
               <h6 class="m-0" v-else-if="!selecionado.id_entrega && selecionado.previsao && selecionado.status < 4">
                 Previsão de {{selecionado.tipo_pedido === '1' ? 'entrega' : 'retirada'}}: <b>{{selecionado.previsao}}</b>
               </h6>
+              <div class="p-3 mt-3 mb-2 bg-warning rounded d-print-none" v-if="selecionado.suspeito === '1'">
+                <h6 class="font-weight-bold m-0">PEDIDO SUSPEITO!</h6>
+                <div>
+                  Recomendamos entrar em contato pelo número do telefone do cliente antes de aceitar este pedido.
+                </div>
+              </div>
               <div class="border p-2 mt-3 mb-2">
                 <h5 class="font-weight-bold m-0">{{selecionado.cliente.nome_cliente}}</h5>
                 <div v-if="selecionado.origin !== '3'">
@@ -127,10 +133,22 @@
                   <b>{{selecionado.cliente.telefone | phone}}</b>
                 </a>
               </div>
-              <div class="border p-2 mt-2 mb-2 d-print-none" v-if="selecionado.tags && selecionado.tags.length">
-                <h6 class="font-weight-bold m-0">ETIQUETAS</h6>
-                <div>
-                  <span class="badge mr-2" :class="'badge-' + t.color" v-for="t in selecionado.tags">{{t.nome_tag}}</span>
+              <div class="border p-2 pb-0 my-2 d-print-none">
+                <h6 class="font-weight-bold mb-2">Etiquetas</h6>
+                <div class="d-flex flex-wrap">
+                  <div class="badge badge-info p-2 mr-2 mb-1 pointer" title="Cliente Novo"
+                       v-if="selecionado.is_new === '1'" @click="modalTag = true">
+                    Novo
+                  </div>
+                  <div class="badge text-white p-2 mr-2 mb-1 pointer" :title="'Cliente ' + t.nome_tag" v-if="selecionado.tags && selecionado.tags.length"
+                       v-for="t in selecionado.tags" :class="'badge-' + t.color" @click="modalTag = true">
+                    {{t.nome_tag}}
+                  </div>
+                  <div class="mb-1">
+                    <button class="btn btn-light p-0 px-2" style="" @click="modalTag = true">
+                      &plus;
+                    </button>
+                  </div>
                 </div>
               </div>
               <div class="border p-2 mt-2 mb-2" v-if="selecionado.tipo_pedido === '2'">
@@ -149,7 +167,7 @@
               </div>
               <div class="border p-2 mt-2 mb-2" v-if="selecionado.tipo_pedido === '1'">
                 <div class="d-flex justify-content-between align-items-center">
-                  <div>
+                  <div class="mr-1">
                     <h6 class="text-success font-weight-bold m-0">ENTREGAR PEDIDO</h6>
                     <div>
                       <span v-if="!selecionado.version">{{selecionado.cliente.endereco}}</span><span v-else>{{selecionado.cliente.logradouro}}</span>,
@@ -161,7 +179,7 @@
                   <div class="text-center d-print-none" v-if="selecionado.cliente.lat_endereco">
                     <a href="javascript:" class="btn btn-success mb-1" @click="openMapa()">
                       <img src="../assets/icons/location-light.svg" style="width: 18px">
-                      <div class="small mt-1">Ver no mapa</div>
+                      <div class="small mt-1">Ver mapa</div>
                     </a>
                   </div>
                 </div>
@@ -272,6 +290,20 @@
         </div>
       </modal>
 
+      <modal :opened="modalTag" width="tiny">
+        <h6 class="pointer text-center">Etiquetas</h6>
+        <div class="my-4">
+          <div class="mb-2 text-white p-2 rounded-sm pointer d-flex justify-content-between align-items-center"
+               v-for="t in tags" :class="'bg-' + t.color" @click="toggleTag(t)">
+            {{t.nome_tag}}
+            <i class="mr-2" v-if="selecionado.tags.find(tag => tag.id_tag === t.id_tag)">&check;</i>
+          </div>
+        </div>
+        <div class="border-top pt-3 text-center">
+          <button class="btn btn-dark rounded-sm" @click="modalTag = false">Voltar</button>
+        </div>
+      </modal>
+
       <modal :opened="modalMapa" width="full">
         <div class="container-fluid border-bottom pb-2">
           <button class="btn btn-outline-danger" style="margin-top: 10px" @click="modalMapa = false">Voltar</button>
@@ -358,11 +390,13 @@ export default {
       },
       selecionado: {
         produtos: [],
+        tags: [],
         troco: 0,
         total: 0
       },
       modalCancelamento: false,
       modalMapa: false,
+      modalTag: false,
 
       motivosRecusa: [
         {id: null, obs: 'Selecione um motivo'},
@@ -410,7 +444,9 @@ export default {
       impressora: {
         automatico: '',
         nCopias: ''
-      }
+      },
+
+      tags: []
     }
   },
 
@@ -461,6 +497,7 @@ export default {
       this.pesquisa.status = '1';
       this.pesquisa.nolocal = '1';
       this.pesquisa.data = '';
+      this.pedidos = [];
       this.buscarPedidos(false);
     },
 
@@ -500,6 +537,9 @@ export default {
 
             if (this.selecionado.id_pedido) {
               this.buscarPedidoId(this.selecionado);
+
+            } else {
+              this.buscarPedidoId(this.pedidos[0]);
             }
 
             this.$emit('ativarEmpresa');
@@ -565,15 +605,18 @@ export default {
 
             if (this.pedidos.length) {
               const p = this.pedidos[scroll ? (this.pedidos.length - 1) : 0];
+              this.buscarPedidoId(p);
 
-              this.buscarPedidoId(p, () => {
-                this.scrollPedido();
-              });
+              if (scroll) {
+                this.scrollPedido(p.id_pedido);
+              }
 
             } else {
               this.clearPedido()
             }
           }
+
+          this.validarPedidoSuspeito();
 
         }, res => {
           console.log(res);
@@ -588,16 +631,44 @@ export default {
         });
     },
 
+    validarPedidoSuspeito() {
+      if (this.selecionado.suspeito === '1') {
+        this.$swal({
+          icon: 'warning',
+          title: "Pedido Suspeito!",
+          text: "De acordo com nosso sistema esse pedido foi considerado suspeito. Recomendamos entrar em contato pelo número do telefone do cliente antes de aceitar o pedido.",
+          buttons: ["Ok, eu entendo", "Não é suspeito"],
+        }).then(res => {
+          if (res) {
+            this.selecionado.suspeito = '0';
+            const tag = this.selecionado.tags.find(t => t.id_tag === '2');
+
+            if (tag) {
+              this.$swal({
+                text: "Deseja marcar este cliente como não suspeito?",
+                buttons: ["Não", "Sim"]
+              }).then(res => {
+                if (res) {
+                  this.toggleTag(tag);
+                }
+              });
+            }
+          }
+        });
+      }
+    },
+
     clearPedido() {
       this.selecionado = {
+        tags: [],
         produtos: [],
         troco: 0,
         total: 0
       };
     },
 
-    scrollPedido() {
-      const el = document.getElementById('listPedido' + this.selecionado.id_pedido);
+    scrollPedido(id_pedido) {
+      const el = document.getElementById('listPedido' + id_pedido);
       if (el) el.scrollIntoView(false);
     },
 
@@ -805,6 +876,46 @@ export default {
       };
 
       this.$emit('openModal', dados);
+    },
+
+    getTags() {
+      this.$http.get('clientes/tags/dados')
+        .then(response => {
+          this.tags = response.data;
+
+        }, res => {
+          this.$swal(res.data.result, res.data.msg);
+        });
+    },
+
+    toggleTag(t) {
+      if (!this.selecionado.tags.find(tag => tag.id_tag === t.id_tag)) {
+        this.selecionado.tags.push({
+          nome_tag: t.nome_tag,
+          id_tag: t.id_tag,
+          color: t.color,
+        })
+
+      } else {
+        this.selecionado.tags = this.selecionado.tags.filter(tag => tag.id_tag !== t.id_tag)
+      }
+
+      this.salvarTag();
+    },
+
+    salvarTag() {
+      const empresa = this.empresas.find(e => e.token === this.selecionado.token);
+
+      if (!empresa) {
+        return;
+      }
+
+      const dados = { id_cliente: this.selecionado.id_cliente, tags: this.selecionado.tags };
+
+      this.$http.post('clientes/tags/' + empresa.key, dados)
+        .then(res => {}, res => {
+          this.$swal(res.data.msg);
+        });
     }
   },
 
@@ -821,6 +932,7 @@ export default {
     });
 
     this.buscarPedidos(true);
+    this.getTags();
   },
 
   computed: {

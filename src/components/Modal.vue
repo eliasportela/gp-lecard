@@ -60,6 +60,15 @@
     height: auto;
   }
 
+  .modal.tiny .modal-content {
+    background-color: #fefefe;
+    margin: 10% auto 0;
+    padding: 20px 10px;
+    border-radius: 4px;
+    max-width: 325px;
+    height: auto;
+  }
+
   @media (max-width: 600px) {
     .modal-content {
       margin: 15% auto;

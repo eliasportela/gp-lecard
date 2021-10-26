@@ -75,6 +75,15 @@
                 <div class="col-md-12 col-xl-6">
                   <div class="card mb-3">
                     <div class="card-body">
+                      <h6 class="m-0">Módulo Franquias</h6>
+                      <p>Receba os pedidos das suas lojas em um único local</p>
+                      <router-link to="/empresas" class="btn btn-dark" style="width: 200px">Gerenciar contas</router-link>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-12 col-xl-6">
+                  <div class="card mb-3">
+                    <div class="card-body">
                       <h6 class="mb-0">{{user.nome_fantasia}}</h6>
                       <p class="m-0"><span>{{user.email}}</span></p>
                       <button class="btn btn-outline-dark mt-3" @click="confirmLogout" style="width: 200px">Sair</button>
@@ -85,20 +94,19 @@
                   <div class="card mb-3">
                     <div class="card-body">
                       <h6 class="text-danger mb-0">Danger zone</h6>
-                      <p>Limpar as configurações do sistema</p>
+                      <p>Limpar todas as configurações salvas</p>
                       <button class="btn btn-danger" @click="resetar" style="width: 200px">Resetar sistema</button>
                     </div>
                   </div>
                 </div>
-              </div>
-              <div class="card" v-if="master">
-                <div class="card-body">
-                  <h6 class="mb-0">Modo Homologação</h6>
-                  <p>Alterar para o servidor de homologação</p>
-                  <div class="d-inline-block pointer" @click="toggleHomologacao()">
-                    <span class="pr-2">{{modo_homologacao ? 'Ativado' : 'Desativado'}}</span>
-                    <img class="switch" src="../assets/icons/switch-on.svg" v-show="modo_homologacao">
-                    <img class="switch" src="../assets/icons/switch-off.svg" v-show="!modo_homologacao">
+                <div class="col-md-12 col-xl-6" v-if="master">
+                  <div class="card">
+                    <div class="card-body">
+                      <h6 class="mb-0">Modo Homologação</h6>
+                      <p>Alterar para o servidor de teste</p>
+                      <button class="btn btn-secondary" style="width: 200px" @click="toggleHomologacao()" v-if="modo_homologacao">Desativar</button>
+                      <button class="btn btn-success" style="width: 200px" @click="toggleHomologacao()" v-else>Ativar</button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -195,18 +203,28 @@
       },
 
       toggleHomologacao() {
-        this.logout();
+        const modo = this.modo_homologacao ? "desativar" : "ativar";
 
-        this.modo_homologacao = !this.modo_homologacao;
-        if (this.modo_homologacao) {
-          config.set('base_server','https://api.storkdigital.com.br/dev/');
+        this.$swal({
+          text: "Deseja " + modo + " o servidor de teste?",
+          buttons: ["Cancelar", "Sim"],
+          dangerMode: true
+        }).then((result) => {
+          if (result) {
+            this.logout();
+            this.modo_homologacao = !this.modo_homologacao;
 
-        } else {
-          config.delete('base_server');
-        }
+            if (this.modo_homologacao) {
+              config.set('base_server','https://api.storkdigital.com.br/dev/');
 
-        this.$router.push("/");
-        ipcRenderer.send('reload');
+            } else {
+              config.delete('base_server');
+            }
+
+            this.$router.push("/");
+            ipcRenderer.send('reload');
+          }
+        });
       }
     },
 

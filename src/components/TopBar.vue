@@ -89,7 +89,7 @@
       <h5 class="text-center">Atenção!</h5>
       <div>Seus pedidos não estão sendo sincronizados. Por favor verifique sua conexão com a internet!</div>
       <div class="text-center mt-4">
-        <button class="btn btn-danger" @click="reloadPage">OK</button>
+        <button class="btn btn-danger" @click="reloadPage">Tentar novamente</button>
       </div>
     </modal>
 
@@ -164,7 +164,7 @@
           </div>
         </div>
       </div>
-      <div class="text-center" style="padding: 120px 0" v-else>
+      <div class="text-center" style="padding: 128px 0" v-else>
         <div class="animated flipInY infinite">
           <img src="../assets/logo-lecard.png" alt="" style="width: 48px">
         </div>
@@ -204,7 +204,6 @@ export default {
       },
 
       load: true,
-      modalOflline: false,
       modalPedidos: false,
 
       connected: false,
@@ -379,17 +378,21 @@ export default {
 
     empresas() {
       return this.$store.state.empresas
+    },
+
+    modalOflline() {
+      return this.$store.state.modalOflline
     }
   },
 
   sockets: {
     connect() {
       this.connected = true;
-      this.modalOflline = false;
+      this.$store.state.modalOflline = false;
     },
 
     disconnect() {
-      this.modalOflline = true;
+      this.$store.state.modalOflline = true;
       this.connected = false;
     },
 

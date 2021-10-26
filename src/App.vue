@@ -55,7 +55,11 @@
           }, res => {
             this.load = false;
 
-            if (res.status === 401) {
+            if (!res.status) {
+              // this.$swal("Não conseguimos acessar sua conexão com a internet. Por favor verifique se seu computador tem uma conexão estável.");
+              this.$store.state.modalOflline = true;
+
+            } else if (res.status === 401) {
               this.nao_atenticou = true;
               this.empresas = this.empresas.filter(el => el !== e);
 
@@ -65,9 +69,6 @@
               }
 
               callback(res);
-
-            } else if (!navigator.onLine) {
-              this.$swal("Não conseguimos acessar sua conexão com a internet. Por favor verifique se seu computador tem uma conexão estável.");
             }
           });
       },

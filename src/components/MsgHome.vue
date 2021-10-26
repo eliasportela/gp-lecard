@@ -1,6 +1,6 @@
 <template>
   <div class="hello">
-    <router-link to="/cardapio?desativados=true" class="card mb-3 pointer text-decoration-none text-dark" v-if="desativados">
+    <router-link to="/cardapio?desativados=true" class="card mb-3 pointer text-decoration-none text-dark" v-if="desativados > 0">
       <div class="card-body d-flex justify-content-between align-items-center">
         <div>
           <h6 class="font-weight-bold mb-1">Produtos desativados</h6>
@@ -39,7 +39,7 @@ export default {
   name: 'MsgHome',
   data() {
     return {
-      desativados: null
+      desativados: 0
     }
   },
 
