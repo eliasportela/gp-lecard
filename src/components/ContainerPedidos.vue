@@ -123,24 +123,32 @@
                   Recomendamos entrar em contato pelo número do telefone do cliente antes de aceitar este pedido.
                 </div>
               </div>
-              <div class="border p-2 mt-3 mb-2">
-                <h5 class="font-weight-bold m-0">{{selecionado.cliente.nome_cliente}}</h5>
-                <div v-if="selecionado.origin !== '3'">
-                  Nº de Pedidos: {{selecionado.qtd_pedidos === '0' ? 'Primeiro pedido' : selecionado.qtd_pedidos + ' pedidos'}}
+              <div class="border p-2 mt-3 mb-2 d-flex justify-content-between align-items-center">
+                <div>
+                  <h5 class="font-weight-bold m-0">{{selecionado.cliente.nome_cliente}}</h5>
+                  <div v-if="selecionado.origin !== '3'">
+                    Nº de Pedidos: {{selecionado.qtd_pedidos === '0' ? 'Primeiro pedido' : selecionado.qtd_pedidos + ' pedidos'}}
+                  </div>
+                  <b>Telefone: </b>
+                  <a :href="'https://api.whatsapp.com/send?phone=+55'+ selecionado.cliente.telefone" class="text-info" target="_blank">
+                    <b>{{selecionado.cliente.telefone | phone}}</b>
+                  </a>
                 </div>
-                <b>Telefone: </b>
-                <a :href="'https://api.whatsapp.com/send?phone=+55'+ selecionado.cliente.telefone" class="text-info" target="_blank">
-                  <b>{{selecionado.cliente.telefone | phone}}</b>
-                </a>
+                <div class="text-center d-print-none mr-1" v-if="!selecionado.tags.length">
+                  <button class="btn btn-info mb-2" title="Taguear cliente" @click="modalTag = true"><img src="../assets/icons/tag.svg" class="d-block" style="width: 12px"></button>
+                  <a href="javascript:" class="text-danger small d-block" @click="bloquearCliente()" title="Bloquear este cliente">
+                    Bloquear
+                  </a>
+                </div>
               </div>
-              <div class="border p-2 pb-0 my-2 d-print-none">
+              <div class="border p-2 pb-0 my-2 d-print-none" v-if="selecionado.is_new === '1' || (selecionado.tags && selecionado.tags.length)">
                 <h6 class="font-weight-bold mb-2">Etiquetas</h6>
                 <div class="d-flex flex-wrap">
                   <div class="badge badge-info p-2 mr-2 mb-1 pointer" title="Cliente Novo"
                        v-if="selecionado.is_new === '1'" @click="modalTag = true">
                     Novo
                   </div>
-                  <div class="badge text-white p-2 mr-2 mb-1 pointer" :title="'Cliente ' + t.nome_tag" v-if="selecionado.tags && selecionado.tags.length"
+                  <div class="badge text-white p-2 mr-2 mb-1 pointer" :title="'Cliente ' + t.nome_tag" v-if="selecionado.tags"
                        v-for="t in selecionado.tags" :class="'badge-' + t.color" @click="modalTag = true">
                     {{t.nome_tag}}
                   </div>
@@ -176,10 +184,10 @@
                       <div v-if="selecionado.cliente.complemento">- {{selecionado.cliente.complemento}}</div>
                     </div>
                   </div>
-                  <div class="text-center d-print-none" v-if="selecionado.cliente.lat_endereco">
-                    <a href="javascript:" class="btn btn-success mb-1" @click="openMapa()">
+                  <div class="text-center d-print-none mr-1" v-if="selecionado.cliente.lat_endereco">
+                    <a href="javascript:" class="btn btn-success" @click="openMapa()" title="Ver o endereço no mapa">
                       <img src="../assets/icons/location-light.svg" style="width: 18px">
-                      <div class="small mt-1">Ver mapa</div>
+                      <div class="small mt-1">Mapa</div>
                     </a>
                   </div>
                 </div>
@@ -838,7 +846,7 @@ export default {
 
     openMapa() {
       this.modalMapa = true;
-      const pedidos = []; // TODO buscar no BD todos os pedidos com latotude
+      const pedidos = [];
       let pedido = null;
 
       if (this.selecionado.cliente.lat_endereco) {
@@ -916,6 +924,21 @@ export default {
         .then(res => {}, res => {
           this.$swal(res.data.msg);
         });
+    },
+
+    bloquearCliente() {
+      const tag = this.tags.find(t => t.id_tag === '2');
+      if (tag) {
+        this.$swal({
+          text: "Deseja bloquear este cliente? Seus futuros pedidos serão marcados como 'Suspeitos'.",
+          buttons: ["Não", "Sim"],
+          dangerMode: true
+        }).then(res => {
+          if (res) {
+            this.toggleTag(tag);
+          }
+        });
+      }
     }
   },
 

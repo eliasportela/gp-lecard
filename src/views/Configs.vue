@@ -12,14 +12,14 @@
                   <div class="row">
                     <div class="col-md-6 mb-2">
                       <label class="mb-0" for="impressoraPedidos">Impressora pedidos</label>
-                      <select class="form-control" id="impressoraPedidos" v-model="config.device">
+                      <select class="form-control" id="impressoraPedidos" v-model="config.device" disabled>
                         <option value="">Default</option>
                         <option :value="p.name" v-for="p in printers">{{p.name}}</option>
                       </select>
                     </div>
                     <div class="col-md-6 mb-2">
                       <label class="mb-0" for="impressoraComanda">Impressora comanda</label>
-                      <select class="form-control" id="impressoraComanda" v-model="config.devicePdv">
+                      <select class="form-control" id="impressoraComanda" v-model="config.devicePdv" disabled>
                         <option value="">Default</option>
                         <option :value="p.name" v-for="p in printers">{{p.name}}</option>
                       </select>
