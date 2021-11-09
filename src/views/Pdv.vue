@@ -6,7 +6,7 @@
         <img src="../assets/logo-lecard.png" class="d-block m-auto animated flipInY infinite" alt="Logo Lecard" style="width: 72px;">
       </div>
       <div v-else>
-        <webview :src="src + 'auth/' + token" style="height: calc(100vh - 60px)" :preload="preload"></webview>
+        <webview :src="src + 'auth/' + token" style="height: calc(100vh - 60px)" :preload="preload" allowpopups="true"></webview>
       </div>
     </div>
   </div>

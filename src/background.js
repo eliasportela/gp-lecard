@@ -93,6 +93,15 @@ function createWindow () {
   win.show();
 }
 
+app.on('web-contents-created', (e, contents) => {
+  if (contents.getType() === 'webview') {
+    contents.on('new-window', (e, url) => {
+      e.preventDefault();
+      require('electron').shell.openExternal(url)
+    })
+  }
+});
+
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
   // On macOS it is common for applications and their menu bar
