@@ -1,49 +1,24 @@
 {
   "name": "gp-lecard",
-  "version": "1.5.8",
-  "private": true,
-  "description": "Gestor de Pedidos - LeCard",
+  "version": "1.6.0",
+  "description": "Gerenciador de Pedidos do LeCard Delivery",
   "author": "storkdigital.com.br",
+  "main": "main.js",
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
-    "electron:build": "vue-cli-service electron:build",
-    "electron:generate-icons": "electron-icon-builder --input=./public/icon.png --output=build --flatten",
-    "electron:realese": "electron:build -wl -- -p always",
-    "electron:serve": "vue-cli-service electron:serve",
-    "postinstall": "electron-builder install-app-deps",
-    "postuninstall": "electron-builder install-app-deps"
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dist": "electron-builder --publish always"
   },
-  "main": "background.js",
-  "dependencies": {
-    "@sentry/electron": "^2.5.1",
-    "animate.css": "^3.7.2",
-    "bootstrap": "^4.4.1",
-    "core-js": "^3.6.4",
-    "electron-config": "^2.0.0",
-    "electron-fetch": "^1.7.1",
-    "electron-updater": "^4.3.1",
-    "leaflet": "^1.7.1",
-    "socket.io-client": "^2.3.0",
-    "v-money": "^0.8.1",
-    "vue": "^2.6.11",
-    "vue-fuse": "^2.1.0",
-    "vue-resource": "^1.5.1",
-    "vue-router": "^3.1.6",
-    "vue-socket.io": "3.0.5",
-    "vue-swal": "^1.0.0",
-    "vue-the-mask": "^0.11.1",
-    "vue2-leaflet": "^2.7.0",
-    "vuex": "^3.4.0"
+  "build": {
+    "asar": "true",
+    "productName": "Gestor de Pedidos - LeCard"
   },
+  "license": "ISC",
   "devDependencies": {
-    "@vue/cli-plugin-babel": "~4.3.0",
-    "@vue/cli-plugin-router": "~4.3.0",
-    "@vue/cli-plugin-vuex": "^4.5.4",
-    "@vue/cli-service": "~4.3.0",
-    "electron": "^7.2.4",
-    "electron-icon-builder": "^1.0.2",
-    "vue-cli-plugin-electron-builder": "~1.4.6",
-    "vue-template-compiler": "^2.6.11"
+    "electron": "^15.3.0",
+    "electron-builder": "^22.10.5"
+  },
+  "dependencies": {
+    "electron-updater": "^4.3.9"
   }
 }
