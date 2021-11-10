@@ -60,6 +60,7 @@ ipcMain.on('reloadUrl', () => {
 
 ipcMain.on('gopage', (evt, opt) => {
   if (winC) {
+    winC.focus();
     return;
   }
 
@@ -84,14 +85,14 @@ function createBrowser(icon) {
     minWidth: 700,
     minHeight: 700,
     title: 'Gestor de Pedidos',
-    show: false,
+    show: true,
     webPreferences: {
       nodeIntegration: true,
       webviewTag: true,
       contextIsolation: false,
       preload: path.join(__dirname, 'preload.js')
     },
-    backgroundColor: '#2e2c29',
+    backgroundColor: '#ffffff',
     icon: path.join(__dirname, icon)
   });
 }
@@ -111,9 +112,9 @@ function createWindow () {
     app.quit()
   });
 
-  win.once('ready-to-show', () => {
-    win.show()
-  });
+  // win.once('ready-to-show', () => {
+  //   win.show()
+  // });
 
   // const printers = JSON.stringify(win.webContents.getPrinters());
   win.webContents.executeJavaScript(`window.Printers = []`);
