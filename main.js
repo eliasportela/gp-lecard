@@ -65,8 +65,7 @@ ipcMain.on('gopage', (evt, opt) => {
 
   winC = createBrowser('comanda.png');
   winC.loadURL(opt);
-
-  winC.webContents.openDevTools();
+  // winC.webContents.openDevTools();
 
   winC.once('ready-to-show', () => {
     winC.show();
@@ -152,7 +151,7 @@ function printData(event, option) {
       try {
         winP.webContents.print(printer);
 
-        if (!printer.silent) {
+        if (printer.silent) {
           for (let i = 1; i < copies; i++) {
             setTimeout(() => {
               winP.webContents.print(printer);
