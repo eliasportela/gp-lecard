@@ -1,17 +1,20 @@
 {
   "name": "gp-lecard",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "Gerenciador de Pedidos do LeCard Delivery",
   "author": "storkdigital.com.br",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dist": "electron-builder --publish always"
+    "build": "electron-builder --ia32",
+    "dist": "electron-builder --ia32 --publish always"
   },
   "build": {
     "asar": "true",
-    "productName": "Gestor de Pedidos - LeCard"
+    "productName": "LeCard - Gestor de Pedidos",
+    "appId": "delivery.lecard.gplecard",
+    "artifactName": "gestor-lecard-${version}.${ext}"
   },
   "license": "ISC",
   "devDependencies": {

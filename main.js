@@ -1,18 +1,27 @@
 const { app, protocol, BrowserWindow, ipcMain, dialog, Menu, globalShortcut } = require('electron');
 const path = require('path');
-const { autoUpdater } = require('electron-updater')
+const { autoUpdater } = require('electron-updater');
+
+const isPackaged = app.isPackaged;
 
 let win = null;
 let winP = null;
 let winC = null;
 
 const BASE_GESTOR="https://gestor.lecard.delivery/";
-// const BASE_GESTOR="http://localhost:8080/";
+const version = app.getVersion();
 
 protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }]);
 app.commandLine.appendSwitch('--autoplay-policy','no-user-gesture-required');
 app.setAppUserModelId('delivery.lecard.gestor');
 Menu.setApplicationMenu(null);
+
+if (isPackaged) {
+  app.setLoginItemSettings({
+    openAtLogin: true,
+    path: app.getPath('exe')
+  });
+}
 
 app.whenReady().then(() => {
   createWindow();
@@ -35,7 +44,7 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', function () {
-  if (process.platform !== 'darwin') app.quit()
+  app.quit()
 });
 
 app.on('web-contents-created', (e, contents) => {
@@ -81,9 +90,9 @@ ipcMain.on('gopage', (evt, opt) => {
 function createBrowser(icon) {
   return new BrowserWindow({
     width: 1100,
-    height: 700,
-    minWidth: 700,
-    minHeight: 700,
+    height: 600,
+    minWidth: 600,
+    minHeight: 600,
     title: 'Gestor de Pedidos',
     show: true,
     webPreferences: {
@@ -112,14 +121,19 @@ function createWindow () {
     app.quit()
   });
 
+  win.webContents.on('new-window', function(e, url) {
+    e.preventDefault();
+    require('electron').shell.openExternal(url);
+  });
+
   // win.once('ready-to-show', () => {
   //   win.show()
   // });
 
   // const printers = JSON.stringify(win.webContents.getPrinters());
-  win.webContents.executeJavaScript(`window.Printers = []`);
+  win.webContents.executeJavaScript(`window.Printers = []; window.ElectronV = '${version}'`);
 
-  if (app.isPackaged) {
+  if (isPackaged) {
     autoUpdater.checkForUpdates();
   }
 }
