@@ -1,46 +1,55 @@
 const { app, protocol, BrowserWindow, ipcMain, dialog, Menu, globalShortcut } = require('electron');
 const path = require('path');
-const { autoUpdater } = require('electron-updater');
-
-const isPackaged = app.isPackaged;
 
 let win = null;
 let winP = null;
 let winC = null;
+let winLoad = null;
 
+let loading = true;
 const BASE_GESTOR="https://gestor.lecard.delivery/";
-const version = app.getVersion();
+// const BASE_GESTOR="http://localhost:8080/";
 
 protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }]);
 app.commandLine.appendSwitch('--autoplay-policy','no-user-gesture-required');
 app.setAppUserModelId('delivery.lecard.gestor');
 Menu.setApplicationMenu(null);
 
-if (isPackaged) {
-  app.setLoginItemSettings({
-    openAtLogin: true,
-    path: app.getPath('exe')
-  });
-}
-
 app.whenReady().then(() => {
-  createWindow();
-
-  winP = new BrowserWindow({
-    width: 1000,
-    show: false,
-    title: 'Impressao'
+  winLoad = new BrowserWindow({
+    width: 1100,
+    height: 600,
+    minWidth: 600,
+    minHeight: 600,
+    title: 'Gestor de Pedidos',
+    backgroundColor: '#dc3545',
+    show: true,
+    icon: path.join(__dirname, 'icon.png')
   });
 
-  winP.loadFile("index.html");
+  winLoad.loadFile("pages/loading.html");
 
-  globalShortcut.register('CommandOrControl+L', () => {
-    win.webContents.openDevTools();
+  winLoad.once('ready-to-show', () => {
+    createWindow();
+  });
+
+  winLoad.on('closed', () => {
+    if (loading) {
+      app.quit();
+    }
   });
 
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
-  })
+  });
+
+  globalShortcut.register('CommandOrControl+L', () => {
+    win.webContents.openDevTools();
+
+    if (winC) {
+      winC.webContents.openDevTools();
+    }
+  });
 });
 
 app.on('window-all-closed', function () {
@@ -56,37 +65,6 @@ app.on('web-contents-created', (e, contents) => {
   }
 });
 
-// ipcmain
-ipcMain.on('print', (event, option) => {
-  printData(event, option);
-});
-
-ipcMain.on('reloadUrl', () => {
-  win.loadURL(BASE_GESTOR).then(() => {}).catch(() => {
-    win.loadFile('pages/error.html');
-  });
-});
-
-ipcMain.on('gopage', (evt, opt) => {
-  if (winC) {
-    winC.focus();
-    return;
-  }
-
-  winC = createBrowser('comanda.png');
-  winC.loadURL(opt);
-  // winC.webContents.openDevTools();
-
-  winC.once('ready-to-show', () => {
-    winC.show();
-    winC.focus();
-  });
-
-  winC.on('closed', () => {
-    winC = null;
-  });
-});
-
 function createBrowser(icon) {
   return new BrowserWindow({
     width: 1100,
@@ -94,7 +72,7 @@ function createBrowser(icon) {
     minWidth: 600,
     minHeight: 600,
     title: 'Gestor de Pedidos',
-    show: true,
+    show: false,
     webPreferences: {
       nodeIntegration: true,
       webviewTag: true,
@@ -115,10 +93,7 @@ function createWindow () {
   });
 
   win.on('closed', () => {
-    winP = null;
-    win = null;
-    winC = null;
-    app.quit()
+    app.quit();
   });
 
   win.webContents.on('new-window', function(e, url) {
@@ -126,16 +101,17 @@ function createWindow () {
     require('electron').shell.openExternal(url);
   });
 
-  // win.once('ready-to-show', () => {
-  //   win.show()
-  // });
+  win.once('ready-to-show', () => {
+    winP = new BrowserWindow({
+      width: 1000,
+      show: false,
+      title: 'Impressao'
+    });
 
-  // const printers = JSON.stringify(win.webContents.getPrinters());
-  win.webContents.executeJavaScript(`window.Printers = []; window.ElectronV = '${version}'`);
+    winP.loadFile("pages/print.html");
 
-  if (isPackaged) {
-    autoUpdater.checkForUpdates();
-  }
+    loadDendences();
+  });
 }
 
 function printData(event, option) {
@@ -194,4 +170,58 @@ function dialogMsg(title, message) {
     title,
     message
   }, null);
+}
+
+function loadDendences() {
+  const isPackaged = app.isPackaged;
+
+  if (isPackaged) {
+    app.setLoginItemSettings({
+      openAtLogin: true,
+      path: app.getPath('exe')
+    });
+  }
+
+  // ipcmain
+  ipcMain.on('print', (event, option) => {
+    printData(event, option);
+  });
+
+  ipcMain.on('reloadUrl', () => {
+    win.loadURL(BASE_GESTOR).then(() => {}).catch(() => {
+      win.loadFile('pages/error.html');
+    });
+  });
+
+  ipcMain.on('gopage', (evt, opt) => {
+    if (winC) {
+      winC.focus();
+      return;
+    }
+
+    winC = createBrowser('comanda.png');
+    winC.loadURL(opt);
+
+    winC.once('ready-to-show', () => {
+      winC.show();
+      winC.focus();
+    });
+
+    winC.on('closed', () => {
+      winC = null;
+    });
+  });
+
+  // const printers = JSON.stringify(win.webContents.getPrinters());
+  const version = app.getVersion();
+  win.webContents.executeJavaScript(`window.Printers = []; sessionStorage.setItem('ElectronV', '${version}')`).then(() => {
+    if (isPackaged) {
+      const { autoUpdater } = require('electron-updater');
+      autoUpdater.checkForUpdates();
+    }
+  });
+
+  loading = false;
+  winLoad.close();
+  win.show();
 }
