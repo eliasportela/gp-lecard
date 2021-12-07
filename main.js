@@ -4,10 +4,13 @@ const path = require('path');
 let win = null;
 let winP = null;
 let winC = null;
-let winLoad = null;
+let printers = [];
 
-let loading = true;
+let listPrint = [];
+let isPrinting = false;
+
 const BASE_GESTOR="https://gestor.lecard.delivery/";
+// const BASE_GESTOR="https://hhh.gestor.lecard.delivery/";
 // const BASE_GESTOR="http://localhost:8080/";
 
 protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }]);
@@ -16,31 +19,40 @@ app.setAppUserModelId('delivery.lecard.gestor');
 Menu.setApplicationMenu(null);
 
 app.whenReady().then(() => {
-  winLoad = new BrowserWindow({
-    width: 1100,
-    height: 600,
-    minWidth: 600,
-    minHeight: 600,
-    title: 'Gestor de Pedidos',
-    backgroundColor: '#dc3545',
-    show: true,
-    icon: path.join(__dirname, 'icon.png')
+  win = createBrowser('icon.png');
+  win.loadFile("pages/loading.html");
+
+  win.once('ready-to-show', () => {
+    win.show();
+
+    setTimeout(() => {
+      win.loadURL(BASE_GESTOR).then(() => {}).catch(() => {
+        win.loadFile('pages/error.html');
+      });
+
+      win.webContents.on('new-window', function(e, url) {
+        e.preventDefault();
+        require('electron').shell.openExternal(url);
+      });
+
+      winP = new BrowserWindow({
+        width: 1000,
+        show: false,
+        title: 'Impressao'
+      });
+
+      winP.loadFile("pages/print.html");
+
+      loadDendences();
+    }, 2000)
   });
 
-  winLoad.loadFile("pages/loading.html");
-
-  winLoad.once('ready-to-show', () => {
-    createWindow();
-  });
-
-  winLoad.on('closed', () => {
-    if (loading) {
-      app.quit();
-    }
+  win.on('closed', () => {
+    app.quit();
   });
 
   app.on('activate', function () {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    // if (BrowserWindow.getAllWindows().length === 0) createWindow()
   });
 
   globalShortcut.register('CommandOrControl+L', () => {
@@ -72,6 +84,7 @@ function createBrowser(icon) {
     minWidth: 600,
     minHeight: 600,
     title: 'Gestor de Pedidos',
+    backgroundColor: '#dc3545',
     show: false,
     webPreferences: {
       nodeIntegration: true,
@@ -79,54 +92,33 @@ function createBrowser(icon) {
       contextIsolation: false,
       preload: path.join(__dirname, 'preload.js')
     },
-    backgroundColor: '#ffffff',
     icon: path.join(__dirname, icon)
   });
 }
 
-function createWindow () {
-  win = createBrowser('icon.png');
-
-  win.loadURL(BASE_GESTOR).then(() => {}).catch(() => {
-    win.show();
-    win.loadFile('pages/error.html');
-  });
-
-  win.on('closed', () => {
-    app.quit();
-  });
-
-  win.webContents.on('new-window', function(e, url) {
-    e.preventDefault();
-    require('electron').shell.openExternal(url);
-  });
-
-  win.once('ready-to-show', () => {
-    winP = new BrowserWindow({
-      width: 1000,
-      show: false,
-      title: 'Impressao'
-    });
-
-    winP.loadFile("pages/print.html");
-
-    loadDendences();
-  });
-}
-
-function printData(event, option) {
-  if (!option) {
+function printData(option, callback) {
+  if (!option || !option.content) {
+    callback();
     return;
   }
 
-  const ispdv = (typeof option === 'string');
-
   const impressora = option.impressora || {};
-  const copies = option.copies ? option.copies : 1;
-  const content = JSON.stringify(`${ispdv ? option : option.content}`);
+  const content = JSON.stringify(`${option.content}`);
   const zoom = impressora.zoom ? impressora.zoom : "9px";
   const width = impressora.largura ? impressora.largura : "100%";
   const deviceName = impressora.device ? impressora.device : "";
+  const id_impressao = option.id_impressao;
+  const copies = option.copies ? parseInt(option.copies) : 1;
+
+  const config = { silent: true };
+
+  if (deviceName && !printers.find(p => p.displayName === deviceName)) {
+    callback({id_impressao, status: 4, erro: "Não foi possível encontrar a impressora selecionada"});
+    return;
+
+  } else if (deviceName) {
+    config.deviceName = deviceName
+  }
 
   const script = `
     document.getElementById('content').innerHTML = ${content};
@@ -134,31 +126,34 @@ function printData(event, option) {
     document.body.style.width = '${width}';
   `;
 
-  const printer = { silent: !deviceName };
-
   try {
     winP.webContents.executeJavaScript(script).then(() => {
 
       try {
-        winP.webContents.print(printer);
+        winP.webContents.print(config);
 
-        if (printer.silent) {
-          for (let i = 1; i < copies; i++) {
-            setTimeout(() => {
-              winP.webContents.print(printer);
-            }, 1500);
-          }
+        if (copies > 1) {
+          setTimeout(() => {
+            winP.webContents.print(config);
+            callback();
+          }, 1500);
+
+        } else {
+          callback({id_impressao, status: 3});
         }
 
       } catch (err) {
-        dialogMsg("Não foi possível imprimir","Verifique se a impressora selecionada está disponível e tente novamente.")
+        callback();
+        // dialogMsg("Não foi possível imprimir","Verifique se a impressora selecionada está disponível e tente novamente.")
       }
 
     }).catch(e => {
+      callback();
       console.log(e)
     });
 
   } catch (e) {
+    callback({id_impressao, status: 4, erro: "Não foi possível imprimir. Tente novamente."});
     dialogMsg("Não foi possível imprimir","Tente novamente.")
   }
 }
@@ -184,7 +179,8 @@ function loadDendences() {
 
   // ipcmain
   ipcMain.on('print', (event, option) => {
-    printData(event, option);
+    listPrint.push(option);
+    printFila(event);
   });
 
   ipcMain.on('reloadUrl', () => {
@@ -205,6 +201,9 @@ function loadDendences() {
     winC.once('ready-to-show', () => {
       winC.show();
       winC.focus();
+
+      const strCPrinter = JSON.stringify(printers);
+      winC.webContents.executeJavaScript(`sessionStorage.setItem('Printers',${JSON.stringify(strCPrinter)}); sessionStorage.setItem('ElectronV', '${version}')`);
     });
 
     winC.on('closed', () => {
@@ -212,16 +211,34 @@ function loadDendences() {
     });
   });
 
-  // const printers = JSON.stringify(win.webContents.getPrinters());
   const version = app.getVersion();
-  win.webContents.executeJavaScript(`window.Printers = []; sessionStorage.setItem('ElectronV', '${version}')`).then(() => {
+
+  printers = win.webContents.getPrinters();
+  const strPrinter = JSON.stringify(printers);
+
+  win.webContents.executeJavaScript(`sessionStorage.setItem('Printers',${JSON.stringify(strPrinter)}); sessionStorage.setItem('ElectronV', '${version}')`).then(() => {
     if (isPackaged) {
       const { autoUpdater } = require('electron-updater');
       autoUpdater.checkForUpdates();
     }
   });
+}
 
-  loading = false;
-  winLoad.close();
-  win.show();
+function printFila(event) {
+  if (!isPrinting && listPrint.length) {
+    isPrinting = true;
+
+    printData(listPrint[0], (res) => {
+      isPrinting = false;
+      listPrint.splice(0,1);
+
+      if (res && res.id_impressao) {
+        event.reply('was-printed', res);
+      }
+
+      setTimeout(() => {
+        printFila(event);
+      }, 1500);
+    });
+  }
 }
