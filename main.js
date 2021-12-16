@@ -13,9 +13,15 @@ const BASE_GESTOR="https://gestor.lecard.delivery/";
 // const BASE_GESTOR="https://hhh.gestor.lecard.delivery/";
 // const BASE_GESTOR="http://localhost:8080/";
 
-protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }]);
-app.commandLine.appendSwitch('--autoplay-policy','no-user-gesture-required');
 app.setAppUserModelId('delivery.lecard.gestor');
+app.disableHardwareAcceleration();
+app.userAgentFallback = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36';
+
+// protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }]);
+app.commandLine.appendSwitch('--autoplay-policy','no-user-gesture-required');
+app.commandLine.appendSwitch('disable-site-isolation-trials');
+app.commandLine.appendSwitch('disable-features', 'OutOfBlinkCors');
+
 Menu.setApplicationMenu(null);
 
 app.whenReady().then(() => {
@@ -50,6 +56,8 @@ app.whenReady().then(() => {
   win.on('closed', () => {
     app.quit();
   });
+
+  win.once('focus', () => win.flashFrame(false));
 
   app.on('activate', function () {
     // if (BrowserWindow.getAllWindows().length === 0) createWindow()
@@ -209,6 +217,15 @@ function loadDendences() {
     winC.on('closed', () => {
       winC = null;
     });
+  });
+
+  ipcMain.on('notification', (play) => {
+    if (play) {
+      win.flashFrame(true);
+
+    } else {
+      win.flashFrame(false);
+    }
   });
 
   const version = app.getVersion();

@@ -12,5 +12,13 @@ document.addEventListener("gopage", (e) => {
   ipcRenderer.send('gopage', e.detail);
 }, false);
 
+document.addEventListener("playNotification", () => {
+  ipcRenderer.send('notification', true);
+}, false);
+
+document.addEventListener("pauseNotification", () => {
+  ipcRenderer.send('notification', false);
+}, false);
+
 window.Electron = true;
 window.LecardCom = true;
