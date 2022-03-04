@@ -1,11 +1,16 @@
-const { app, protocol, BrowserWindow, ipcMain, dialog, Menu, globalShortcut } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, globalShortcut } = require('electron');
 const path = require('path');
+const fs = require('fs');
+
+const env = JSON.parse(fs.readFileSync(path.join(__dirname, './config.json'), 'utf8'));
 
 let win = null;
 let winP = null;
 let winC = null;
 let printers = [];
 
+let loading = true;
+const BASE_GESTOR = env.BASE_GESTOR;
 let listPrint = [];
 let isPrinting = false;
 
@@ -13,15 +18,9 @@ const BASE_GESTOR="https://gestor.lecard.delivery/";
 // const BASE_GESTOR="https://hhh.gestor.lecard.delivery/";
 // const BASE_GESTOR="http://localhost:8080/";
 
-app.setAppUserModelId('delivery.lecard.gestor');
-app.disableHardwareAcceleration();
 app.userAgentFallback = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36';
-
-// protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }]);
 app.commandLine.appendSwitch('--autoplay-policy','no-user-gesture-required');
-app.commandLine.appendSwitch('disable-site-isolation-trials');
-app.commandLine.appendSwitch('disable-features', 'OutOfBlinkCors');
-
+app.setAppUserModelId('delivery.lecard.gestor');
 Menu.setApplicationMenu(null);
 
 app.whenReady().then(() => {
