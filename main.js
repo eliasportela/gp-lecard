@@ -1,5 +1,8 @@
-const { app, protocol, BrowserWindow, ipcMain, dialog, Menu, globalShortcut } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, globalShortcut } = require('electron');
 const path = require('path');
+const fs = require('fs');
+
+const env = JSON.parse(fs.readFileSync(path.join(__dirname, './config.json'), 'utf8'));
 
 let win = null;
 let winP = null;
@@ -7,10 +10,9 @@ let winC = null;
 let winLoad = null;
 
 let loading = true;
-const BASE_GESTOR="https://gestor.lecard.delivery/";
-// const BASE_GESTOR="http://localhost:8080/";
+const BASE_GESTOR = env.BASE_GESTOR;
 
-protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }]);
+app.userAgentFallback = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36';
 app.commandLine.appendSwitch('--autoplay-policy','no-user-gesture-required');
 app.setAppUserModelId('delivery.lecard.gestor');
 Menu.setApplicationMenu(null);
