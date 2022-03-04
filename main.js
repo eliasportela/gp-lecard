@@ -3,20 +3,14 @@ const path = require('path');
 const fs = require('fs');
 
 const env = JSON.parse(fs.readFileSync(path.join(__dirname, './config.json'), 'utf8'));
+const BASE_GESTOR = env.BASE_GESTOR;
 
 let win = null;
 let winP = null;
 let winC = null;
 let printers = [];
-
-let loading = true;
-const BASE_GESTOR = env.BASE_GESTOR;
 let listPrint = [];
 let isPrinting = false;
-
-const BASE_GESTOR="https://gestor.lecard.delivery/";
-// const BASE_GESTOR="https://hhh.gestor.lecard.delivery/";
-// const BASE_GESTOR="http://localhost:8080/";
 
 app.userAgentFallback = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36';
 app.commandLine.appendSwitch('--autoplay-policy','no-user-gesture-required');
