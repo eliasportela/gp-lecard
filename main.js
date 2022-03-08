@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu, globalShortcut } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const { autoUpdater } = require('electron-updater');
 
 const env = JSON.parse(fs.readFileSync(path.join(__dirname, './config.json'), 'utf8'));
 const BASE_GESTOR = env.BASE_GESTOR;
@@ -11,11 +12,12 @@ let winC = null;
 let printers = [];
 let listPrint = [];
 let isPrinting = false;
+let showVersionAvaliable = false;
 
 app.userAgentFallback = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36';
 app.commandLine.appendSwitch('--autoplay-policy','no-user-gesture-required');
 app.setAppUserModelId('delivery.lecard.gestor');
-Menu.setApplicationMenu(null);
+Menu.setApplicationMenu(createMenuContext());
 
 app.whenReady().then(() => {
   win = createBrowser('icon.png');
@@ -81,9 +83,9 @@ app.on('web-contents-created', (e, contents) => {
 function createBrowser(icon) {
   return new BrowserWindow({
     width: 1100,
-    height: 600,
+    height: 630,
     minWidth: 600,
-    minHeight: 600,
+    minHeight: 630,
     title: 'Gestor de Pedidos',
     backgroundColor: '#dc3545',
     show: false,
@@ -184,6 +186,10 @@ function loadDendences() {
     printFila(event);
   });
 
+  ipcMain.on('showDialog', (event, option) => {
+    dialog.showMessageBox(win, option, null);
+  });
+
   ipcMain.on('reloadUrl', () => {
     win.loadURL(BASE_GESTOR).then(() => {}).catch(() => {
       win.loadFile('pages/error.html');
@@ -228,8 +234,7 @@ function loadDendences() {
 
   win.webContents.executeJavaScript(`sessionStorage.setItem('Printers',${JSON.stringify(strPrinter)}); sessionStorage.setItem('ElectronV', '${version}')`).then(() => {
     if (isPackaged) {
-      const { autoUpdater } = require('electron-updater');
-      autoUpdater.checkForUpdates();
+      checkAutoUpdater();
     }
   });
 }
@@ -251,4 +256,136 @@ function printFila(event) {
       }, 1500);
     });
   }
+}
+
+function createMenuContext(){
+  const menus = [
+    {
+      label: 'Ajuda',
+      submenu: [
+        {
+          label: 'Verificar atualizações',
+          enabled: true,
+          click() {
+            showVersionAvaliable = true;
+            autoUpdater.checkForUpdates()
+          },
+        },
+        {
+          label: 'Licença',
+          click: () => {
+            dialog.showMessageBox(win, {
+              type: 'info',
+              buttons: ['OK'],
+              title: 'Lincença',
+              message: 'Status: Ativo\nVersão: ' + app.getVersion()
+            }, null);
+          }
+        },
+      ]
+    },
+    {
+      label: 'Editar',
+      submenu: [
+        {
+          label: 'Desfazer',
+          accelerator: 'CmdOrCtrl+Z',
+          role: 'undo',
+        },
+        {
+          label: 'Refazer',
+          accelerator: 'Shift+CmdOrCtrl+Z',
+          role: 'redo',
+        },
+        {
+          type: 'separator',
+        },
+        {
+          label: 'Cortar',
+          accelerator: 'CmdOrCtrl+X',
+          role: 'cut',
+        },
+        {
+          label: 'Copiar',
+          accelerator: 'CmdOrCtrl+C',
+          role: 'copy',
+        },
+        {
+          label: 'Colar',
+          accelerator: 'CmdOrCtrl+V',
+          role: 'paste',
+        },
+        {
+          label: 'Selecionar',
+          accelerator: 'CmdOrCtrl+A',
+          role: 'selectAll',
+        }
+      ]
+    }
+  ];
+
+  return Menu.buildFromTemplate(menus);
+}
+
+function checkAutoUpdater() {
+  setTimeout(() => {
+    autoUpdater.checkForUpdates();
+  }, (1000*60));
+
+  autoUpdater.on('update-downloaded', () => {
+    try {
+      const dialogOpts = {
+        type: 'info',
+        buttons: ['Reiniciar', 'Mais tarde'],
+        title: 'Aplicação atualiza',
+        message: "",
+        detail: 'Uma nova versão foi baixada, por favor, reinicie para aplicar as mudanças.'
+      };
+
+      dialog.showMessageBox(win, dialogOpts, null).then((returnValue) => {
+        if (returnValue.response === 0) autoUpdater.quitAndInstall()
+      });
+
+    } catch (error) {
+      autoUpdater.quitAndInstall();
+    }
+  });
+
+  autoUpdater.on('error', message => {
+    const dialogOpts = {
+      type: 'info',
+      buttons: ['OK'],
+      title: 'Erro na atualização',
+      message: "",
+      detail: 'Ocorreu um erro ao tentar atualizar.'
+    };
+
+    dialog.showMessageBox(win, dialogOpts, null);
+  });
+
+  autoUpdater.on('update-available', (args) => {
+    const dialogOpts = {
+      type: 'info',
+      buttons: ['OK'],
+      title: 'Atualização',
+      message: "",
+      detail: 'Uma nova versão será baixada, espere um momento que irá atualizar sozinha.'
+    };
+
+    dialog.showMessageBox(win, dialogOpts, null);
+  });
+
+  autoUpdater.on('update-not-available', (args) => {
+    if (showVersionAvaliable){
+      const dialogOpts = {
+        type: 'info',
+        buttons: ['OK'],
+        title: 'Versão já está atualizada',
+        message: "",
+        detail: 'Sua versão já está atualizada.'
+      };
+
+      dialog.showMessageBox(win, dialogOpts, null);
+    }
+  });
 }
