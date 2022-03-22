@@ -216,6 +216,11 @@ function loadDendences() {
     winC.on('closed', () => {
       winC = null;
     });
+
+    winC.webContents.on('new-window', function(e, url) {
+      e.preventDefault();
+      require('electron').shell.openExternal(url);
+    });
   });
 
   ipcMain.on('notification', (play) => {
