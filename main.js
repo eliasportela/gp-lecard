@@ -87,7 +87,7 @@ function createBrowser(icon) {
     minWidth: 600,
     minHeight: 630,
     title: 'Gestor de Pedidos',
-    backgroundColor: '#dc3545',
+    backgroundColor: '#fb5010',
     show: false,
     webPreferences: {
       nodeIntegration: true,
@@ -116,7 +116,7 @@ function printData(option, callback) {
   const config = { silent: true };
 
   if (deviceName && !printers.find(p => p.displayName === deviceName)) {
-    callback({id_impressao, status: 4, erro: "Não foi possível encontrar a impressora selecionada"});
+    callback({id_impressao, status: 4, erro: "Não foi possível encontrar a impressora selecionada: " + deviceName});
     return;
 
   } else if (deviceName) {
@@ -249,14 +249,14 @@ function printFila(event) {
     isPrinting = true;
 
     printData(listPrint[0], (res) => {
-      isPrinting = false;
       listPrint.splice(0,1);
 
-      if (res && res.id_impressao) {
+      if (res) {
         event.reply('was-printed', res);
       }
 
       setTimeout(() => {
+        isPrinting = false;
         printFila(event);
       }, 1500);
     });
