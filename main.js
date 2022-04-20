@@ -2,9 +2,11 @@ const { app, BrowserWindow, ipcMain, dialog, Menu, globalShortcut } = require('e
 const path = require('path');
 const fs = require('fs');
 const { autoUpdater } = require('electron-updater');
+const elStore = require('electron-store');
 
 const env = JSON.parse(fs.readFileSync(path.join(__dirname, './config.json'), 'utf8'));
-const BASE_GESTOR = env.BASE_GESTOR;
+let BASE_GESTOR = env.BASE_GESTOR;
+let BASE_COMANDA = env.BASE_COMANDA;
 
 let win = null;
 let winP = null;
@@ -13,6 +15,8 @@ let printers = [];
 let listPrint = [];
 let isPrinting = false;
 let showVersionAvaliable = false;
+let store = new elStore();
+const isComanda = !!store.get("isComanda");
 
 app.userAgentFallback = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36';
 app.commandLine.appendSwitch('--autoplay-policy','no-user-gesture-required');
@@ -20,14 +24,14 @@ app.setAppUserModelId('delivery.lecard.gestor');
 Menu.setApplicationMenu(createMenuContext());
 
 app.whenReady().then(() => {
-  win = createBrowser('icon.png');
+  win = createBrowser(isComanda ? 'comanda.png' : 'icon.png');
   win.loadFile("pages/loading.html");
 
   win.once('ready-to-show', () => {
     win.show();
 
     setTimeout(() => {
-      win.loadURL(BASE_GESTOR).then(() => {}).catch(() => {
+      win.loadURL(isComanda ? BASE_COMANDA : BASE_GESTOR).then(() => {}).catch(() => {
         win.loadFile('pages/error.html');
       });
 
@@ -265,6 +269,37 @@ function printFila(event) {
 
 function createMenuContext(){
   const menus = [
+    {
+      label: 'Configs',
+      submenu: [
+        {
+          label: (isComanda ? 'Alternar para o gestor' : 'Alternar para a comandas'),
+          enabled: true,
+          click() {
+            const dialogOpts = {
+              type: 'info',
+              buttons: ['Sim', 'Cancelar'],
+              title: 'Alternar sistema',
+              message: "",
+              detail: 'Deseja alterar este sistema para ' + (isComanda ? 'o gestor?' : 'a comandas?')
+            };
+
+            dialog.showMessageBox(win, dialogOpts, null).then((returnValue) => {
+              if (returnValue.response === 0) {
+                if (isComanda) {
+                  store.delete('isComanda');
+                } else {
+                  store.set('isComanda', 'true');
+                }
+
+                app.relaunch();
+                app.quit();
+              }
+            });
+          },
+        }
+      ]
+    },
     {
       label: 'Ajuda',
       submenu: [

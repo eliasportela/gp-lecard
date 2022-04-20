@@ -5,7 +5,7 @@
   <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
   <!--<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">-->
   <!--<meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'">-->
-  <title>Gestor de Pedidos</title>
+  <title>Carregando o sistema..</title>
 
   <meta name="viewport" content= "width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="../assets/bootstrap.min.css"/>
@@ -24,7 +24,7 @@
 
     .loader {
       border: 16px solid #f3f3f3; /* Light grey */
-      border-top: 16px solid #f1b0b7; /* Blue */
+      border-top: 16px solid #ddd; /* Blue */
       border-radius: 50%;
       width: 120px;
       height: 120px;
@@ -47,10 +47,8 @@
 </div>
 
 <script>
-  const {ipcRenderer} = require('electron');
-
-  document.getElementById('btnLoad').onclick = () => {
-    ipcRenderer.send('reloadUrl');
+  if (window.isComanda) {
+    document.body.style.backgroundColor = "#9454f0";
   }
 </script>
 

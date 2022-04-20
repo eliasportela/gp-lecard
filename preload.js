@@ -1,4 +1,6 @@
 const {ipcRenderer} = require('electron');
+const elStore = require("electron-store");
+let store = new elStore();
 
 ipcRenderer.on('was-printed', (event, arg) => {
   document.dispatchEvent(new CustomEvent('wasPrinted', { detail: arg }));
@@ -22,3 +24,4 @@ document.addEventListener("pauseNotification", () => {
 
 window.Electron = true;
 window.LecardCom = true;
+window.isComanda = !!store.get("isComanda");
