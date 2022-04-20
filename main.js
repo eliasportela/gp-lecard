@@ -273,19 +273,19 @@ function createMenuContext(){
       label: 'Configs',
       submenu: [
         {
-          label: (isComanda ? 'Alternar para o gestor' : 'Alternar para a comandas'),
+          label: (isComanda ? 'Alternar para o gestor' : 'Alternar para a comanda'),
           enabled: true,
           click() {
             const dialogOpts = {
               type: 'info',
-              buttons: ['Sim', 'Cancelar'],
+              buttons: ['Cancelar', 'Sim'],
               title: 'Alternar sistema',
               message: "",
-              detail: 'Deseja alterar este sistema para ' + (isComanda ? 'o gestor?' : 'a comandas?')
+              detail: 'Deseja alterar este sistema para ' + (isComanda ? 'o gestor?' : 'a comanda?')
             };
 
             dialog.showMessageBox(win, dialogOpts, null).then((returnValue) => {
-              if (returnValue.response === 0) {
+              if (returnValue.response !== 0) {
                 if (isComanda) {
                   store.delete('isComanda');
                 } else {
