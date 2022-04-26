@@ -114,13 +114,13 @@ function printData(option, callback) {
   const zoom = impressora.zoom ? impressora.zoom : "9px";
   const width = impressora.largura ? impressora.largura : "100%";
   const deviceName = impressora.device ? impressora.device : "";
-  const id_impressao = option.id_impressao;
+  const id_impressao = option.id_impressao || null;
   const copies = option.copies ? parseInt(option.copies) : 1;
 
   const config = { silent: true };
 
   if (deviceName && !printers.find(p => p.displayName === deviceName)) {
-    callback({id_impressao, status: 4, erro: "Não foi possível encontrar a impressora selecionada: " + deviceName});
+    callback({id_impressao, status: 4, erro: "Não foi possível encontrar a impressora: " + deviceName});
     return;
 
   } else if (deviceName) {
@@ -135,34 +135,42 @@ function printData(option, callback) {
 
   try {
     winP.webContents.executeJavaScript(script).then(() => {
-
-      try {
-        winP.webContents.print(config);
-
-        if (copies > 1) {
+      print(config, (erro) => {
+        if (!erro && copies > 1) {
           setTimeout(() => {
-            winP.webContents.print(config);
-            callback();
+            print(config, (erro) => {
+              if (!erro) {
+                callback({id_impressao, status: 3});
+
+              } else {
+                callback({id_impressao, status: 4, erro});
+              }
+            });
           }, 1500);
 
-        } else {
+        } else if (!erro) {
           callback({id_impressao, status: 3});
-        }
 
-      } catch (err) {
-        callback();
-        // dialogMsg("Não foi possível imprimir","Verifique se a impressora selecionada está disponível e tente novamente.")
-      }
+        } else {
+          callback({id_impressao, status: 4, erro});
+        }
+      });
 
     }).catch(e => {
       callback();
-      console.log(e)
+      console.log(e);
     });
 
   } catch (e) {
     callback({id_impressao, status: 4, erro: "Não foi possível imprimir. Tente novamente."});
-    dialogMsg("Não foi possível imprimir","Tente novamente.")
+    // dialogMsg("Não foi possível imprimir","Tente novamente.")
   }
+}
+
+function print(config, callback) {
+  winP.webContents.print(config, (success, failureReason) => {
+    callback(success ? null : failureReason);
+  });
 }
 
 function dialogMsg(title, message) {
