@@ -96,7 +96,7 @@
       line-height: 12px;
       font-weight: bold;
     }
-    .d-print-none {
+    .d-print-none, .d-none {
       display: none;
     }
     .small {
@@ -106,9 +106,19 @@
 
 </head>
 <body>
-
 <div id="content">
 </div>
-
+<script>
+  function filtrarCozinha(id_cozinha) {
+    if (id_cozinha) {
+      const itens = document.getElementsByClassName('item');
+      for(let i=0; i < itens.length; i++) {
+        if (itens[i].getAttribute('data-cozinha') != id_cozinha) {
+          itens[i].classList.add('d-none');
+        }
+      }
+    }
+  }
+</script>
 </body>
 </html>

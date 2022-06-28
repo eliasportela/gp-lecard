@@ -114,6 +114,7 @@ function printData(option, callback) {
   const zoom = impressora.zoom ? impressora.zoom : "9px";
   const width = impressora.largura ? impressora.largura : "100%";
   const deviceName = impressora.device ? impressora.device : "";
+  const id_cozinha = impressora.id_cozinha || null;
   const id_impressao = option.id_impressao || null;
   const copies = option.copies ? parseInt(option.copies) : 1;
 
@@ -131,6 +132,7 @@ function printData(option, callback) {
     document.getElementById('content').innerHTML = ${content};
     document.body.style.fontSize = '${zoom}';
     document.body.style.width = '${width}';
+    filtrarCozinha(${id_cozinha});
   `;
 
   try {
