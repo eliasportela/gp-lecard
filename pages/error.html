@@ -17,6 +17,11 @@
       align-items: center;
       justify-content: center;
     }
+
+    .btn-style, .btn-style:hover {
+      background-color: #fb5010;
+      color: #ffffff;
+    }
   </style>
 
 </head>
@@ -27,7 +32,7 @@
     <h3>Não foi possível carregar o sistema!</h3>
     <p>Por favor, verifique sua conexão com a internet e tente novamente.</p>
     <div>
-      <button id="btnLoad" class="btn btn-danger">Recarregar</button>
+      <button id="btnLoad" class="btn btn-style">Recarregar</button>
     </div>
   </div>
 </div>
@@ -38,6 +43,12 @@
   document.getElementById('btnLoad').onclick = () => {
     ipcRenderer.send('reloadUrl');
   }
+
+  setTimeout(() => {
+    console.log('reconnecting')
+    ipcRenderer.send('reloadUrl');
+  }, 1000 * 90);
+
 </script>
 
 </body>

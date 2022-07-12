@@ -62,6 +62,10 @@ app.whenReady().then(() => {
     // if (BrowserWindow.getAllWindows().length === 0) createWindow()
   });
 
+  win.webContents.on('did-fail-load', () => {
+    win.loadFile('pages/error.html');
+  })
+
   globalShortcut.register('CommandOrControl+L', () => {
     win.webContents.openDevTools();
 
@@ -188,10 +192,10 @@ function loadDendences() {
   const isPackaged = app.isPackaged;
 
   if (isPackaged) {
-    app.setLoginItemSettings({
-      openAtLogin: true,
-      path: app.getPath('exe')
-    });
+    // app.setLoginItemSettings({
+    //   openAtLogin: true,
+    //   path: app.getPath('exe')
+    // });
   }
 
   // ipcmain
@@ -208,6 +212,10 @@ function loadDendences() {
     win.loadURL(BASE_GESTOR).then(() => {}).catch(() => {
       win.loadFile('pages/error.html');
     });
+
+    win.once('ready-to-show', () => {
+      setPrinters(win);
+    });
   });
 
   ipcMain.on('gopage', (evt, opt) => {
@@ -222,9 +230,7 @@ function loadDendences() {
     winC.once('ready-to-show', () => {
       winC.show();
       winC.focus();
-
-      const strCPrinter = JSON.stringify(printers);
-      winC.webContents.executeJavaScript(`sessionStorage.setItem('Printers',${JSON.stringify(strCPrinter)}); sessionStorage.setItem('ElectronV', '${version}')`);
+      setPrinters(winC);
     });
 
     winC.on('closed', () => {
@@ -246,16 +252,18 @@ function loadDendences() {
     }
   });
 
+  if (isPackaged) {
+    checkAutoUpdater();
+  }
+
+  setPrinters(win);
+}
+
+function setPrinters(w) {
+  printers = w.webContents.getPrinters();
   const version = app.getVersion();
-
-  printers = win.webContents.getPrinters();
-  const strPrinter = JSON.stringify(printers);
-
-  win.webContents.executeJavaScript(`sessionStorage.setItem('Printers',${JSON.stringify(strPrinter)}); sessionStorage.setItem('ElectronV', '${version}')`).then(() => {
-    if (isPackaged) {
-      checkAutoUpdater();
-    }
-  });
+  const strCPrinter = JSON.stringify(printers);
+  w.webContents.executeJavaScript(`sessionStorage.setItem('Printers',${JSON.stringify(strCPrinter)}); sessionStorage.setItem('ElectronV', '${version}')`);
 }
 
 function printFila(event) {
@@ -379,35 +387,34 @@ function createMenuContext(){
 
 function checkAutoUpdater() {
   setTimeout(() => {
-    autoUpdater.checkForUpdates();
-  }, (1000*60));
+    if (!showVersionAvaliable) {
+      autoUpdater.checkForUpdates();
+    }
+  }, (30000));
 
   autoUpdater.on('update-downloaded', () => {
-    try {
-      const dialogOpts = {
-        type: 'info',
-        buttons: ['Reiniciar', 'Mais tarde'],
-        title: 'Aplicação atualiza',
-        message: "",
-        detail: 'Uma nova versão foi baixada, por favor, reinicie para aplicar as mudanças.'
-      };
+    const dialogOpts = {
+      type: 'info',
+      buttons: ['OK'],
+      title: 'Nova versão disponível!',
+      message: "",
+      detail: 'Uma nova versão foi baixada, por favor aguarde enquanto atualizamos o sistema'
+    };
 
-      dialog.showMessageBox(win, dialogOpts, null).then((returnValue) => {
-        if (returnValue.response === 0) autoUpdater.quitAndInstall()
-      });
+    dialog.showMessageBox(win, dialogOpts, null);
 
-    } catch (error) {
+    setTimeout(() => {
       autoUpdater.quitAndInstall();
-    }
+    }, 10000);
   });
 
-  autoUpdater.on('error', message => {
+  autoUpdater.on('error', (ev, message) => {
     const dialogOpts = {
       type: 'info',
       buttons: ['OK'],
       title: 'Erro na atualização',
-      message: "",
-      detail: 'Ocorreu um erro ao tentar atualizar.'
+      message: 'Erro ao tentar atualizar',
+      detail: message
     };
 
     dialog.showMessageBox(win, dialogOpts, null);
@@ -438,4 +445,8 @@ function checkAutoUpdater() {
       dialog.showMessageBox(win, dialogOpts, null);
     }
   });
+
+  autoUpdater.on('download-progress', (progressObj) => {
+    win.setProgressBar(progressObj.percent / 100);
+  })
 }
