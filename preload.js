@@ -1,7 +1,6 @@
 const {ipcRenderer} = require('electron');
-const elStore = require("electron-store");
 const fs = require("fs");
-let store = new elStore();
+const store = require('./store.js')
 
 ipcRenderer.on('was-printed', (event, arg) => {
   document.dispatchEvent(new CustomEvent('wasPrinted', { detail: arg }));
@@ -24,45 +23,66 @@ document.addEventListener("pauseNotification", () => {
 }, false);
 
 document.addEventListener("comandoAcbr", (e) => {
-  // const comando = e.detail;
-  comandoACBR('BAL.LePeso');
+  if (e.detail) {
+    comandoACBR(e.detail);
+  }
 }, false);
 
 window.Electron = true;
 window.LecardCom = true;
 window.isComanda = !!store.get("isComanda");
+window.acbrFolder = null;
 
 function comandoACBR(comando) {
-  fs.writeFile('C://ACBrMonitorPLUS/ent.txt', comando,null, function (err) {
-    if (err) throw err;
+  if (!window.acbrFolder) {
+    document.dispatchEvent(new CustomEvent('acbrReply', { detail: "LeCard Monitor não configurado!" }));
+    return;
+  }
 
-    lerACBR(1, (res) => {
-      if (res) {
-        document.dispatchEvent(new CustomEvent('acbrReply', { detail: res }));
-      }
+  const path = window.acbrFolder + '/';
+
+  removerAcbrFile(path, () => {
+    fs.writeFile(path + 'ent.txt', comando,null, function (err) {
+      if (err) throw err;
+
+      lerACBR(path, 1, (res) => {
+        if (res) {
+          document.dispatchEvent(new CustomEvent('acbrReply', { detail: res }));
+        }
+      });
     });
   });
 }
 
-function lerACBR(cont, callback) {
-  console.log('lendo.. ' + cont)
-
-  if (fs.existsSync('C://ACBrMonitorPLUS/sai.txt')) {
-    fs.readFile("C://ACBrMonitorPLUS/sai.txt", 'utf-8', function (err, data) {
-      if(err) throw err;
+function lerACBR(path, cont, callback) {
+  if (fs.existsSync(path + 'sai.txt')) {
+    fs.readFile(path + "sai.txt", 'utf-8', function (err, data) {
+      if (err) throw err;
       callback(data);
-
-      try {
-        fs.unlinkSync('C://ACBrMonitorPLUS/sai.txt')
-
-      } catch(err) {
-        console.error(err)
-      }
+      removerAcbrFile(path);
     });
 
   } else if (cont < 10) {
     setTimeout(() => {
-      lerACBR(++cont, callback);
+      lerACBR(path, ++cont, callback);
     }, 1000);
+  }
+}
+
+function removerAcbrFile(path, callback) {
+  if (fs.existsSync(path + 'sai.txt')) {
+    try {
+      fs.unlinkSync(path + 'sai.txt');
+
+      if (callback) {
+        callback();
+      }
+
+    } catch(err) {
+      console.error(err)
+    }
+
+  } else if (callback) {
+    callback();
   }
 }

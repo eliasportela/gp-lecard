@@ -1,6 +1,6 @@
 {
   "name": "gp-lecard",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "Gerenciador de Pedidos do LeCard Delivery",
   "author": "storkdigital.com.br",
   "main": "main.js",

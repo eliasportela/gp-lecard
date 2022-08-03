@@ -2,11 +2,19 @@ const { app, BrowserWindow, ipcMain, dialog, Menu, globalShortcut } = require('e
 const path = require('path');
 const fs = require('fs');
 const { autoUpdater } = require('electron-updater');
-const elStore = require('electron-store');
+const store = require('./store');
 
 const env = JSON.parse(fs.readFileSync(path.join(__dirname, './config.json'), 'utf8'));
 let BASE_GESTOR = env.BASE_GESTOR;
 let BASE_COMANDA = env.BASE_COMANDA;
+
+if (store.get('BASE_GESTOR')) {
+  BASE_GESTOR = store.get('BASE_GESTOR');
+}
+
+if (store.get('BASE_COMANDA')) {
+  BASE_COMANDA = store.get('BASE_COMANDA');
+}
 
 let win = null;
 let winP = null;
@@ -15,7 +23,6 @@ let printers = [];
 let listPrint = [];
 let isPrinting = false;
 let showVersionAvaliable = false;
-let store = new elStore();
 const isComanda = !!store.get("isComanda");
 
 app.userAgentFallback = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36';
@@ -47,6 +54,7 @@ app.whenReady().then(() => {
       });
 
       winP.loadFile("pages/print.html");
+      win.focus();
 
       loadDendences();
     }, 2000)
@@ -315,6 +323,23 @@ function createMenuContext(){
               }
             });
           },
+        },
+        {
+          label: "Abrir arquivo de configuração",
+          enabled: true,
+          click() {
+            store.openInEditor();
+          }
+        },
+        {
+          label: (win && win.isFullScreen() ? "Sair" : "Modo") + " FullScrean",
+          enabled: true,
+          click() {
+            if (win) {
+              win.setFullScreen(!win.isFullScreen());
+              Menu.setApplicationMenu(createMenuContext());
+            }
+          }
         }
       ]
     },
