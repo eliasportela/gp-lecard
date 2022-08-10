@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const { autoUpdater } = require('electron-updater');
 const store = require('./store');
+const ifood = require('./ifood')
 
 const env = JSON.parse(fs.readFileSync(path.join(__dirname, './config.json'), 'utf8'));
 let BASE_GESTOR = env.BASE_GESTOR;
@@ -258,6 +259,10 @@ function loadDendences() {
     } else {
       win.flashFrame(false);
     }
+  });
+
+  ipcMain.on('ifoodEvent', (event, option) => {
+    ifood.pollingAPI(win, option).then();
   });
 
   if (isPackaged) {
