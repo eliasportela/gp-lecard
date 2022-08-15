@@ -24,27 +24,20 @@ module.exports = {
     count++;
 
     try {
-      // const res = await fetch('https://merchant-api.ifood.com.br/order/v1.0/events:polling',
-      //   { method: 'GET', headers: { 'Authorization': `Bearer ${token}`, 'x-polling-merchants': `[${merchantId}]` } });
-
       const res = await fetch('https://merchant-api.ifood.com.br/order/v1.0/events:polling',
-        { method: 'GET', headers: { 'Authorization': `Bearer ${token}` } });
+        { method: 'GET', headers: { 'Authorization': `Bearer ${token}`, 'x-polling-merchants': `${merchantId}` } });
 
       console.log(count);
 
-      if (res.status === 200) {
-        const json = await res.json();
-
-        if (json && json.length) {
-          console.log(json);
-          win.webContents.send('ifoodReply', json);
-        }
-
-        return true;
-
-      } else if (res.status === 401) {
-        await this.newSession();
+      if (res.status === 401) {
+        await this.newSession(true);
       }
+
+      const orders = res.status === 200 ? await res.json() : [];
+      const status = await this.getStatusMerchant();
+      win.webContents.send('ifoodReply', { orders, status });
+
+      return true;
 
     } catch (error) {
       console.log(error ? error.code : error);
@@ -53,10 +46,15 @@ module.exports = {
     return false;
   },
 
-  async newSession() {
+  async newSession(renew) {
     try {
       const form = new FormData()
       form.append('key', lecardKey || localStorage.getItem('key'));
+
+      if (renew) {
+        form.append('renew', 'true');
+      }
+
       const res = await fetch('http://localhost/lecard-server/api/integrador/ifood/auth',
         { method: 'POST', body: form });
       const json = await res.json();
@@ -66,6 +64,24 @@ module.exports = {
 
     } catch (err) {
       console.log(err);
+    }
+  },
+
+  async getStatusMerchant() {
+    try {
+      const res = await fetch(`https://merchant-api.ifood.com.br/merchant/v1.0/merchants/${merchantId}/status`,
+        { method: 'GET', headers: { 'Authorization': `Bearer ${token}` } });
+
+      const json = await res.json();
+      if (json) {
+        return json;
+      }
+
+      return [];
+
+    } catch (err) {
+      console.log(err);
+      return [];
     }
   }
 };
