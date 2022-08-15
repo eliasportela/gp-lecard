@@ -95,7 +95,7 @@ ipcRenderer.on('ifoodReply', (event, arg) => {
 });
 
 document.addEventListener('ifoodPolling', (e) => {
-  if (e.detail.pause) {
+  if (e.detail && e.detail.pause) {
     clearTimeout(ifoodTimeout);
 
   } else {
