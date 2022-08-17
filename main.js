@@ -3,7 +3,15 @@ const path = require('path');
 const fs = require('fs');
 const { autoUpdater } = require('electron-updater');
 const store = require('./store');
-const ifood = require('./ifood')
+const ifood = require('./ifood');
+
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  console.log('Ha duas instancias abertas');
+  app.quit();
+  return;
+}
 
 const env = JSON.parse(fs.readFileSync(path.join(__dirname, './config.json'), 'utf8'));
 let BASE_GESTOR = env.BASE_GESTOR;
@@ -200,13 +208,6 @@ function dialogMsg(title, message) {
 function loadDendences() {
   const isPackaged = app.isPackaged;
 
-  if (isPackaged) {
-    // app.setLoginItemSettings({
-    //   openAtLogin: true,
-    //   path: app.getPath('exe')
-    // });
-  }
-
   // ipcmain
   ipcMain.on('print', (event, option) => {
     listPrint.push(option);
@@ -224,6 +225,12 @@ function loadDendences() {
 
     win.once('ready-to-show', () => {
       setPrinters(win);
+
+      setTimeout(() => {
+        if (isPackaged && !showVersionAvaliable) {
+          autoUpdater.checkForUpdates();
+        }
+      }, (10000));
     });
   });
 
@@ -416,12 +423,6 @@ function createMenuContext(){
 }
 
 function checkAutoUpdater() {
-  setTimeout(() => {
-    if (!showVersionAvaliable) {
-      autoUpdater.checkForUpdates();
-    }
-  }, (30000));
-
   autoUpdater.on('update-downloaded', () => {
     const dialogOpts = {
       type: 'info',
@@ -439,15 +440,17 @@ function checkAutoUpdater() {
   });
 
   autoUpdater.on('error', (ev, message) => {
-    const dialogOpts = {
-      type: 'info',
-      buttons: ['OK'],
-      title: 'Erro na atualização',
-      message: 'Erro ao tentar atualizar',
-      detail: message
-    };
+    if (showVersionAvaliable) {
+      const dialogOpts = {
+        type: 'info',
+        buttons: ['OK'],
+        title: 'Erro na atualização',
+        message: 'Erro ao tentar atualizar',
+        detail: message
+      };
 
-    dialog.showMessageBox(win, dialogOpts, null);
+      dialog.showMessageBox(win, dialogOpts, null);
+    }
   });
 
   autoUpdater.on('update-available', (args) => {
