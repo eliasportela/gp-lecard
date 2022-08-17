@@ -1,3 +1,5 @@
 {
-  "BASE_GESTOR": "https://gestor.lecard.delivery/"
+  "BASE_GESTOR": "",
+  "BASE_COMANDA": "",
+  "BASE_SERVER": ""
 }

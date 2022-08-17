@@ -3,6 +3,7 @@ const FormData = require('form-data');
 let lecardKey = null;
 let token = null;
 let merchantId = null;
+let base_url = null;
 let count = 0;
 
 module.exports = {
@@ -14,10 +15,12 @@ module.exports = {
 
       lecardKey = opt.token || null;
       merchantId = opt.merchantId || null;
+      base_url = "https://api.storkdigital.com.br/dev/";
       await this.newSession();
     }
 
     if (!token || !merchantId) {
+      win.webContents.send('ifoodReply', { error: "Token ou MerchantId do iFood não configurado!" });
       return;
     }
 
@@ -27,8 +30,6 @@ module.exports = {
       const res = await fetch('https://merchant-api.ifood.com.br/order/v1.0/events:polling',
         { method: 'GET', headers: { 'Authorization': `Bearer ${token}`, 'x-polling-merchants': `${merchantId}` } });
 
-      console.log(count);
-
       if (res.status === 401) {
         await this.newSession(true);
       }
@@ -36,11 +37,13 @@ module.exports = {
       const orders = res.status === 200 ? await res.json() : [];
       const status = await this.getStatusMerchant();
       win.webContents.send('ifoodReply', { orders, status });
+      console.log(orders);
 
       return true;
 
     } catch (error) {
       console.log(error ? error.code : error);
+      win.webContents.send('ifoodReply', { error: "Não foi possível sincronizar os pedidos do iFood!" });
     }
 
     return false;
@@ -55,11 +58,15 @@ module.exports = {
         form.append('renew', 'true');
       }
 
-      const res = await fetch('http://localhost/lecard-server/api/integrador/ifood/auth',
+      const res = await fetch(base_url + 'api/integrador/ifood/auth',
         { method: 'POST', body: form });
-      const json = await res.json();
-      if (json.result) {
-        token = json.token;
+
+      if (res.status === 200) {
+        const json = await res.json();
+
+        if (json.result) {
+          token = json.token;
+        }
       }
 
     } catch (err) {
@@ -72,9 +79,12 @@ module.exports = {
       const res = await fetch(`https://merchant-api.ifood.com.br/merchant/v1.0/merchants/${merchantId}/status`,
         { method: 'GET', headers: { 'Authorization': `Bearer ${token}` } });
 
-      const json = await res.json();
-      if (json) {
-        return json;
+      if (res.status === 200) {
+        const json = await res.json();
+
+        if (json) {
+          return json;
+        }
       }
 
       return [];
