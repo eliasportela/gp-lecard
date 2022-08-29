@@ -1,6 +1,6 @@
 {
   "name": "gp-lecard",
-  "version": "1.7.2",
+  "version": "1.7.3",
   "description": "Gerenciador de Pedidos do LeCard Delivery",
   "author": "storkdigital.com.br",
   "main": "main.js",
@@ -24,6 +24,7 @@
   "dependencies": {
     "electron-fetch": "^1.7.4",
     "electron-store": "^8.0.1",
-    "electron-updater": "^4.3.9"
+    "electron-updater": "^4.3.9",
+    "form-data": "^4.0.0"
   }
 }

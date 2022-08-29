@@ -1,5 +1,5 @@
-const fetch = require('electron-fetch').default;
 const FormData = require('form-data');
+const fetch = require('electron-fetch').default;
 let lecardKey = null;
 let token = null;
 let merchantId = null;
@@ -51,7 +51,7 @@ module.exports = {
 
   async newSession(renew) {
     try {
-      const form = new FormData()
+      const form = new FormData();
       form.append('key', lecardKey || localStorage.getItem('key'));
 
       if (renew) {
