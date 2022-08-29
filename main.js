@@ -16,6 +16,7 @@ if (!gotTheLock) {
 const env = JSON.parse(fs.readFileSync(path.join(__dirname, './config.json'), 'utf8'));
 let BASE_GESTOR = env.BASE_GESTOR;
 let BASE_COMANDA = env.BASE_COMANDA;
+let BASE_API = env.BASE_API;
 
 if (store.get('BASE_GESTOR')) {
   BASE_GESTOR = store.get('BASE_GESTOR');
@@ -269,7 +270,7 @@ function loadDendences() {
   });
 
   ipcMain.on('ifoodEvent', (event, option) => {
-    ifood.pollingAPI(win, option).then();
+    ifood.pollingAPI(win, option, BASE_API).then();
   });
 
   if (isPackaged) {

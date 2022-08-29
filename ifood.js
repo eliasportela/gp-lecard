@@ -7,24 +7,26 @@ let base_url = null;
 let count = 0;
 
 module.exports = {
-  async pollingAPI(win, opt) {
-    if (count === 0) {
-      if (!opt.token || !opt.merchantId) {
+  async pollingAPI(win, opt, base_api) {
+    count++;
+
+    if (count === 1) {
+      base_url = base_api;
+
+      if (!opt || !opt.token || !opt.merchantId || !base_url) {
+        win.webContents.send('ifoodReply', { error: "Token ou MerchantId do iFood não estão configurados!" });
         return;
       }
 
       lecardKey = opt.token || null;
       merchantId = opt.merchantId || null;
-      base_url = "https://api.storkdigital.com.br/dev/";
       await this.newSession();
     }
 
-    if (!token || !merchantId) {
-      win.webContents.send('ifoodReply', { error: "Token ou MerchantId do iFood não configurado!" });
+    if (!token) {
+      win.webContents.send('ifoodReply', { error: "Não foi possível autenticar com o iFood!" });
       return;
     }
-
-    count++;
 
     try {
       const res = await fetch('https://merchant-api.ifood.com.br/order/v1.0/events:polling',
@@ -75,6 +77,10 @@ module.exports = {
   },
 
   async getStatusMerchant() {
+    if (count === 1) {
+      return [];
+    }
+
     try {
       const res = await fetch(`https://merchant-api.ifood.com.br/merchant/v1.0/merchants/${merchantId}/status`,
         { method: 'GET', headers: { 'Authorization': `Bearer ${token}` } });
