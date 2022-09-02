@@ -5,12 +5,21 @@ let token = null;
 let merchantId = null;
 let base_url = null;
 let count = 0;
+let ifoodTimeout = null;
 
 module.exports = {
   async pollingAPI(win, opt, base_api) {
-    count++;
+    if (opt && opt.pause) {
+      win.webContents.send('ifoodReply', { error: "iFood pausado com sucesso!" });
+      clearInterval(ifoodTimeout);
+      return;
+    }
 
-    if (count === 1) {
+    if (ifoodTimeout) {
+      clearInterval(ifoodTimeout);
+    }
+
+    if (count === 0) {
       base_url = base_api;
 
       if (!opt || !opt.token || !opt.merchantId || !base_url) {
@@ -28,6 +37,16 @@ module.exports = {
       return;
     }
 
+    await this.pollingIfood(win);
+
+    ifoodTimeout = setInterval(async () => {
+      await this.pollingIfood(win);
+    }, 30 * 1000);
+  },
+
+  async pollingIfood(win) {
+    count++;
+
     try {
       const res = await fetch('https://merchant-api.ifood.com.br/order/v1.0/events:polling',
         { method: 'GET', headers: { 'Authorization': `Bearer ${token}`, 'x-polling-merchants': `${merchantId}` } });
@@ -38,14 +57,14 @@ module.exports = {
 
       const orders = res.status === 200 ? await res.json() : [];
       const status = await this.getStatusMerchant();
-      win.webContents.send('ifoodReply', { orders, status });
-      console.log(orders);
-
+      win.webContents.send('ifoodReply', { orders, status, count });
       return true;
 
-    } catch (error) {
-      console.log(error ? error.code : error);
-      win.webContents.send('ifoodReply', { error: "Não foi possível sincronizar os pedidos do iFood!" });
+    } catch (e) {
+      let errorCode = e && e.code ? e.code : null;
+      let error = errorCode ? (errorCode === 'ENOTFOUND' ? 'Verifique sua conexão com a internet.' : 'Código do erro: ' + errorCode) : e;
+      win.webContents.send('ifoodReply', { error: "Não foi possível sincronizar os pedidos do iFood.\n" + error, errorCode });
+      console.log(errorCode);
     }
 
     return false;
@@ -54,7 +73,7 @@ module.exports = {
   async newSession(renew) {
     try {
       const form = new FormData();
-      form.append('key', lecardKey || localStorage.getItem('key'));
+      form.append('key', lecardKey);
 
       if (renew) {
         form.append('renew', 'true');

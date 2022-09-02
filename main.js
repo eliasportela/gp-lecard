@@ -26,6 +26,7 @@ if (store.get('BASE_COMANDA')) {
   BASE_COMANDA = store.get('BASE_COMANDA');
 }
 
+let splash = null;
 let win = null;
 let winP = null;
 let winC = null;
@@ -35,6 +36,7 @@ let isPrinting = false;
 let showVersionAvaliable = false;
 const isComanda = !!store.get("isComanda");
 
+app.disableHardwareAcceleration();
 app.userAgentFallback = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36';
 app.commandLine.appendSwitch('--autoplay-policy','no-user-gesture-required');
 app.setAppUserModelId('delivery.lecard.gestor');
@@ -42,15 +44,28 @@ Menu.setApplicationMenu(createMenuContext());
 
 app.whenReady().then(() => {
   win = createBrowser(isComanda ? 'comanda.png' : 'icon.png');
-  win.loadFile("pages/loading.html");
+
+  win.loadURL(isComanda ? BASE_COMANDA : BASE_GESTOR).then(() => {}).catch(() => {
+    win.loadFile('pages/error.html');
+  });
+
+  splash = new BrowserWindow({
+    width: 500,
+    height: 300,
+    transparent: true,
+    frame: false,
+    alwaysOnTop: true,
+    icon: path.join(__dirname, isComanda ? 'comanda.png' : 'icon.png')
+  });
+
+  splash.loadFile('pages/loading.html');
+  splash.center();
 
   win.once('ready-to-show', () => {
-    win.show();
-
     setTimeout(() => {
-      win.loadURL(isComanda ? BASE_COMANDA : BASE_GESTOR).then(() => {}).catch(() => {
-        win.loadFile('pages/error.html');
-      });
+      splash.close();
+      win.show();
+      win.center();
 
       win.webContents.on('new-window', function(e, url) {
         e.preventDefault();
@@ -65,8 +80,6 @@ app.whenReady().then(() => {
 
       winP.loadFile("pages/print.html");
       win.focus();
-
-      loadDendences();
     }, 2000)
   });
 
@@ -91,6 +104,8 @@ app.whenReady().then(() => {
       winC.webContents.openDevTools();
     }
   });
+
+  loadDendences();
 });
 
 app.on('window-all-closed', function () {

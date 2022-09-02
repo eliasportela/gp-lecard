@@ -88,28 +88,11 @@ function removerAcbrFile(path, callback) {
 }
 
 // ifood
-let ifoodTimeout = null;
+document.addEventListener('ifoodPolling', (e) => {
+  const opt = e.detail;
+  ipcRenderer.send('ifoodEvent', opt);
+});
 
 ipcRenderer.on('ifoodReply', (event, arg) => {
   document.dispatchEvent(new CustomEvent('ifoodReply', { detail: arg }));
 });
-
-document.addEventListener('ifoodPolling', (e) => {
-  if (e.detail && e.detail.pause) {
-    clearTimeout(ifoodTimeout);
-
-  } else {
-    pollingIfood(e.detail);
-  }
-});
-
-function pollingIfood(detail) {
-  if (ifoodTimeout) {
-    clearTimeout(ifoodTimeout);
-  }
-
-  ipcRenderer.send('ifoodEvent', detail);
-  ifoodTimeout = setTimeout(() => {
-    pollingIfood();
-  }, 1000 * 30);
-}
