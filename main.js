@@ -59,13 +59,12 @@ app.whenReady().then(() => {
   });
 
   splash.loadFile('pages/loading.html');
-  splash.center();
 
   win.once('ready-to-show', () => {
     setTimeout(() => {
       splash.close();
       win.show();
-      win.center();
+      win.focus();
 
       win.webContents.on('new-window', function(e, url) {
         e.preventDefault();
