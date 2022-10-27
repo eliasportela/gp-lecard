@@ -29,7 +29,7 @@ if (store.get('BASE_COMANDA')) {
 let splash = null;
 let win = null;
 let winP = null;
-let winC = null;
+let winC = [];
 let printers = [];
 let listPrint = [];
 let isPrinting = false;
@@ -43,7 +43,7 @@ app.setAppUserModelId('delivery.lecard.gestor');
 Menu.setApplicationMenu(createMenuContext());
 
 app.whenReady().then(() => {
-  win = createBrowser(isComanda ? 'comanda.png' : 'icon.png');
+  win = createBrowser(isComanda ? 'comanda.png' : 'icon.png', true);
 
   win.loadURL(isComanda ? BASE_COMANDA : BASE_GESTOR).then(() => {}).catch(() => {
     win.loadFile('pages/error.html');
@@ -63,8 +63,6 @@ app.whenReady().then(() => {
   win.once('ready-to-show', () => {
     setTimeout(() => {
       splash.close();
-      win.show();
-      win.focus();
 
       win.webContents.on('new-window', function(e, url) {
         e.preventDefault();
@@ -78,11 +76,14 @@ app.whenReady().then(() => {
       });
 
       winP.loadFile("pages/print.html");
+      win.show();
       win.focus();
+
     }, 2000)
   });
 
   win.on('closed', () => {
+    win = null;
     app.quit();
   });
 
@@ -99,8 +100,8 @@ app.whenReady().then(() => {
   globalShortcut.register('CommandOrControl+L', () => {
     win.webContents.openDevTools();
 
-    if (winC) {
-      winC.webContents.openDevTools();
+    for (let i=0; i < winC.length; i++) {
+      winC[i].webContents.openDevTools();
     }
   });
 
@@ -120,7 +121,8 @@ app.on('web-contents-created', (e, contents) => {
   }
 });
 
-function createBrowser(icon) {
+function createBrowser(icon, isServer) {
+  const preload = isServer ? 'preload.js' : 'preload-read.js';
   return new BrowserWindow({
     width: 1100,
     height: 630,
@@ -133,7 +135,7 @@ function createBrowser(icon) {
       nodeIntegration: true,
       webviewTag: true,
       contextIsolation: false,
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, preload)
     },
     icon: path.join(__dirname, icon)
   });
@@ -250,28 +252,16 @@ function loadDendences() {
   });
 
   ipcMain.on('gopage', (evt, opt) => {
-    if (winC) {
-      winC.focus();
+    if (!opt || !opt.url) {
       return;
     }
 
-    winC = createBrowser('comanda.png');
-    winC.loadURL(opt);
+    if (opt.new_window || !winC.length) {
+      openPage(opt);
 
-    winC.once('ready-to-show', () => {
-      winC.show();
-      winC.focus();
-      setPrinters(winC);
-    });
-
-    winC.on('closed', () => {
-      winC = null;
-    });
-
-    winC.webContents.on('new-window', function(e, url) {
-      e.preventDefault();
-      require('electron').shell.openExternal(url);
-    });
+    } else if (winC.length) {
+      winC[0].focus();
+    }
   });
 
   ipcMain.on('notification', (play) => {
@@ -292,6 +282,33 @@ function loadDendences() {
   }
 
   setPrinters(win);
+}
+
+function openPage(opt) {
+  let window = createBrowser('comanda.png', false);
+  window.loadURL(opt.url);
+
+  window.once('ready-to-show', () => {
+    window.show();
+    window.focus();
+    setPrinters(window);
+
+    if (isComanda || winC.length > 1) {
+      window.webContents.executeJavaScript(`sessionStorage.setItem('isReadOnly',${winC.length});`);
+    }
+  });
+
+  window.on('closed', () => {
+    winC = winC.filter(w => w !== window);
+    window = null;
+  });
+
+  window.webContents.on('new-window', function(e, url) {
+    e.preventDefault();
+    require('electron').shell.openExternal(url);
+  });
+
+  winC.push(window);
 }
 
 function setPrinters(w) {
@@ -350,13 +367,6 @@ function createMenuContext(){
               }
             });
           },
-        },
-        {
-          label: "Abrir arquivo de configuração",
-          enabled: true,
-          click() {
-            store.openInEditor();
-          }
         },
         {
           label: (win && win.isFullScreen() ? "Sair" : "Modo") + " FullScrean",

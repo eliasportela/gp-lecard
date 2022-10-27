@@ -6,10 +6,13 @@ let merchantId = null;
 let base_url = null;
 let count = 0;
 let ifoodTimeout = null;
+let listIfood = new Set();
+let processIfood = false;
 
 module.exports = {
   async pollingAPI(win, opt, base_api) {
     if (opt && opt.pause) {
+      count = 0;
       win.webContents.send('ifoodReply', { error: "iFood pausado com sucesso!" });
       clearInterval(ifoodTimeout);
       return;
@@ -58,6 +61,11 @@ module.exports = {
       const orders = res.status === 200 ? await res.json() : [];
       const status = await this.getStatusMerchant();
       win.webContents.send('ifoodReply', { orders, status, count });
+
+      if (res.status === 200) {
+        await this.ifoodReplyOrder(orders);
+      }
+
       return true;
 
     } catch (e) {
@@ -118,5 +126,60 @@ module.exports = {
       console.log(err);
       return [];
     }
+  },
+
+  async ifoodReplyOrder(data) {
+    let orders = data || [];
+
+    if (orders.length) {
+      orders.forEach(evt => {
+        listIfood.add(JSON.stringify(evt));
+      });
+
+      setTimeout(async () => {
+        processIfood = false;
+        await this.registerOrder();
+      }, 1500);
+    }
+  },
+
+  async registerOrder() {
+    if (!processIfood && listIfood.size) {
+      processIfood = true;
+      const item = listIfood.values().next().value;
+
+      await this.integradorIfood(JSON.parse(item), () => {
+        listIfood.delete(item);
+
+        setTimeout(async () => {
+          processIfood = false;
+          await this.registerOrder();
+        }, 2000);
+      });
+    }
+  },
+
+  async integradorIfood(event, callback) {
+    const form = this.getFormData(event);
+    const res = await fetch(base_url + 'api/integrador/ifood',
+      { method: 'POST', body: form });
+
+    if (res.status === 200) {
+      const json = await res.json();
+      callback(json.success);
+
+    } else {
+      callback(false);
+    }
+  },
+
+  getFormData(object) {
+    const formData = new FormData();
+    Object.keys(object).forEach(key => {
+      if (typeof object[key] !== 'object') formData.append(key, object[key])
+      else formData.append(key, JSON.stringify(object[key]))
+    });
+
+    return formData;
   }
 };
