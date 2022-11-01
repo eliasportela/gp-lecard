@@ -87,6 +87,24 @@ app.whenReady().then(() => {
     app.quit();
   });
 
+  win.on('close', async (e) => {
+    e.preventDefault();
+
+    if (!winC.length) {
+      win.destroy();
+
+    } else {
+      const { response } = await dialog.showMessageBox(win, {
+        type: 'question',
+        title: '  Confirme  ',
+        message: `Ao continuar todas as janelas abertas serão fechadas. Deseja encerar o sistema?`,
+        buttons: ['Sim', 'Não'],
+      });
+
+      response === 0 && win.destroy();
+    }
+  });
+
   win.once('focus', () => win.flashFrame(false));
 
   app.on('activate', function () {
@@ -252,7 +270,7 @@ function loadDendences() {
   });
 
   ipcMain.on('gopage', (evt, opt) => {
-    if (!opt || !opt.url) {
+    if (!opt) {
       return;
     }
 
@@ -286,7 +304,7 @@ function loadDendences() {
 
 function openPage(opt) {
   let window = createBrowser('comanda.png', false);
-  window.loadURL(opt.url);
+  window.loadURL(opt.url || opt);
 
   window.once('ready-to-show', () => {
     window.show();

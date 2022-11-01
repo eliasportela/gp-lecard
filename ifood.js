@@ -36,13 +36,18 @@ module.exports = {
     }
 
     if (!token) {
-      win.webContents.send('ifoodReply', { error: "Não foi possível autenticar com o iFood!" });
+      win.webContents.send('ifoodReply', { error: "Não foi possível autenticar com o iFood! Faça o login novamente no Portal para continuar." });
       return;
     }
 
     await this.pollingIfood(win);
 
     ifoodTimeout = setInterval(async () => {
+      if (!token) {
+        win.webContents.send('ifoodReply', { error: "Não foi possível autenticar com o iFood! Faça o login novamente no Portal para continuar." });
+        return;
+      }
+
       await this.pollingIfood(win);
     }, 30 * 1000);
   },
@@ -63,7 +68,7 @@ module.exports = {
       win.webContents.send('ifoodReply', { orders, status, count });
 
       if (res.status === 200) {
-        await this.ifoodReplyOrder(orders);
+        await this.ifoodReplyOrder(orders, win);
       }
 
       return true;
@@ -80,6 +85,7 @@ module.exports = {
 
   async newSession(renew) {
     try {
+      token = null;
       const form = new FormData();
       form.append('key', lecardKey);
 
@@ -128,7 +134,7 @@ module.exports = {
     }
   },
 
-  async ifoodReplyOrder(data) {
+  async ifoodReplyOrder(data, win) {
     let orders = data || [];
 
     if (orders.length) {
@@ -138,48 +144,51 @@ module.exports = {
 
       setTimeout(async () => {
         processIfood = false;
-        await this.registerOrder();
+        await this.registerOrder(win);
       }, 1500);
     }
   },
 
-  async registerOrder() {
+  async registerOrder(win) {
     if (!processIfood && listIfood.size) {
       processIfood = true;
       const item = listIfood.values().next().value;
 
-      await this.integradorIfood(JSON.parse(item), () => {
+      await this.integradorIfood(item, (res, msg) => {
         listIfood.delete(item);
 
         setTimeout(async () => {
           processIfood = false;
-          await this.registerOrder();
+          await this.registerOrder(win);
         }, 2000);
+
+        if (!res && msg) {
+          win.webContents.send('ifoodReply', { error: "Erro ao enviar o evento para o servidor. " + msg });
+        }
       });
     }
   },
 
-  async integradorIfood(event, callback) {
-    const form = this.getFormData(event);
+  async integradorIfood(object, callback) {
+    const form = new FormData();
+    form.append('json_data', object);
     const res = await fetch(base_url + 'api/integrador/ifood',
       { method: 'POST', body: form });
 
-    if (res.status === 200) {
-      const json = await res.json();
-      callback(json.success);
+    const text = await res.text();
 
-    } else {
-      callback(false);
+    try {
+      const json = JSON.parse(text);
+
+      if (res.status === 200) {
+        callback(true);
+
+      } else {
+        callback(false, json);
+      }
+
+    } catch (e) {
+      callback(false, text);
     }
-  },
-
-  getFormData(object) {
-    const formData = new FormData();
-    Object.keys(object).forEach(key => {
-      if (typeof object[key] !== 'object') formData.append(key, object[key])
-      else formData.append(key, JSON.stringify(object[key]))
-    });
-
-    return formData;
   }
 };
