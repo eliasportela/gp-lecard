@@ -10,7 +10,7 @@ module.exports = {
     const path = window.acbrFolder + '/';
 
     this.removerAcbrFile(path, () => {
-      fs.writeFile(path + 'ent.txt', comando,null, function (err) {
+      fs.writeFile(path + 'ent.txt', comando, null, (err) => {
         if (err) throw err;
 
         this.lerACBR(path, 1, (res) => {
@@ -24,7 +24,7 @@ module.exports = {
 
   lerACBR(path, cont, callback) {
     if (fs.existsSync(path + 'sai.txt')) {
-      fs.readFile(path + "sai.txt", 'utf-8', function (err, data) {
+      fs.readFile(path + "sai.txt", 'utf-8', (err, data) => {
         if (err) throw err;
         callback(data);
         this.removerAcbrFile(path);
