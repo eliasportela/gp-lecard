@@ -270,7 +270,7 @@ function loadDendences() {
   });
 
   ipcMain.on('gopage', (evt, opt) => {
-    if (!opt || !opt.url) {
+    if (!opt) {
       return;
     }
 
@@ -304,7 +304,7 @@ function loadDendences() {
 
 function openPage(opt) {
   let window = createBrowser('comanda.png', false);
-  window.loadURL(opt.new_window === 'gestor' ? BASE_GESTOR : opt.url);
+  window.loadURL(opt.new_window === 'gestor' ? BASE_GESTOR : (opt.url || opt));
 
   window.once('ready-to-show', () => {
     window.show();
