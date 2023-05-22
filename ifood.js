@@ -10,7 +10,7 @@ let listIfood = new Set();
 let processIfood = false;
 
 module.exports = {
-  async pollingAPI(win, opt, base_api) {
+  async pollingAPI(win, opt) {
     if (opt && opt.pause) {
       count = 0;
       win.webContents.send('ifoodReply', { error: "iFood pausado com sucesso!" });
@@ -23,7 +23,7 @@ module.exports = {
     }
 
     if (count === 0) {
-      base_url = base_api;
+      base_url = opt.base_api || "https://api.storkdigital.com.br/";
 
       if (!opt || !opt.token || !opt.merchantId || !base_url) {
         win.webContents.send('ifoodReply', { error: "Token ou MerchantId do iFood não estão configurados!" });

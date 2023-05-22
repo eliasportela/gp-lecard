@@ -15,26 +15,21 @@ if (!gotTheLock) {
 
 const env = JSON.parse(fs.readFileSync(path.join(__dirname, './config.json'), 'utf8'));
 let BASE_GESTOR = env.BASE_GESTOR;
-let BASE_COMANDA = env.BASE_COMANDA;
-let BASE_API = env.BASE_API;
+let isHomolog = false;
 
-if (store.get('BASE_GESTOR')) {
-  BASE_GESTOR = store.get('BASE_GESTOR');
-}
-
-if (store.get('BASE_COMANDA')) {
-  BASE_COMANDA = store.get('BASE_COMANDA');
+if (store.get('IS_HOMOLOG')) {
+  isHomolog = true;
+  BASE_GESTOR = env.BASE_GESTOR_HHH;
 }
 
 let splash = null;
 let win = null;
 let winP = null;
-let winC = [];
+let windows = [];
 let printers = [];
 let listPrint = [];
 let isPrinting = false;
 let showVersionAvaliable = false;
-const isComanda = !!store.get("isComanda");
 
 app.disableHardwareAcceleration();
 app.userAgentFallback = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36';
@@ -43,9 +38,9 @@ app.setAppUserModelId('delivery.lecard.gestor');
 Menu.setApplicationMenu(createMenuContext());
 
 app.whenReady().then(() => {
-  win = createBrowser(isComanda ? 'comanda.png' : 'icon.png', true);
+  win = createBrowser(false);
 
-  win.loadURL(isComanda ? BASE_COMANDA : BASE_GESTOR).then(() => {}).catch(() => {
+  win.loadURL(BASE_GESTOR).then(() => {}).catch(() => {
     win.loadFile('pages/error.html');
   });
 
@@ -55,7 +50,7 @@ app.whenReady().then(() => {
     transparent: true,
     frame: false,
     alwaysOnTop: true,
-    icon: path.join(__dirname, isComanda ? 'comanda.png' : 'icon.png')
+    icon: path.join(__dirname, 'icon.png')
   });
 
   splash.loadFile('pages/loading.html');
@@ -90,7 +85,7 @@ app.whenReady().then(() => {
   win.on('close', async (e) => {
     e.preventDefault();
 
-    if (!winC.length) {
+    if (!windows.length) {
       win.destroy();
 
     } else {
@@ -118,8 +113,8 @@ app.whenReady().then(() => {
   globalShortcut.register('CommandOrControl+L', () => {
     win.webContents.openDevTools();
 
-    for (let i=0; i < winC.length; i++) {
-      winC[i].webContents.openDevTools();
+    for (let i=0; i < windows.length; i++) {
+      windows[i].webContents.openDevTools();
     }
   });
 
@@ -139,23 +134,23 @@ app.on('web-contents-created', (e, contents) => {
   }
 });
 
-function createBrowser(icon, isServer) {
-  const preload = isServer ? 'preload.js' : 'preload-read.js';
+function createBrowser(new_page) {
   return new BrowserWindow({
     width: 1100,
-    height: 630,
+    height: 650,
     minWidth: 600,
-    minHeight: 630,
-    title: 'Gestor de Pedidos',
-    backgroundColor: '#fb5010',
+    minHeight: 650,
+    title: 'Gestor LeCard',
+    backgroundColor: '#9454f0',
     show: false,
     webPreferences: {
       nodeIntegration: true,
       webviewTag: true,
       contextIsolation: false,
-      preload: path.join(__dirname, preload)
+      enableRemoteModule: true,
+      preload: path.join(__dirname, new_page ? 'preload-read.js' : 'preload.js')
     },
-    icon: path.join(__dirname, icon)
+    icon: path.join(__dirname, 'icon.png')
   });
 }
 
@@ -274,11 +269,11 @@ function loadDendences() {
       return;
     }
 
-    if (opt.new_window || !winC.length) {
+    if (opt.new_window || !windows.length) {
       openPage(opt);
 
-    } else if (winC.length) {
-      winC[0].focus();
+    } else if (windows.length) {
+      windows[0].focus();
     }
   });
 
@@ -292,7 +287,7 @@ function loadDendences() {
   });
 
   ipcMain.on('ifoodEvent', (event, option) => {
-    ifood.pollingAPI(win, option, BASE_API).then();
+    ifood.pollingAPI(win, option).then();
   });
 
   if (isPackaged) {
@@ -303,37 +298,39 @@ function loadDendences() {
 }
 
 function openPage(opt) {
-  let window = createBrowser('comanda.png', false);
-  window.loadURL(opt.new_window === 'gestor' ? BASE_GESTOR : (opt.url || opt));
+  if (!opt || !opt.url) {
+    return;
+  }
 
-  window.once('ready-to-show', () => {
-    window.show();
-    window.focus();
-    setPrinters(window);
+  let new_page = createBrowser(true);
+  new_page.loadURL(opt.url);
 
-    if (isComanda || winC.length > 1) {
-      window.webContents.executeJavaScript(`sessionStorage.setItem('isReadOnly',${winC.length});`);
-    }
+  new_page.once('ready-to-show', () => {
+    new_page.show();
+    new_page.focus();
+    new_page.webContents.executeJavaScript(`sessionStorage.setItem('isReadOnly',${windows.length});`);
+    setPrinters(new_page);
   });
 
-  window.on('closed', () => {
-    winC = winC.filter(w => w !== window);
-    window = null;
+  new_page.on('closed', () => {
+    windows = windows.filter(w => w !== new_page);
+    new_page = null;
   });
 
-  window.webContents.on('new-window', function(e, url) {
+  new_page.webContents.on('new-window', function(e, url) {
     e.preventDefault();
     require('electron').shell.openExternal(url);
   });
 
-  winC.push(window);
+  windows.push(new_page);
 }
 
 function setPrinters(w) {
   printers = w.webContents.getPrinters();
   const version = app.getVersion();
   const strCPrinter = JSON.stringify(printers);
-  w.webContents.executeJavaScript(`sessionStorage.setItem('Printers',${JSON.stringify(strCPrinter)}); sessionStorage.setItem('ElectronV', '${version}')`);
+  let code = `sessionStorage.setItem('Printers',${JSON.stringify(strCPrinter)}); sessionStorage.setItem('ElectronV', '${version}'); `;
+  w.webContents.executeJavaScript(code);
 }
 
 function printFila(event) {
@@ -361,7 +358,7 @@ function createMenuContext(){
       label: 'Configs',
       submenu: [
         {
-          label: (isComanda ? 'Alternar para o gestor' : 'Alternar para a comanda'),
+          label: (isHomolog ? 'Modo produção' : 'Modo de teste'),
           enabled: true,
           click() {
             const dialogOpts = {
@@ -369,15 +366,16 @@ function createMenuContext(){
               buttons: ['Cancelar', 'Sim'],
               title: 'Alternar sistema',
               message: "",
-              detail: 'Deseja alterar este sistema para ' + (isComanda ? 'o gestor?' : 'a comanda?')
+              detail: 'Deseja alterar este sistema para ' + (isHomolog ? 'produção?' : 'o modo de teste?')
             };
 
             dialog.showMessageBox(win, dialogOpts, null).then((returnValue) => {
               if (returnValue.response !== 0) {
-                if (isComanda) {
-                  store.delete('isComanda');
+                if (isHomolog) {
+                  store.delete('IS_HOMOLOG');
+
                 } else {
-                  store.set('isComanda', 'true');
+                  store.set('IS_HOMOLOG', 'true');
                 }
 
                 app.relaunch();
@@ -472,14 +470,10 @@ function checkAutoUpdater() {
       buttons: ['OK'],
       title: 'Nova versão disponível!',
       message: "",
-      detail: 'Uma nova versão foi baixada, por favor aguarde enquanto atualizamos o sistema'
+      detail: 'Uma nova versão foi baixada, por favor reinicie o sistema para atualizar.'
     };
 
     dialog.showMessageBox(win, dialogOpts, null);
-
-    setTimeout(() => {
-      autoUpdater.quitAndInstall();
-    }, 10000);
   });
 
   autoUpdater.on('error', (ev, message) => {

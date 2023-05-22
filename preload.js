@@ -1,6 +1,6 @@
 const {ipcRenderer} = require('electron');
-const store = require('./store.js')
 const acbr = require('./acbr.js')
+const os = require('node:os')
 
 ipcRenderer.on('was-printed', (event, arg) => {
   document.dispatchEvent(new CustomEvent('wasPrinted', { detail: arg }));
@@ -14,14 +14,6 @@ document.addEventListener("gopage", (e) => {
   ipcRenderer.send('gopage', e.detail);
 }, false);
 
-document.addEventListener("playNotification", () => {
-  ipcRenderer.send('notification', true);
-}, false);
-
-document.addEventListener("pauseNotification", () => {
-  ipcRenderer.send('notification', false);
-}, false);
-
 document.addEventListener("comandoAcbr", (e) => {
   if (e.detail) {
     acbr.comandoACBR(e.detail);
@@ -29,8 +21,16 @@ document.addEventListener("comandoAcbr", (e) => {
 }, false);
 
 window.Electron = true;
-window.isComanda = !!store.get("isComanda");
 window.acbrFolder = null;
+window.gPConfigs = { host: os.hostname() };
+
+document.addEventListener("playNotification", () => {
+  ipcRenderer.send('notification', true);
+}, false);
+
+document.addEventListener("pauseNotification", () => {
+  ipcRenderer.send('notification', false);
+}, false);
 
 // ifood
 document.addEventListener('ifoodPolling', (e) => {
