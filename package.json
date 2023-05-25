@@ -12,7 +12,7 @@
   },
   "build": {
     "asar": "true",
-    "productName": "LeCard - Gestor de Pedidos",
+    "productName": "LeCard Gestor",
     "appId": "delivery.lecard.gplecard",
     "artifactName": "gestor-lecard-${version}.${ext}"
   },
