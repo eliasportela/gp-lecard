@@ -20,4 +20,5 @@ document.addEventListener("comandoAcbr", (e) => {
 }, false);
 
 window.Electron = true;
+window.isReadOnly = true;
 window.acbrFolder = null;
