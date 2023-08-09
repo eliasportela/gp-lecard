@@ -167,12 +167,13 @@ function printData(option, callback) {
   const deviceName = impressora.device ? impressora.device : "";
   const id_cozinha = impressora.id_cozinha || null;
   const id_impressao = option.id_impressao || null;
+  const id_pedido = option.id_pedido || null;
   const copies = option.copies ? parseInt(option.copies) : 1;
 
   const config = { silent: true };
 
   if (deviceName && !printers.find(p => p.displayName === deviceName)) {
-    callback({id_impressao, status: 4, erro: "Não foi possível encontrar a impressora: " + deviceName});
+    callback({id_impressao, id_pedido, status: 4, erro: "Não foi possível encontrar a impressora: " + deviceName});
     return;
 
   } else if (deviceName) {
@@ -192,20 +193,12 @@ function printData(option, callback) {
         if (!erro && copies > 1) {
           setTimeout(() => {
             print(config, (erro) => {
-              if (!erro) {
-                callback({id_impressao, status: 3});
-
-              } else {
-                callback({id_impressao, status: 4, erro});
-              }
+              callback({id_impressao, id_pedido, erro, status: erro ? 4 : 3});
             });
           }, 1500);
 
-        } else if (!erro) {
-          callback({id_impressao, status: 3});
-
         } else {
-          callback({id_impressao, status: 4, erro});
+          callback({id_impressao, id_pedido, erro, status: erro ? 4 : 3});
         }
       });
 
@@ -215,8 +208,7 @@ function printData(option, callback) {
     });
 
   } catch (e) {
-    callback({id_impressao, status: 4, erro: "Não foi possível imprimir. Tente novamente."});
-    // dialogMsg("Não foi possível imprimir","Tente novamente.")
+    callback({id_impressao, id_pedido, status: 4, erro: "Não foi possível imprimir. Tente novamente."});
   }
 }
 
