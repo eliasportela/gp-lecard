@@ -25,6 +25,7 @@ if (store.get('IS_HOMOLOG')) {
 let splash = null;
 let win = null;
 let winP = null;
+let windPDF = null;
 let windows = [];
 let printers = [];
 let listPrint = [];
@@ -280,6 +281,28 @@ function loadDendences() {
 
   ipcMain.on('ifoodEvent', (event, option) => {
     ifood.pollingAPI(win, option).then();
+  });
+
+  ipcMain.on('openPDF', (evt, opt) => {
+    if (!opt) {
+      return;
+    }
+
+    if (!windPDF) {
+      windPDF = new BrowserWindow({
+        width: 400,
+        minWidth: 400,
+        height: 650,
+        minHeight: 650,
+        show: true,
+        title: opt.title || 'Impressão PDF',
+        backgroundColor: '#323539',
+        icon: path.join(__dirname, 'icon.png')
+      });
+    }
+
+    windPDF.loadURL(opt.url);
+    windPDF.focus();
   });
 
   if (isPackaged) {
