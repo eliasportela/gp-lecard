@@ -16,10 +16,15 @@ if (!gotTheLock) {
 const env = JSON.parse(fs.readFileSync(path.join(__dirname, './config.json'), 'utf8'));
 let BASE_GESTOR = env.BASE_GESTOR;
 let isHomolog = false;
+let isBeta = false;
 
 if (store.get('IS_HOMOLOG')) {
   isHomolog = true;
   BASE_GESTOR = env.BASE_GESTOR_HHH;
+
+} else if (store.get('IS_BETA')) {
+  isBeta = true;
+  BASE_GESTOR = env.BASE_GESTOR_BETA;
 }
 
 let splash = null;
@@ -349,6 +354,33 @@ function createMenuContext(){
     {
       label: 'Configs',
       submenu: [
+        {
+          label: (isBeta ? 'Voltar versão Estável' : 'Habilitar versão Beta'),
+          enabled: true,
+          click() {
+            const dialogOpts = {
+              type: 'info',
+              buttons: ['Cancelar', 'Sim'],
+              title: 'Alternar versão',
+              message: "",
+              detail: 'Deseja alterar este sistema para a versão ' + (isBeta ? 'estável?' : 'beta?')
+            };
+
+            dialog.showMessageBox(win, dialogOpts, null).then((returnValue) => {
+              if (returnValue.response !== 0) {
+                if (isBeta) {
+                  store.delete('IS_BETA');
+
+                } else {
+                  store.set('IS_BETA', 'true');
+                }
+
+                app.relaunch();
+                app.quit();
+              }
+            });
+          },
+        },
         {
           label: (isHomolog ? 'Modo produção' : 'Modo de teste'),
           enabled: true,
