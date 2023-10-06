@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, Menu, globalShortcut } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, globalShortcut, session } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { autoUpdater } = require('electron-updater');
@@ -285,6 +285,23 @@ function loadDendences() {
 
   ipcMain.on('ifoodEvent', (event, option) => {
     ifood.pollingAPI(win, option).then();
+  });
+
+  ipcMain.on('update', (event, option) => {
+    if (option.outdate) {
+      if (isPackaged) {
+        showVersionAvaliable = true;
+        autoUpdater.checkForUpdates()
+      }
+
+    } else {
+      session.defaultSession.clearStorageData({
+        storages: ['cookies', 'filesystem', 'cachestorage', 'indexdb', 'shadercache', 'websql', 'serviceworkers']
+      }).then(res => {
+        app.relaunch();
+        app.quit();
+      });
+    }
   });
 
   if (isPackaged) {

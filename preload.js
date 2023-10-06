@@ -41,3 +41,7 @@ document.addEventListener('ifoodPolling', (e) => {
 ipcRenderer.on('ifoodReply', (event, arg) => {
   document.dispatchEvent(new CustomEvent('ifoodReply', { detail: arg }));
 });
+
+document.addEventListener("update", (e) => {
+  ipcRenderer.send('update', e.detail || {});
+}, false);
