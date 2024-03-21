@@ -35,6 +35,7 @@ let printers = [];
 let listPrint = [];
 let isPrinting = false;
 let showVersionAvaliable = false;
+const version = app.getVersion();
 
 app.disableHardwareAcceleration();
 app.userAgentFallback = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36';
@@ -43,12 +44,6 @@ app.setAppUserModelId('delivery.lecard.gestor');
 Menu.setApplicationMenu(createMenuContext());
 
 app.whenReady().then(() => {
-  win = createBrowser(false);
-
-  win.loadURL(BASE_GESTOR).then(() => {}).catch(() => {
-    win.loadFile('pages/error.html');
-  });
-
   splash = new BrowserWindow({
     width: 500,
     height: 300,
@@ -60,26 +55,66 @@ app.whenReady().then(() => {
 
   splash.loadFile('pages/loading.html');
 
-  win.once('ready-to-show', () => {
+  winP = new BrowserWindow({ width: 1000, show: false, title: 'Impressao' });
+  winP.loadFile("pages/print.html");
+
+  winP.once('ready-to-show', () => {
     setTimeout(() => {
-      splash.close();
-
-      win.webContents.on('new-window', function(e, url) {
-        e.preventDefault();
-        require('electron').shell.openExternal(url);
-      });
-
-      winP = new BrowserWindow({
-        width: 1000,
-        show: false,
-        title: 'Impressao'
-      });
-
-      winP.loadFile("pages/print.html");
-      win.show();
-      win.focus();
-
+      createMain();
     }, 2000)
+  });
+
+  app.on('activate', function () {
+    // if (BrowserWindow.getAllWindows().length === 0) createWindow()
+  });
+
+  globalShortcut.register('CommandOrControl+L', () => {
+    if (win) {
+      win.webContents.openDevTools();
+
+      for (let i=0; i < windows.length; i++) {
+        windows[i].webContents.openDevTools();
+      }
+    }
+  });
+
+  loadDendences();
+});
+
+app.on('window-all-closed', function () {
+  app.quit()
+});
+
+app.on('web-contents-created', (e, contents) => {
+  if (contents.getType() === 'webview') {
+    contents.on('new-window', (e, url) => {
+      e.preventDefault();
+      require('electron').shell.openExternal(url)
+    })
+  }
+});
+
+function createMain() {
+  win = createBrowser(false);
+
+  win.loadURL(BASE_GESTOR).then(() => {}).catch(() => {
+    win.loadFile('pages/error.html');
+  });
+
+  win.once('ready-to-show', () => {
+    setPrinters(win);
+    splash.close();
+    win.show();
+    win.focus();
+  });
+
+  win.webContents.on('did-fail-load', () => {
+    win.loadFile('pages/error.html');
+  })
+
+  win.webContents.on('new-window', function(e, url) {
+    e.preventDefault();
+    require('electron').shell.openExternal(url);
   });
 
   win.on('closed', () => {
@@ -106,38 +141,7 @@ app.whenReady().then(() => {
   });
 
   win.once('focus', () => win.flashFrame(false));
-
-  app.on('activate', function () {
-    // if (BrowserWindow.getAllWindows().length === 0) createWindow()
-  });
-
-  win.webContents.on('did-fail-load', () => {
-    win.loadFile('pages/error.html');
-  })
-
-  globalShortcut.register('CommandOrControl+L', () => {
-    win.webContents.openDevTools();
-
-    for (let i=0; i < windows.length; i++) {
-      windows[i].webContents.openDevTools();
-    }
-  });
-
-  loadDendences();
-});
-
-app.on('window-all-closed', function () {
-  app.quit()
-});
-
-app.on('web-contents-created', (e, contents) => {
-  if (contents.getType() === 'webview') {
-    contents.on('new-window', (e, url) => {
-      e.preventDefault();
-      require('electron').shell.openExternal(url)
-    })
-  }
-});
+}
 
 function createBrowser(new_page) {
   return new BrowserWindow({
@@ -213,6 +217,7 @@ function printData(option, callback) {
     });
 
   } catch (e) {
+    console.log(e);
     callback({id_impressao, id_pedido, status: 4, erro: "Não foi possível imprimir. Tente novamente."});
   }
 }
@@ -307,8 +312,6 @@ function loadDendences() {
   if (isPackaged) {
     checkAutoUpdater();
   }
-
-  setPrinters(win);
 }
 
 function openPage(opt) {
@@ -340,11 +343,9 @@ function openPage(opt) {
 }
 
 function setPrinters(w) {
-  printers = w.webContents.getPrinters();
-  const version = app.getVersion();
-  const strCPrinter = JSON.stringify(printers);
-  let code = `sessionStorage.setItem('Printers',${JSON.stringify(strCPrinter)}); sessionStorage.setItem('ElectronV', '${version}'); `;
-  w.webContents.executeJavaScript(code);
+  w.webContents.executeJavaScript(`window.ElectronV='${version}'; sessionStorage.setItem('ElectronV', '${version}');`);
+  const printers = JSON.stringify(JSON.stringify(w.webContents.getPrinters()));
+  w.webContents.executeJavaScript(`sessionStorage.setItem('Printers',${printers});`);
 }
 
 function printFila(event) {
