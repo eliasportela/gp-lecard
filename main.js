@@ -38,8 +38,10 @@ let showVersionAvaliable = false;
 const version = app.getVersion();
 
 app.disableHardwareAcceleration();
-app.userAgentFallback = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36';
+app.commandLine.appendSwitch('disable-site-isolation-trials')
+app.commandLine.appendSwitch('disable-features', 'OutOfBlinkCors')
 app.commandLine.appendSwitch('--autoplay-policy','no-user-gesture-required');
+app.userAgentFallback = `LeCard/${version} (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36`;
 app.setAppUserModelId('delivery.lecard.gestor');
 Menu.setApplicationMenu(createMenuContext());
 
@@ -344,8 +346,10 @@ function openPage(opt) {
 
 function setPrinters(w) {
   w.webContents.executeJavaScript(`window.ElectronV='${version}'; sessionStorage.setItem('ElectronV', '${version}');`);
-  const printers = JSON.stringify(JSON.stringify(w.webContents.getPrinters()));
-  w.webContents.executeJavaScript(`sessionStorage.setItem('Printers',${printers});`);
+  w.webContents.getPrintersAsync().then((printers) => {
+    const strPrinters = printers ? JSON.stringify(JSON.stringify(printers)) : "[]";
+    w.webContents.executeJavaScript(`sessionStorage.setItem('Printers',${strPrinters});`);
+  })
 }
 
 function printFila(event) {

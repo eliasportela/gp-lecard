@@ -4,6 +4,11 @@ module.exports = {
   comandoACBR(comando) {
     if (!window.acbrFolder) {
       document.dispatchEvent(new CustomEvent('acbrReply', { detail: "LeCard Monitor não configurado!" }));
+
+      // setTimeout(() => {
+      //   document.dispatchEvent(new CustomEvent('acbrReply', { detail: 'OK: 0,300' }));
+      // }, 1200);
+
       return;
     }
 
