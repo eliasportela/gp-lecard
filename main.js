@@ -253,18 +253,18 @@ function loadDendences() {
   });
 
   ipcMain.on('reloadUrl', () => {
-    win.loadURL(BASE_GESTOR).then(() => {}).catch(() => {
+    win.hide();
+
+    win.loadURL(BASE_GESTOR).then(() => {
+      win.show();
+
+    }).catch(() => {
+      win.show();
       win.loadFile('pages/error.html');
     });
 
     win.once('ready-to-show', () => {
       setPrinters(win);
-
-      setTimeout(() => {
-        if (isPackaged && !showVersionAvaliable) {
-          autoUpdater.checkForUpdates();
-        }
-      }, (10000));
     });
   });
 
@@ -298,7 +298,16 @@ function loadDendences() {
     if (option.outdate) {
       if (isPackaged) {
         showVersionAvaliable = true;
-        autoUpdater.checkForUpdates()
+        autoUpdater.checkForUpdates();
+
+      } else {
+        dialog.showMessageBox(win, {
+          type: 'info',
+          buttons: ['OK'],
+          title: 'Nova versão disponível! (Teste)',
+          message: "Não feche o sistema",
+          detail: 'Por favor aguarde, baixando a nova versão.'
+        }, null);
       }
 
     } else {
@@ -510,13 +519,25 @@ function createMenuContext(){
 }
 
 function checkAutoUpdater() {
-  autoUpdater.on('update-downloaded', () => {
+  autoUpdater.on('update-available', (args) => {
     const dialogOpts = {
       type: 'info',
       buttons: ['OK'],
       title: 'Nova versão disponível!',
+      message: "Não feche o sistema",
+      detail: 'Aguarde enquanto estamos baixando a nova versão.'
+    };
+
+    dialog.showMessageBox(win, dialogOpts, null);
+  });
+
+  autoUpdater.on('update-downloaded', () => {
+    const dialogOpts = {
+      type: 'info',
+      buttons: ['OK'],
+      title: 'Versão baixada com sucesso!',
       message: "",
-      detail: 'Uma nova versão foi baixada, por favor reinicie o sistema para atualizar.'
+      detail: 'Por favor feche o sistema para atualizar a nova versão.'
     };
 
     dialog.showMessageBox(win, dialogOpts, null);
@@ -534,18 +555,6 @@ function checkAutoUpdater() {
 
       dialog.showMessageBox(win, dialogOpts, null);
     }
-  });
-
-  autoUpdater.on('update-available', (args) => {
-    const dialogOpts = {
-      type: 'info',
-      buttons: ['OK'],
-      title: 'Atualização',
-      message: "",
-      detail: 'Uma nova versão será baixada, espere um momento que irá atualizar sozinha.'
-    };
-
-    dialog.showMessageBox(win, dialogOpts, null);
   });
 
   autoUpdater.on('update-not-available', (args) => {
