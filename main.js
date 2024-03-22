@@ -297,16 +297,15 @@ function loadDendences() {
   ipcMain.on('update', (event, option) => {
     if (option.outdate) {
       if (isPackaged) {
-        showVersionAvaliable = true;
         autoUpdater.checkForUpdates();
 
       } else {
         dialog.showMessageBox(win, {
           type: 'info',
           buttons: ['OK'],
-          title: 'Nova versão disponível! (Teste)',
-          message: "Não feche o sistema",
-          detail: 'Por favor aguarde, baixando a nova versão.'
+          title: 'Atualização',
+          message: "Nova versão disponível",
+          detail: 'Por favor não feche o sistema, aguarde estamos baixando a nova versão.'
         }, null);
       }
 
@@ -463,13 +462,13 @@ function createMenuContext(){
           },
         },
         {
-          label: 'Licença',
+          label: 'Versão',
           click: () => {
             dialog.showMessageBox(win, {
               type: 'info',
               buttons: ['OK'],
-              title: 'Lincença',
-              message: 'Status: Ativo\nVersão: ' + app.getVersion()
+              title: 'Versão',
+              message: 'Versão: ' + version
             }, null);
           }
         },
@@ -519,56 +518,57 @@ function createMenuContext(){
 }
 
 function checkAutoUpdater() {
-  autoUpdater.on('update-available', (args) => {
-    const dialogOpts = {
-      type: 'info',
-      buttons: ['OK'],
-      title: 'Nova versão disponível!',
-      message: "Não feche o sistema",
-      detail: 'Aguarde enquanto estamos baixando a nova versão.'
-    };
+  autoUpdater.on('update-available', () => {
+    if (showVersionAvaliable) {
+      showVersionAvaliable = false;
+      const dialogOpts = {
+        type: 'info',
+        buttons: ['OK'],
+        title: 'Atualização',
+        message: 'Baixando atualização',
+        detail: 'Por favor não feche o sistema, aguarde estamos baixando a nova versão.'
+      };
 
-    dialog.showMessageBox(win, dialogOpts, null);
+      dialog.showMessageBox(win, dialogOpts, null);
+    }
   });
 
   autoUpdater.on('update-downloaded', () => {
     const dialogOpts = {
       type: 'info',
+      buttons: ['Reiniciar'],
+      title: 'Atualização',
+      message: "Versão baixada com sucesso!",
+      detail: 'Clique em "Reiniciar" ou feche e abra novamente o sistema.'
+    };
+
+    dialog.showMessageBox(win, dialogOpts, null).then(() => {
+      autoUpdater.quitAndInstall();
+    });
+  });
+
+  autoUpdater.on('error', (ev, message) => {
+    const dialogOpts = {
+      type: 'info',
       buttons: ['OK'],
-      title: 'Versão baixada com sucesso!',
-      message: "",
-      detail: 'Por favor feche o sistema para atualizar a nova versão.'
+      title: 'Atualização',
+      message: 'Erro ao tentar atualizar',
+      detail: message
     };
 
     dialog.showMessageBox(win, dialogOpts, null);
   });
 
-  autoUpdater.on('error', (ev, message) => {
-    if (showVersionAvaliable) {
-      const dialogOpts = {
-        type: 'info',
-        buttons: ['OK'],
-        title: 'Erro na atualização',
-        message: 'Erro ao tentar atualizar',
-        detail: message
-      };
-
-      dialog.showMessageBox(win, dialogOpts, null);
-    }
-  });
-
   autoUpdater.on('update-not-available', (args) => {
-    if (showVersionAvaliable){
-      const dialogOpts = {
-        type: 'info',
-        buttons: ['OK'],
-        title: 'Versão já está atualizada',
-        message: "",
-        detail: 'Sua versão já está atualizada.'
-      };
+    const dialogOpts = {
+      type: 'info',
+      buttons: ['OK'],
+      title: 'Atualização',
+      message: 'Tudo certo por aqui!',
+      detail: 'Você já está usando a versão atual do sistema.'
+    };
 
-      dialog.showMessageBox(win, dialogOpts, null);
-    }
+    dialog.showMessageBox(win, dialogOpts, null);
   });
 
   autoUpdater.on('download-progress', (progressObj) => {
