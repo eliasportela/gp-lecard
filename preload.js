@@ -14,6 +14,10 @@ document.addEventListener("gopage", (e) => {
   ipcRenderer.send('gopage', e.detail);
 }, false);
 
+document.addEventListener("goPageExternal", (e) => {
+  ipcRenderer.send('goPageExternal', e.detail);
+}, false);
+
 document.addEventListener("comandoAcbr", (e) => {
   if (e.detail) {
     acbr.comandoACBR(e.detail);

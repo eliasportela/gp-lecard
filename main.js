@@ -31,6 +31,7 @@ let splash = null;
 let win = null;
 let winP = null;
 let windows = [];
+let wExternal = null;
 let printers = [];
 let listPrint = [];
 let isPrinting = false;
@@ -78,6 +79,10 @@ app.whenReady().then(() => {
         windows[i].webContents.openDevTools();
       }
     }
+
+    if (wExternal) {
+      wExternal.webContents.openDevTools();
+    }
   });
 
   loadDendences();
@@ -85,15 +90,6 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', function () {
   app.quit()
-});
-
-app.on('web-contents-created', (e, contents) => {
-  if (contents.getType() === 'webview') {
-    contents.on('new-window', (e, url) => {
-      e.preventDefault();
-      require('electron').shell.openExternal(url)
-    })
-  }
 });
 
 function createMain() {
@@ -112,11 +108,11 @@ function createMain() {
 
   win.webContents.on('did-fail-load', () => {
     win.loadFile('pages/error.html');
-  })
+  });
 
-  win.webContents.on('new-window', function(e, url) {
-    e.preventDefault();
+  win.webContents.setWindowOpenHandler(({ url }) => {
     require('electron').shell.openExternal(url);
+    return { action: 'deny' };
   });
 
   win.on('closed', () => {
@@ -281,6 +277,14 @@ function loadDendences() {
     }
   });
 
+  ipcMain.on('goPageExternal', (evt, opt) => {
+    if (!opt) {
+      return;
+    }
+
+    openPageExternal(opt.url);
+  });
+
   ipcMain.on('notification', (play) => {
     if (play) {
       win.flashFrame(true);
@@ -344,12 +348,49 @@ function openPage(opt) {
     new_page = null;
   });
 
-  new_page.webContents.on('new-window', function(e, url) {
-    e.preventDefault();
+  new_page.webContents.setWindowOpenHandler(({ url }) => {
     require('electron').shell.openExternal(url);
+    return { action: 'deny' };
   });
 
   windows.push(new_page);
+}
+
+function openPageExternal(url) {
+  if (wExternal) {
+    wExternal.loadURL(url).then(() => {
+      wExternal.focus();
+    });
+
+  } else {
+    wExternal = new BrowserWindow({
+      width: 1100,
+      height: 650,
+      minWidth: 600,
+      minHeight: 650,
+      title: 'LeCard - Portal',
+      icon: path.join(__dirname, 'icon.png')
+    });
+
+    wExternal.loadURL(url);
+
+    wExternal.once('ready-to-show', () => {
+      wExternal.focus();
+    });
+
+    wExternal.webContents.on('did-fail-load', () => {
+      wExternal.loadFile('pages/errorExternal.html');
+    });
+
+    wExternal.on('closed', () => {
+      wExternal = null;
+    });
+
+    win.webContents.setWindowOpenHandler(({ url }) => {
+      require('electron').shell.openExternal(url);
+      return { action: 'deny' };
+    });
+  }
 }
 
 function setPrinters(w) {
