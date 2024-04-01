@@ -395,10 +395,14 @@ function openPageExternal(url) {
 
 function setPrinters(w) {
   w.webContents.executeJavaScript(`window.ElectronV='${version}'; sessionStorage.setItem('ElectronV', '${version}');`);
-  w.webContents.getPrintersAsync().then((printers) => {
-    const strPrinters = printers ? JSON.stringify(JSON.stringify(printers)) : "[]";
-    w.webContents.executeJavaScript(`sessionStorage.setItem('Printers',${strPrinters});`);
-  })
+  w.webContents.getPrintersAsync().then((devices) => {
+    printers = devices;
+
+    if (printers) {
+      const strPrinters = printers ? JSON.stringify(JSON.stringify(printers)) : "[]";
+      w.webContents.executeJavaScript(`sessionStorage.setItem('Printers',${strPrinters});`);
+    }
+  });
 }
 
 function printFila(event) {
