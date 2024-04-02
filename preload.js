@@ -36,6 +36,14 @@ document.addEventListener("pauseNotification", () => {
   ipcRenderer.send('notification', false);
 }, false);
 
+ipcRenderer.on('updateReply', (event, arg) => {
+  document.dispatchEvent(new CustomEvent('updateReply', { detail: arg }));
+});
+
+ipcRenderer.on('updateProgress', (event, arg) => {
+  document.dispatchEvent(new CustomEvent('updateProgress', { detail: arg }));
+})
+
 // ifood
 document.addEventListener('ifoodPolling', (e) => {
   const opt = e.detail;

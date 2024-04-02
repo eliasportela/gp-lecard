@@ -35,7 +35,7 @@ let wExternal = null;
 let printers = [];
 let listPrint = [];
 let isPrinting = false;
-let showVersionAvaliable = false;
+let showVersionMenu = false;
 const version = app.getVersion();
 
 app.disableHardwareAcceleration();
@@ -301,6 +301,7 @@ function loadDendences() {
   ipcMain.on('update', (event, option) => {
     if (option.outdate) {
       if (isPackaged) {
+        showVersionMenu = false;
         autoUpdater.checkForUpdates();
 
       } else {
@@ -502,7 +503,7 @@ function createMenuContext(){
           label: 'Verificar atualizações',
           enabled: true,
           click() {
-            showVersionAvaliable = true;
+            showVersionMenu = true;
             autoUpdater.checkForUpdates()
           },
         },
@@ -563,18 +564,30 @@ function createMenuContext(){
 }
 
 function checkAutoUpdater() {
-  autoUpdater.on('update-available', () => {
-    if (showVersionAvaliable) {
-      showVersionAvaliable = false;
-      const dialogOpts = {
-        type: 'info',
-        buttons: ['OK'],
-        title: 'Atualização',
-        message: 'Baixando atualização',
-        detail: 'Por favor não feche o sistema, aguarde estamos baixando a nova versão.'
-      };
+  autoUpdater.on('checking-for-update', () => {
+    win.webContents.send('updateReply', {
+      title: 'Atualização',
+      message: 'Verificando atualização',
+      detail: 'Só um momento, estamos aguardando a nova versão.',
+      step: 1
+    });
+  });
 
+  autoUpdater.on('update-available', () => {
+    const dialogOpts = {
+      type: 'info',
+      buttons: ['OK'],
+      title: 'Atualização',
+      message: 'Baixando atualização',
+      detail: 'Por favor não feche o sistema, estamos baixando a nova versão.'
+    };
+
+    if (showVersionMenu) {
       dialog.showMessageBox(win, dialogOpts, null);
+
+    } else {
+      dialogOpts.step = 2;
+      win.webContents.send('updateReply', dialogOpts);
     }
   });
 
@@ -590,6 +603,9 @@ function checkAutoUpdater() {
     dialog.showMessageBox(win, dialogOpts, null).then(() => {
       autoUpdater.quitAndInstall();
     });
+
+    dialogOpts.step = 3;
+    win.webContents.send('updateReply', dialogOpts);
   });
 
   autoUpdater.on('error', (ev, message) => {
@@ -601,7 +617,13 @@ function checkAutoUpdater() {
       detail: message
     };
 
-    dialog.showMessageBox(win, dialogOpts, null);
+    if (showVersionMenu) {
+      dialog.showMessageBox(win, dialogOpts, null);
+
+    } else {
+      dialogOpts.step = 4;
+      win.webContents.send('updateReply', dialogOpts);
+    }
   });
 
   autoUpdater.on('update-not-available', (args) => {
@@ -613,10 +635,17 @@ function checkAutoUpdater() {
       detail: 'Você já está usando a versão atual do sistema.'
     };
 
-    dialog.showMessageBox(win, dialogOpts, null);
+    if (showVersionMenu) {
+      dialog.showMessageBox(win, dialogOpts, null);
+
+    } else {
+      dialogOpts.step = 5;
+      win.webContents.send('updateReply', dialogOpts);
+    }
   });
 
   autoUpdater.on('download-progress', (progressObj) => {
     win.setProgressBar(progressObj.percent / 100);
-  })
+    win.webContents.send('updateProgress', progressObj.percent);
+  });
 }
