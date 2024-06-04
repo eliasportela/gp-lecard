@@ -1,13 +1,11 @@
 const FormData = require('form-data');
 const fetch = require('electron-fetch').default;
-let lecardKey = null;
-let token = null;
-let merchantId = null;
 let base_url = null;
 let count = 0;
 let ifoodTimeout = null;
 let listIfood = new Set();
 let processIfood = false;
+let empresas = [];
 
 module.exports = {
   async pollingAPI(win, opt) {
@@ -22,50 +20,58 @@ module.exports = {
       clearInterval(ifoodTimeout);
     }
 
-    if (count === 0) {
-      base_url = opt.base_api || "https://api.storkdigital.com.br/";
+    base_url = opt.base_api || "https://api.storkdigital.com.br/";
 
-      if (!opt || !opt.token || !opt.merchantId || !base_url) {
-        win.webContents.send('ifoodReply', { error: "Token ou MerchantId do iFood não estão configurados!" });
-        return;
-      }
-
-      lecardKey = opt.token || null;
-      merchantId = opt.merchantId || null;
-      await this.newSession();
-    }
-
-    if (!token) {
-      win.webContents.send('ifoodReply', { error: "Não foi possível autenticar com o iFood! Faça o login novamente no Portal para continuar." });
+    if (!opt || !opt.token || !opt.merchantId || !base_url) {
+      win.webContents.send('ifoodReply', { error: "Token ou MerchantId do iFood não estão configurados!" });
       return;
     }
 
-    await this.pollingIfood(win);
+    if (!empresas.find(e => e.lecardKey === opt.token)) {
+      const token = await this.newSession(opt.token);
 
-    ifoodTimeout = setInterval(async () => {
       if (!token) {
         win.webContents.send('ifoodReply', { error: "Não foi possível autenticar com o iFood! Faça o login novamente no Portal para continuar." });
-        return;
-      }
 
-      await this.pollingIfood(win);
-    }, 30 * 1000);
+      } else {
+        const empresa = { token, merchantId: opt.merchantId, lecardKey: opt.token }
+        empresas.push(empresa);
+        await this.pollingIfood(win, empresa);
+      }
+    }
+
+    ifoodTimeout = setInterval(async () => {
+      count++;
+
+      for (const e of empresas) {
+        if (!e.token) {
+          win.webContents.send('ifoodReply', { error: "Não foi possível autenticar com o iFood! Faça o login novamente no Portal para continuar." });
+          return;
+        }
+
+        await this.pollingIfood(win, e);
+      }
+    }, 31 * 1000);
   },
 
-  async pollingIfood(win) {
-    count++;
-
+  async pollingIfood(win, empresa) {
     try {
       const res = await fetch('https://merchant-api.ifood.com.br/order/v1.0/events:polling',
-        { method: 'GET', headers: { 'Authorization': `Bearer ${token}`, 'x-polling-merchants': `${merchantId}` } });
+        { method: 'GET', headers: { 'Authorization': `Bearer ${empresa.token}`, 'x-polling-merchants': `${empresa.merchantId}` } });
 
       if (res.status === 401) {
-        await this.newSession(true);
+        empresa.token = await this.newSession(empresa.lecardKey, true);
+
+        if (!empresa.token) {
+          win.webContents.send('ifoodReply', { error: "Não foi possível autenticar com o iFood! Faça o login novamente no Portal para continuar." });
+          empresas = empresas.filter(e => e !== empresa);
+          return;
+        }
       }
 
       const orders = res.status === 200 ? await res.json() : [];
-      const status = await this.getStatusMerchant();
-      win.webContents.send('ifoodReply', { orders, status, count });
+      const status = await this.getStatusMerchant(empresa);
+      win.webContents.send('ifoodReply', { merchantId: empresa.merchantId, orders, status, count });
 
       if (res.status === 200) {
         await this.ifoodReplyOrder(orders, win);
@@ -83,11 +89,10 @@ module.exports = {
     return false;
   },
 
-  async newSession(renew) {
+  async newSession(key, renew) {
     try {
-      token = null;
       const form = new FormData();
-      form.append('key', lecardKey);
+      form.append('key', key);
 
       if (renew) {
         form.append('renew', 'true');
@@ -100,23 +105,26 @@ module.exports = {
         const json = await res.json();
 
         if (json.result) {
-          token = json.token;
+          return json.token;
         }
       }
 
+      return null;
+
     } catch (err) {
       console.log(err);
+      return null;
     }
   },
 
-  async getStatusMerchant() {
-    if (count === 1) {
+  async getStatusMerchant(empresa) {
+    if (count === 0) {
       return [];
     }
 
     try {
-      const res = await fetch(`https://merchant-api.ifood.com.br/merchant/v1.0/merchants/${merchantId}/status`,
-        { method: 'GET', headers: { 'Authorization': `Bearer ${token}` } });
+      const res = await fetch(`https://merchant-api.ifood.com.br/merchant/v1.0/merchants/${empresa.merchantId}/status`,
+        { method: 'GET', headers: { 'Authorization': `Bearer ${empresa.token}` } });
 
       if (res.status === 200) {
         const json = await res.json();
@@ -143,7 +151,6 @@ module.exports = {
       });
 
       setTimeout(async () => {
-        processIfood = false;
         await this.registerOrder(win);
       }, 1500);
     }
@@ -166,6 +173,9 @@ module.exports = {
           win.webContents.send('ifoodReply', { error: "Erro ao enviar o evento para o servidor. " + msg });
         }
       });
+
+    } else if (!listIfood.size) {
+      processIfood = false;
     }
   },
 
