@@ -81,7 +81,7 @@ module.exports = {
 
     } catch (e) {
       let errorCode = e && e.code ? e.code : null;
-      let error = errorCode ? (errorCode === 'ENOTFOUND' ? 'Verifique sua conexão com a internet.' : 'Código do erro: ' + errorCode) : e;
+      let error = errorCode ? (['ERR_INTERNET_DISCONNECTED', 'ENOTFOUND'].includes(errorCode) ? 'Verifique sua conexão com a internet.' : 'Código do erro: ' + errorCode) : e;
       win.webContents.send('ifoodReply', { error: "Não foi possível sincronizar os pedidos do iFood.\n" + error, errorCode });
       console.log(errorCode);
     }
@@ -170,6 +170,7 @@ module.exports = {
         }, 2000);
 
         if (!res && msg) {
+          console.log(msg)
           win.webContents.send('ifoodReply', { error: "Erro ao enviar o evento para o servidor. " + msg });
         }
       });
