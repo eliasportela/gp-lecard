@@ -41,6 +41,8 @@ module.exports = {
     }
 
     ifoodTimeout = setInterval(async () => {
+      //const date = new Date();
+      //console.log(`${date.getUTCMinutes()}:${date.getUTCSeconds()}`)
       count++;
 
       for (const e of empresas) {
@@ -51,7 +53,7 @@ module.exports = {
 
         await this.pollingIfood(win, e);
       }
-    }, 31 * 1000);
+    }, 30 * 1000);
   },
 
   async pollingIfood(win, empresa) {
