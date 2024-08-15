@@ -155,6 +155,7 @@ function createBrowser(new_page) {
       webviewTag: true,
       contextIsolation: false,
       enableRemoteModule: true,
+      backgroundThrottling: false,
       preload: path.join(__dirname, new_page ? 'preload-read.js' : 'preload.js')
     },
     icon: path.join(__dirname, 'icon.png')
