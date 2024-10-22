@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, Menu, globalShortcut, session } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, globalShortcut, session, powerSaveBlocker} = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { autoUpdater } = require('electron-updater');
@@ -36,6 +36,7 @@ let printers = [];
 let listPrint = [];
 let isPrinting = false;
 let showVersionMenu = false;
+let idPowerSave = null;
 const version = app.getVersion();
 
 app.disableHardwareAcceleration();
@@ -86,9 +87,18 @@ app.whenReady().then(() => {
   });
 
   loadDendences();
+
+  if (!idPowerSave) {
+    idPowerSave = powerSaveBlocker.start('prevent-display-sleep');
+  }
 });
 
 app.on('window-all-closed', function () {
+  if (idPowerSave) {
+    console.log('closePowerSave');
+    powerSaveBlocker.stop(idPowerSave)
+  }
+
   app.quit()
 });
 
@@ -155,7 +165,7 @@ function createBrowser(new_page) {
       webviewTag: true,
       contextIsolation: false,
       enableRemoteModule: true,
-      backgroundThrottling: false,
+      backgroundThrottling: new_page,
       preload: path.join(__dirname, new_page ? 'preload-read.js' : 'preload.js')
     },
     icon: path.join(__dirname, 'icon.png')
@@ -177,8 +187,7 @@ function printData(option, callback) {
   const id_impressao = option.id_impressao || null;
   const id_pedido = option.id_pedido || null;
   const copies = option.copies ? parseInt(option.copies) : 1;
-
-  const config = { silent: true };
+  const config = { silent: true, id_cozinha };
 
   if (deviceName && !printers.find(p => p.displayName === deviceName)) {
     callback({id_impressao, id_pedido, status: 4, erro: "Não foi possível encontrar a impressora: " + deviceName});

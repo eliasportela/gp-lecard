@@ -1,6 +1,6 @@
 {
   "name": "gp-lecard",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "description": "Gerenciador LeCard Delivery",
   "author": "storkdigital.com.br",
   "main": "main.js",
@@ -15,6 +15,10 @@
     "productName": "LeCard Gestor",
     "appId": "delivery.lecard.gplecard",
     "artifactName": "gestor-lecard-${version}.${ext}"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eliasportela/gestor.git"
   },
   "license": "ISC",
   "devDependencies": {
