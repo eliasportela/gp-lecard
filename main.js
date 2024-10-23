@@ -242,7 +242,11 @@ function loadDendences() {
   // ipcmain
   ipcMain.on('print', (event, option) => {
     listPrint.push(option);
-    printFila(event);
+
+    if (!isPrinting) {
+      isPrinting = true;
+      printFila(event);
+    }
   });
 
   ipcMain.on('showDialog', (event, option) => {
@@ -408,22 +412,24 @@ function setPrinters(w) {
 }
 
 function printFila(event) {
-  if (!isPrinting && listPrint.length) {
-    isPrinting = true;
-
-    printData(listPrint[0], (res) => {
-      listPrint.splice(0,1);
-
-      if (res) {
-        event.reply('was-printed', res);
-      }
-
-      setTimeout(() => {
-        isPrinting = false;
-        printFila(event);
-      }, 1500);
-    });
+  if (isPrinting) {
+    return;
   }
+
+  printData(listPrint[0], (res) => {
+    listPrint.splice(0,1);
+
+    if (res) {
+      event.reply('was-printed', res);
+    }
+
+    if (listPrint.length) {
+      printFila(event);
+
+    } else {
+      isPrinting = false;
+    }
+  });
 }
 
 function createMenuContext(){
