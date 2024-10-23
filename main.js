@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, Menu, globalShortcut, session } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, globalShortcut, session, powerSaveBlocker} = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { autoUpdater } = require('electron-updater');
@@ -36,12 +36,16 @@ let printers = [];
 let listPrint = [];
 let isPrinting = false;
 let showVersionMenu = false;
+let idPowerSave = null;
 const version = app.getVersion();
 
 app.disableHardwareAcceleration();
+
 app.commandLine.appendSwitch('disable-site-isolation-trials')
 app.commandLine.appendSwitch('disable-features', 'OutOfBlinkCors')
 app.commandLine.appendSwitch('--autoplay-policy','no-user-gesture-required');
+app.commandLine.appendSwitch("disable-background-timer-throttling");
+
 app.userAgentFallback = `LeCard/${version} (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36`;
 app.setAppUserModelId('delivery.lecard.gestor');
 Menu.setApplicationMenu(createMenuContext());
@@ -86,9 +90,18 @@ app.whenReady().then(() => {
   });
 
   loadDendences();
+
+  if (!idPowerSave) {
+    idPowerSave = powerSaveBlocker.start('prevent-display-sleep');
+  }
 });
 
 app.on('window-all-closed', function () {
+  if (idPowerSave) {
+    console.log('closePowerSave');
+    powerSaveBlocker.stop(idPowerSave)
+  }
+
   app.quit()
 });
 
@@ -155,7 +168,7 @@ function createBrowser(new_page) {
       webviewTag: true,
       contextIsolation: false,
       enableRemoteModule: true,
-      backgroundThrottling: false,
+      backgroundThrottling: new_page,
       preload: path.join(__dirname, new_page ? 'preload-read.js' : 'preload.js')
     },
     icon: path.join(__dirname, 'icon.png')
@@ -172,20 +185,19 @@ function printData(option, callback) {
   const content = JSON.stringify(`${option.content}`);
   const zoom = impressora.zoom ? impressora.zoom : "9px";
   const width = impressora.largura ? impressora.largura : "100%";
-  const deviceName = impressora.device ? impressora.device : "";
+  const device = impressora.device ? impressora.device : "";
   const id_cozinha = impressora.id_cozinha || null;
   const id_impressao = option.id_impressao || null;
   const id_pedido = option.id_pedido || null;
   const copies = option.copies ? parseInt(option.copies) : 1;
+  const config = { silent: true, id_cozinha };
 
-  const config = { silent: true };
-
-  if (deviceName && !printers.find(p => p.displayName === deviceName)) {
-    callback({id_impressao, id_pedido, status: 4, erro: "Não foi possível encontrar a impressora: " + deviceName});
+  if (device && !printers.find(p => p.displayName === device)) {
+    callback({id_impressao, id_pedido, status: 4, device, erro: "Não foi possível encontrar a impressora: " + device});
     return;
 
-  } else if (deviceName) {
-    config.deviceName = deviceName
+  } else if (device) {
+    config.deviceName = device
   }
 
   const script = `
@@ -201,23 +213,23 @@ function printData(option, callback) {
         if (!erro && copies > 1) {
           setTimeout(() => {
             print(config, (erro) => {
-              callback({id_impressao, id_pedido, erro, status: erro ? 4 : 3});
+              callback({id_impressao, id_pedido, erro, device, status: erro ? 4 : 3});
             });
           }, 1500);
 
         } else {
-          callback({id_impressao, id_pedido, erro, status: erro ? 4 : 3});
+          callback({id_impressao, id_pedido, erro, device, status: erro ? 4 : 3});
         }
       });
 
     }).catch(e => {
-      callback();
+      callback({id_impressao, id_pedido, status: 4, device, erro: "Não foi possível imprimir. Erro no Script."});
       console.log(e);
     });
 
   } catch (e) {
     console.log(e);
-    callback({id_impressao, id_pedido, status: 4, erro: "Não foi possível imprimir. Tente novamente."});
+    callback({id_impressao, id_pedido, status: 4, device, erro: "Não foi possível imprimir. Tente novamente."});
   }
 }
 

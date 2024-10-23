@@ -22,19 +22,20 @@ module.exports = {
 
     base_url = opt.base_api || "https://api.storkdigital.com.br/";
 
-    if (!opt || !opt.token || !opt.merchantId || !base_url) {
+    if (!opt || !opt.token || !opt.merchantId || !base_url || !opt.id_empresa) {
       win.webContents.send('ifoodReply', { error: "Token ou MerchantId do iFood não estão configurados!" });
       return;
     }
 
-    if (!empresas.find(e => e.lecardKey === opt.token)) {
-      const token = await this.newSession(opt.token);
+    if (!empresas.find(e => e.key === opt.token)) {
+      opt.key = opt.token;
+      const token = await this.newSession(opt, false);
 
       if (!token) {
         win.webContents.send('ifoodReply', { error: "Não foi possível autenticar com o iFood! Faça o login novamente no Portal para continuar." });
 
       } else {
-        const empresa = { token, merchantId: opt.merchantId, lecardKey: opt.token }
+        const empresa = { token, merchantId: opt.merchantId, key: opt.token }
         empresas.push(empresa);
         await this.pollingIfood(win, empresa);
       }
@@ -62,7 +63,7 @@ module.exports = {
         { method: 'GET', headers: { 'Authorization': `Bearer ${empresa.token}`, 'x-polling-merchants': `${empresa.merchantId}` } });
 
       if (res.status === 401) {
-        empresa.token = await this.newSession(empresa.lecardKey, true);
+        empresa.token = await this.newSession(empresa, true);
 
         if (!empresa.token) {
           win.webContents.send('ifoodReply', { error: "Não foi possível autenticar com o iFood! Faça o login novamente no Portal para continuar." });
@@ -91,10 +92,11 @@ module.exports = {
     return false;
   },
 
-  async newSession(key, renew) {
+  async newSession(empresa, renew) {
     try {
       const form = new FormData();
-      form.append('key', key);
+      form.append('key', empresa.key);
+      form.append('id_empresa', empresa.id_empresa);
 
       if (renew) {
         form.append('renew', 'true');
