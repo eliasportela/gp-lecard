@@ -40,9 +40,12 @@ let idPowerSave = null;
 const version = app.getVersion();
 
 app.disableHardwareAcceleration();
+
 app.commandLine.appendSwitch('disable-site-isolation-trials')
 app.commandLine.appendSwitch('disable-features', 'OutOfBlinkCors')
 app.commandLine.appendSwitch('--autoplay-policy','no-user-gesture-required');
+app.commandLine.appendSwitch("disable-background-timer-throttling");
+
 app.userAgentFallback = `LeCard/${version} (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36`;
 app.setAppUserModelId('delivery.lecard.gestor');
 Menu.setApplicationMenu(createMenuContext());
@@ -59,7 +62,7 @@ app.whenReady().then(() => {
 
   splash.loadFile('pages/loading.html');
 
-  winP = new BrowserWindow({ width: 1000, show: true, title: 'Impressao' });
+  winP = new BrowserWindow({ width: 1000, show: false, title: 'Impressao' });
   winP.loadFile("pages/print.html");
 
   winP.once('ready-to-show', () => {
