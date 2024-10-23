@@ -59,7 +59,7 @@ app.whenReady().then(() => {
 
   splash.loadFile('pages/loading.html');
 
-  winP = new BrowserWindow({ width: 1000, show: false, title: 'Impressao' });
+  winP = new BrowserWindow({ width: 1000, show: true, title: 'Impressao' });
   winP.loadFile("pages/print.html");
 
   winP.once('ready-to-show', () => {
@@ -182,19 +182,19 @@ function printData(option, callback) {
   const content = JSON.stringify(`${option.content}`);
   const zoom = impressora.zoom ? impressora.zoom : "9px";
   const width = impressora.largura ? impressora.largura : "100%";
-  const deviceName = impressora.device ? impressora.device : "";
+  const device = impressora.device ? impressora.device : "";
   const id_cozinha = impressora.id_cozinha || null;
   const id_impressao = option.id_impressao || null;
   const id_pedido = option.id_pedido || null;
   const copies = option.copies ? parseInt(option.copies) : 1;
   const config = { silent: true, id_cozinha };
 
-  if (deviceName && !printers.find(p => p.displayName === deviceName)) {
-    callback({id_impressao, id_pedido, status: 4, erro: "Não foi possível encontrar a impressora: " + deviceName});
+  if (device && !printers.find(p => p.displayName === device)) {
+    callback({id_impressao, id_pedido, status: 4, device, erro: "Não foi possível encontrar a impressora: " + device});
     return;
 
-  } else if (deviceName) {
-    config.deviceName = deviceName
+  } else if (device) {
+    config.deviceName = device
   }
 
   const script = `
@@ -210,23 +210,23 @@ function printData(option, callback) {
         if (!erro && copies > 1) {
           setTimeout(() => {
             print(config, (erro) => {
-              callback({id_impressao, id_pedido, erro, status: erro ? 4 : 3});
+              callback({id_impressao, id_pedido, erro, device, status: erro ? 4 : 3});
             });
           }, 1500);
 
         } else {
-          callback({id_impressao, id_pedido, erro, status: erro ? 4 : 3});
+          callback({id_impressao, id_pedido, erro, device, status: erro ? 4 : 3});
         }
       });
 
     }).catch(e => {
-      callback();
+      callback({id_impressao, id_pedido, status: 4, device, erro: "Não foi possível imprimir. Erro no Script."});
       console.log(e);
     });
 
   } catch (e) {
     console.log(e);
-    callback({id_impressao, id_pedido, status: 4, erro: "Não foi possível imprimir. Tente novamente."});
+    callback({id_impressao, id_pedido, status: 4, device, erro: "Não foi possível imprimir. Tente novamente."});
   }
 }
 
