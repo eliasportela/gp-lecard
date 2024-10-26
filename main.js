@@ -211,11 +211,9 @@ function printData(option, callback) {
     winP.webContents.executeJavaScript(script).then(() => {
       print(config, (erro) => {
         if (!erro && copies > 1) {
-          setTimeout(() => {
-            print(config, (erro) => {
-              callback({id_impressao, id_pedido, erro, device, status: erro ? 4 : 3});
-            });
-          }, 1500);
+          print(config, (erro) => {
+            callback({id_impressao, id_pedido, erro, device, status: erro ? 4 : 3});
+          });
 
         } else {
           callback({id_impressao, id_pedido, erro, device, status: erro ? 4 : 3});
@@ -223,8 +221,8 @@ function printData(option, callback) {
       });
 
     }).catch(e => {
-      callback({id_impressao, id_pedido, status: 4, device, erro: "Não foi possível imprimir. Erro no Script."});
       console.log(e);
+      callback({id_impressao, id_pedido, status: 4, device, erro: "Não foi possível imprimir. Erro no Script."});
     });
 
   } catch (e) {
@@ -424,10 +422,6 @@ function setPrinters(w) {
 }
 
 function printFila(event) {
-  if (isPrinting) {
-    return;
-  }
-
   printData(listPrint[0], (res) => {
     listPrint.splice(0,1);
 
