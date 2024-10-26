@@ -22,7 +22,7 @@ module.exports = {
 
     base_url = opt.base_api || "https://api.storkdigital.com.br/";
 
-    if (!opt || !opt.token || !opt.merchantId || !base_url || !opt.id_empresa) {
+    if (!opt || !opt.token || !opt.merchantId || !base_url) {
       win.webContents.send('ifoodReply', { error: "Token ou MerchantId do iFood não estão configurados!" });
       return;
     }
@@ -94,7 +94,7 @@ module.exports = {
     try {
       const form = new FormData();
       form.append('key', empresa.key);
-      form.append('id_empresa', empresa.id_empresa);
+      form.append('id_empresa', empresa.id_empresa || '');
 
       if (renew) {
         form.append('renew', 'true');
