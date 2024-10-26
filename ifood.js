@@ -42,8 +42,6 @@ module.exports = {
     }
 
     ifoodTimeout = setInterval(async () => {
-      //const date = new Date();
-      //console.log(`${date.getUTCMinutes()}:${date.getUTCSeconds()}`)
       count++;
 
       for (const e of empresas) {
