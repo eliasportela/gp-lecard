@@ -605,20 +605,16 @@ function checkAutoUpdater() {
   });
 
   autoUpdater.on('update-downloaded', () => {
-    const dialogOpts = {
-      type: 'info',
-      buttons: ['Reiniciar'],
+    win.webContents.send('updateReply', {
       title: 'Atualização',
       message: "Versão baixada com sucesso!",
-      detail: 'Clique em "Reiniciar" ou feche e abra novamente o sistema.'
-    };
-
-    dialog.showMessageBox(win, dialogOpts, null).then(() => {
-      autoUpdater.quitAndInstall();
+      detail: 'Instalando, por favor aguarde..',
+      step: 3
     });
 
-    dialogOpts.step = 3;
-    win.webContents.send('updateReply', dialogOpts);
+    setTimeout(() => {
+      autoUpdater.quitAndInstall();
+    }, 3000);
   });
 
   autoUpdater.on('error', (ev, message) => {
