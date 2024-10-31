@@ -66,9 +66,7 @@ app.whenReady().then(() => {
   winP.loadFile("pages/print.html");
 
   winP.once('ready-to-show', () => {
-    setTimeout(() => {
-      createMain();
-    }, 2000)
+    createMain();
   });
 
   app.on('activate', function () {
@@ -114,9 +112,12 @@ function createMain() {
 
   win.once('ready-to-show', () => {
     setPrinters(win);
-    splash.close();
-    win.show();
-    win.focus();
+
+    setTimeout(() => {
+      splash.close();
+      win.show();
+      win.focus();
+    }, 2000);
   });
 
   win.webContents.on('did-fail-load', () => {
