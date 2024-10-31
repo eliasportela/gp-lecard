@@ -27,7 +27,7 @@ module.exports = {
       return;
     }
 
-    if (!empresas.find(e => e.key === opt.token)) {
+    if (!empresas.find(e => e.id_empresa === opt.id_empresa)) {
       opt.key = opt.token;
       const token = await this.newSession(opt, false);
 
@@ -35,7 +35,7 @@ module.exports = {
         win.webContents.send('ifoodReply', { error: "Não foi possível autenticar com o iFood! Faça o login novamente no Portal para continuar." });
 
       } else {
-        const empresa = { token, merchantId: opt.merchantId, key: opt.token }
+        const empresa = { token, merchantId: opt.merchantId, key: opt.token, id_empresa: opt.id_empresa }
         empresas.push(empresa);
         await this.pollingIfood(win, empresa);
       }
