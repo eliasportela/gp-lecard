@@ -4,6 +4,7 @@ const fs = require('fs');
 const { autoUpdater } = require('electron-updater');
 const store = require('./store');
 const ifood = require('./ifood');
+const log = require('electron-log');
 
 const gotTheLock = app.requestSingleInstanceLock();
 
@@ -49,6 +50,7 @@ app.commandLine.appendSwitch("disable-background-timer-throttling");
 app.userAgentFallback = `LeCard/${version} (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36`;
 app.setAppUserModelId('delivery.lecard.gestor');
 Menu.setApplicationMenu(createMenuContext());
+log.errorHandler.startCatching();
 
 app.whenReady().then(() => {
   splash = new BrowserWindow({
@@ -179,6 +181,7 @@ function createBrowser(new_page) {
 async function printData(option) {
   return new Promise((resolve => {
     if (!option || !option.content) {
+      log.info('printData not content');
       return resolve();
     }
 
@@ -192,9 +195,12 @@ async function printData(option) {
     const id_pedido = option.id_pedido || null;
     const copies = option.copies ? parseInt(option.copies) : 1;
     const config = { silent: true, id_cozinha, id_pedido };
+    let erro;
 
     if (device && !printers.find(p => p.displayName === device)) {
-      return resolve({ id_impressao, id_pedido, status: 4, device, erro: "Não foi possível encontrar a impressora: " + device })
+      erro = "Não foi possível encontrar a impressora: " + device;
+      log.error(erro);
+      return resolve({ id_impressao, id_pedido, status: 4, device, erro })
 
     } else if (device) {
       config.deviceName = device
@@ -214,19 +220,22 @@ async function printData(option) {
         });
 
       }).catch(e => {
-        console.log(e);
-        return resolve({ id_impressao, id_pedido, status: 4, device, erro: "Não foi possível imprimir. Erro no Script." });
+        erro = "Não foi possível imprimir. Erro no Script."
+        log.error(erro, e);
+        return resolve({ id_impressao, id_pedido, status: 4, device, erro });
       });
 
     } catch (e) {
-      console.log(e);
-      return resolve({ id_impressao, id_pedido, status: 4, device, erro: "Não foi possível imprimir. Tente novamente." });
+      erro = "Não foi possível imprimir. Tente novamente."
+      log.error(erro, e);
+      return resolve({ id_impressao, id_pedido, status: 4, device, erro });
     }
   }));
 }
 
 function print(config, copies, atual, callback) {
   setTimeout(() => {
+    log.info('print', config.id_pedido);
     winP.webContents.print(config, (success, failureReason) => {
       if (success && copies > atual) {
         print(config, copies, ++atual, callback);

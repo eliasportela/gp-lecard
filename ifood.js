@@ -1,5 +1,7 @@
 const FormData = require('form-data');
 const fetch = require('electron-fetch').default;
+const log = require('electron-log');
+
 let base_url = null;
 let count = 0;
 let ifoodTimeout = null;
@@ -11,7 +13,8 @@ module.exports = {
   async pollingAPI(win, opt) {
     if (opt && opt.pause) {
       count = 0;
-      win.webContents.send('ifoodReply', { error: "iFood pausado com sucesso!" });
+      win.webContents.send('ifoodReply', { error: "iFood pausado com sucesso!" })
+      log.error("iFood pausado");
       clearInterval(ifoodTimeout);
       return;
     }
@@ -24,6 +27,7 @@ module.exports = {
 
     if (!opt || !opt.token || !opt.merchantId || !base_url) {
       win.webContents.send('ifoodReply', { error: "Token ou MerchantId do iFood não estão configurados!" });
+      log.error("Token ou MerchantId do iFood não estão configurados!");
       return;
     }
 
@@ -33,6 +37,7 @@ module.exports = {
 
       if (!token) {
         win.webContents.send('ifoodReply', { error: "Não foi possível autenticar com o iFood! Faça o login novamente no Portal para continuar." });
+        log.error("Erro ao autenticar iFood");
 
       } else {
         const empresa = { token, merchantId: opt.merchantId, key: opt.token, id_empresa: opt.id_empresa }
@@ -46,6 +51,7 @@ module.exports = {
 
       for (const e of empresas) {
         if (!e.token) {
+          log.error("Erro ao autenticar iFood");
           win.webContents.send('ifoodReply', { error: "Não foi possível autenticar com o iFood! Faça o login novamente no Portal para continuar." });
           return;
         }
@@ -66,10 +72,12 @@ module.exports = {
         if (!empresa.token) {
           win.webContents.send('ifoodReply', { error: "Não foi possível autenticar com o iFood! Faça o login novamente no Portal para continuar." });
           empresas = empresas.filter(e => e !== empresa);
+          log.error("Erro ao autenticar iFood");
           return;
         }
       }
 
+      log.info('ifood polling');
       const orders = res.status === 200 ? await res.json() : [];
       const status = await this.getStatusMerchant(empresa);
       win.webContents.send('ifoodReply', { merchantId: empresa.merchantId, orders, status, count });
@@ -84,7 +92,7 @@ module.exports = {
       let errorCode = e && e.code ? e.code : null;
       let error = errorCode ? (['ERR_INTERNET_DISCONNECTED', 'ENOTFOUND'].includes(errorCode) ? 'Verifique sua conexão com a internet.' : 'Código do erro: ' + errorCode) : e;
       win.webContents.send('ifoodReply', { error: "Não foi possível sincronizar os pedidos do iFood.\n" + error, errorCode });
-      console.log(errorCode);
+      log.error("ifood", e);
     }
 
     return false;
@@ -114,7 +122,7 @@ module.exports = {
       return null;
 
     } catch (err) {
-      console.log(err);
+      log.info('ifood newSession', err);
       return null;
     }
   },
@@ -139,7 +147,7 @@ module.exports = {
       return [];
 
     } catch (err) {
-      console.log(err);
+      log.info('ifood getStatusMerchant', err);
       return [];
     }
   },
@@ -172,8 +180,8 @@ module.exports = {
         }, 2000);
 
         if (!res && msg) {
-          console.log(msg)
           win.webContents.send('ifoodReply', { error: "Erro ao enviar o evento para o servidor. " + msg });
+          log.error("iFood registerOrder", msg);
         }
       });
 
