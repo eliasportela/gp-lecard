@@ -235,7 +235,7 @@ async function printData(option) {
 
 function print(config, copies, atual, callback) {
   setTimeout(() => {
-    log.info('print', config.id_pedido);
+    log.info('print', config.id_pedido || 'pdv');
     winP.webContents.print(config, (success, failureReason) => {
       if (success && copies > atual) {
         print(config, copies, ++atual, callback);
