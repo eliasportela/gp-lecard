@@ -176,75 +176,66 @@ function createBrowser(new_page) {
   });
 }
 
-function printData(option, callback) {
-  if (!option || !option.content) {
-    callback();
-    return;
-  }
+async function printData(option) {
+  return new Promise((resolve => {
+    if (!option || !option.content) {
+      return resolve();
+    }
 
-  const impressora = option.impressora || {};
-  const content = JSON.stringify(`${option.content}`);
-  const zoom = impressora.zoom ? impressora.zoom : "9px";
-  const width = impressora.largura ? impressora.largura : "100%";
-  const device = impressora.device ? impressora.device : "";
-  const id_cozinha = impressora.id_cozinha || null;
-  const id_impressao = option.id_impressao || null;
-  const id_pedido = option.id_pedido || null;
-  const copies = option.copies ? parseInt(option.copies) : 1;
-  const config = { silent: true, id_cozinha };
+    const impressora = option.impressora || {};
+    const content = JSON.stringify(`${option.content}`);
+    const zoom = impressora.zoom ? impressora.zoom : "9px";
+    const width = impressora.largura ? impressora.largura : "100%";
+    const device = impressora.device ? impressora.device : "";
+    const id_cozinha = impressora.id_cozinha || null;
+    const id_impressao = option.id_impressao || null;
+    const id_pedido = option.id_pedido || null;
+    const copies = option.copies ? parseInt(option.copies) : 1;
+    const config = { silent: true, id_cozinha, id_pedido };
 
-  if (device && !printers.find(p => p.displayName === device)) {
-    callback({id_impressao, id_pedido, status: 4, device, erro: "Não foi possível encontrar a impressora: " + device});
-    return;
+    if (device && !printers.find(p => p.displayName === device)) {
+      return resolve({ id_impressao, id_pedido, status: 4, device, erro: "Não foi possível encontrar a impressora: " + device })
 
-  } else if (device) {
-    config.deviceName = device
-  }
+    } else if (device) {
+      config.deviceName = device
+    }
 
-  const script = `
+    const script = `
     document.getElementById('content').innerHTML = ${content};
     document.body.style.fontSize = '${zoom}';
     document.body.style.width = '${width}';
     filtrarCozinha(${id_cozinha});
-  `;
+    `;
 
-  try {
-    winP.webContents.executeJavaScript(script).then(() => {
-      print(config, (erro) => {
-        if (!erro && copies > 1) {
-          print(config, (erro) => {
-            callback({id_impressao, id_pedido, erro, device, status: erro ? 4 : 3});
-          });
+    try {
+      winP.webContents.executeJavaScript(script).then(() => {
+        print(config, copies, 1, (erro) => {
+          return resolve({ id_impressao, id_pedido, erro, device, status: erro ? 4 : 3 });
+        });
 
-        } else {
-          callback({id_impressao, id_pedido, erro, device, status: erro ? 4 : 3});
-        }
+      }).catch(e => {
+        console.log(e);
+        return resolve({ id_impressao, id_pedido, status: 4, device, erro: "Não foi possível imprimir. Erro no Script." });
       });
 
-    }).catch(e => {
+    } catch (e) {
       console.log(e);
-      callback({id_impressao, id_pedido, status: 4, device, erro: "Não foi possível imprimir. Erro no Script."});
+      return resolve({ id_impressao, id_pedido, status: 4, device, erro: "Não foi possível imprimir. Tente novamente." });
+    }
+  }));
+}
+
+function print(config, copies, atual, callback) {
+  setTimeout(() => {
+    winP.webContents.print(config, (success, failureReason) => {
+      if (success && copies >= atual) {
+        print(config, copies, ++atual, callback);
+
+      } else {
+        callback(success ? null : failureReason);
+      }
     });
-
-  } catch (e) {
-    console.log(e);
-    callback({id_impressao, id_pedido, status: 4, device, erro: "Não foi possível imprimir. Tente novamente."});
-  }
-}
-
-function print(config, callback) {
-  winP.webContents.print(config, (success, failureReason) => {
-    callback(success ? null : failureReason);
-  });
-}
-
-function dialogMsg(title, message) {
-  dialog.showMessageBox(win, {
-    type: 'info',
-    buttons: ['OK'],
-    title,
-    message
-  }, null);
+  }, 1000);
 }
 
 function loadDendences() {
@@ -253,11 +244,7 @@ function loadDendences() {
   // ipcmain
   ipcMain.on('print', (event, option) => {
     listPrint.push(option);
-
-    if (!isPrinting) {
-      isPrinting = true;
-      printFila(event);
-    }
+    printFila(event);
   });
 
   ipcMain.on('showDialog', (event, option) => {
@@ -422,21 +409,21 @@ function setPrinters(w) {
   });
 }
 
-function printFila(event) {
-  printData(listPrint[0], (res) => {
-    listPrint.splice(0,1);
+async function printFila(event) {
+  if (isPrinting) return;
+  isPrinting = true;
 
-    if (res) {
-      event.reply('was-printed', res);
+  while (listPrint.length > 0) {
+    const resposta = await printData(listPrint[0]);
+
+    if (resposta) {
+      event.reply('was-printed', resposta);
     }
 
-    if (listPrint.length) {
-      printFila(event);
+    listPrint.shift();
+  }
 
-    } else {
-      isPrinting = false;
-    }
-  });
+  isPrinting = false;
 }
 
 function createMenuContext(){
