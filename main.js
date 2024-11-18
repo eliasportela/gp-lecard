@@ -18,6 +18,7 @@ const env = JSON.parse(fs.readFileSync(path.join(__dirname, './config.json'), 'u
 let BASE_GESTOR = env.BASE_GESTOR;
 let isHomolog = false;
 let isBeta = false;
+let isLite = !!store.get('IS_LITE');
 
 if (store.get('IS_HOMOLOG')) {
   isHomolog = true;
@@ -45,7 +46,10 @@ app.disableHardwareAcceleration();
 app.commandLine.appendSwitch('disable-site-isolation-trials')
 app.commandLine.appendSwitch('disable-features', 'OutOfBlinkCors')
 app.commandLine.appendSwitch('--autoplay-policy','no-user-gesture-required');
-app.commandLine.appendSwitch("disable-background-timer-throttling");
+
+if (!isLite) {
+  app.commandLine.appendSwitch("disable-background-timer-throttling");
+}
 
 app.userAgentFallback = `LeCard/${version} (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36`;
 app.setAppUserModelId('delivery.lecard.gestor');
@@ -91,7 +95,7 @@ app.whenReady().then(() => {
 
   loadDendences();
 
-  if (!idPowerSave) {
+  if (!idPowerSave && !isLite) {
     idPowerSave = powerSaveBlocker.start('prevent-display-sleep');
   }
 });
@@ -171,7 +175,7 @@ function createBrowser(new_page) {
       webviewTag: true,
       contextIsolation: false,
       enableRemoteModule: true,
-      backgroundThrottling: new_page,
+      backgroundThrottling: (new_page && !isLite),
       preload: path.join(__dirname, new_page ? 'preload-read.js' : 'preload.js')
     },
     icon: path.join(__dirname, 'icon.png')
@@ -207,7 +211,7 @@ async function printData(option) {
     }
 
     const script = `
-    document.getElementById('content').innerHTML = ${content};
+    document.getElementById('content').innerHTML = ${id_pedido || id_impressao};
     document.body.style.fontSize = '${zoom}';
     document.body.style.width = '${width}';
     filtrarCozinha(${id_cozinha});
@@ -235,7 +239,7 @@ async function printData(option) {
 
 function print(config, copies, atual, callback) {
   setTimeout(() => {
-    log.info('print', config.id_pedido || 'pdv');
+    log.info('print', config.id_pedido || 'pdv', new Date().getSeconds());
     winP.webContents.print(config, (success, failureReason) => {
       if (success && copies > atual) {
         print(config, copies, ++atual, callback);
@@ -244,7 +248,7 @@ function print(config, copies, atual, callback) {
         callback(success ? null : failureReason);
       }
     });
-  }, 1000);
+  }, 2000);
 }
 
 function loadDendences() {
@@ -252,8 +256,10 @@ function loadDendences() {
 
   // ipcmain
   ipcMain.on('print', (event, option) => {
-    for (let i=0; i < option.length; i++) {
-      listPrint.push(option[i]);
+    let print = Array.isArray(option) ? option : [option];
+
+    for (let i=0; i < print.length; i++) {
+      listPrint.push(print[i]);
     }
 
     printFila(event);
@@ -497,13 +503,18 @@ function createMenuContext(){
           },
         },
         {
-          label: (win && win.isFullScreen() ? "Sair" : "Modo") + " FullScrean",
+          label: (isLite ? "Desativar" : "Ativar") + " Modo Lite",
           enabled: true,
           click() {
-            if (win) {
-              win.setFullScreen(!win.isFullScreen());
-              Menu.setApplicationMenu(createMenuContext());
+            if (isLite) {
+              store.delete('IS_LITE');
+
+            } else {
+              store.set('IS_LITE', 'true');
             }
+
+            app.relaunch();
+            app.quit();
           }
         }
       ]
