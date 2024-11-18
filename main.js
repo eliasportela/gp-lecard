@@ -39,9 +39,9 @@ let isPrinting = false;
 let showVersionMenu = false;
 let idPowerSave = null;
 const version = app.getVersion();
+process.env.APP_VERSION = version;
 
 app.disableHardwareAcceleration();
-
 app.commandLine.appendSwitch('disable-site-isolation-trials')
 app.commandLine.appendSwitch('disable-features', 'OutOfBlinkCors')
 app.commandLine.appendSwitch('--autoplay-policy','no-user-gesture-required');
@@ -252,7 +252,10 @@ function loadDendences() {
 
   // ipcmain
   ipcMain.on('print', (event, option) => {
-    listPrint.push(option);
+    for (let i=0; i < option.length; i++) {
+      listPrint.push(option[i]);
+    }
+
     printFila(event);
   });
 
@@ -407,7 +410,6 @@ function openPageExternal(url) {
 }
 
 function setPrinters(w) {
-  w.webContents.executeJavaScript(`window.ElectronV='${version}'; sessionStorage.setItem('ElectronV', '${version}');`);
   w.webContents.getPrintersAsync().then((devices) => {
     printers = devices;
 

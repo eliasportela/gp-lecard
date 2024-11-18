@@ -1,6 +1,6 @@
-const {ipcRenderer} = require('electron');
-const acbr = require('./acbr.js')
-const os = require('node:os')
+const { ipcRenderer } = require('electron');
+const acbr = require('./acbr.js');
+const os = require('node:os');
 
 ipcRenderer.on('was-printed', (event, arg) => {
   document.dispatchEvent(new CustomEvent('wasPrinted', { detail: arg }));
@@ -25,6 +25,7 @@ document.addEventListener("comandoAcbr", (e) => {
 }, false);
 
 window.Electron = true;
+window.ElectronV = process.env.APP_VERSION;
 window.acbrFolder = null;
 window.gPConfigs = { host: os.hostname() };
 

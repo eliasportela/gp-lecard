@@ -1,4 +1,4 @@
-const {ipcRenderer} = require('electron');
+const { ipcRenderer } = require('electron');
 const acbr = require('./acbr.js');
 
 ipcRenderer.on('was-printed', (event, arg) => {
@@ -22,3 +22,4 @@ document.addEventListener("comandoAcbr", (e) => {
 window.Electron = true;
 window.isReadOnly = true;
 window.acbrFolder = null;
+window.ElectronV = process.env.APP_VERSION;
