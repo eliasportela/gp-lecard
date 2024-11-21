@@ -1,8 +1,8 @@
 {
   "name": "gp-lecard",
   "version": "1.8.6",
-  "description": "Gerenciador LeCard Delivery",
-  "author": "storkdigital.com.br",
+  "description": "Gestor de Pedidos LeCard",
+  "author": "www.lecard.delivery",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
