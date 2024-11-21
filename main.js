@@ -1,9 +1,6 @@
-const { app, BrowserWindow, ipcMain, dialog, Menu, globalShortcut, session, powerSaveBlocker} = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, globalShortcut } = require('electron');
 const path = require('path');
-const fs = require('fs');
-const { autoUpdater } = require('electron-updater');
 const store = require('./store');
-const ifood = require('./ifood');
 const log = require('electron-log');
 
 const gotTheLock = app.requestSingleInstanceLock();
@@ -14,19 +11,15 @@ if (!gotTheLock) {
   return;
 }
 
-const env = JSON.parse(fs.readFileSync(path.join(__dirname, './config.json'), 'utf8'));
-let BASE_GESTOR = env.BASE_GESTOR;
+let BASE_GESTOR = "https://gestor.lecard.delivery/";
+// BASE_GESTOR = "http://localhost:8080/";
+
 let isHomolog = false;
-let isBeta = false;
 let isLite = !!store.get('IS_LITE');
 
 if (store.get('IS_HOMOLOG')) {
   isHomolog = true;
-  BASE_GESTOR = env.BASE_GESTOR_HHH;
-
-} else if (store.get('IS_BETA')) {
-  isBeta = true;
-  BASE_GESTOR = env.BASE_GESTOR_BETA;
+  BASE_GESTOR = "https://hhh.gestor.lecard.delivery/";
 }
 
 let splash = null;
@@ -38,7 +31,11 @@ let printers = [];
 let listPrint = [];
 let isPrinting = false;
 let showVersionMenu = false;
+
 let idPowerSave = null;
+let autoUpdater = null;
+let ifood = null;
+
 const version = app.getVersion();
 process.env.APP_VERSION = version;
 
@@ -68,6 +65,10 @@ app.whenReady().then(() => {
 
   splash.loadFile('pages/loading.html');
 
+  splash.on('closed', () => {
+    splash = null;
+  });
+
   winP = new BrowserWindow({ width: 1000, show: false, title: 'Impressao' });
   winP.loadFile("pages/print.html");
 
@@ -95,15 +96,14 @@ app.whenReady().then(() => {
 
   loadDendences();
 
-  if (!idPowerSave && !isLite) {
-    idPowerSave = powerSaveBlocker.start('prevent-display-sleep');
+  if (!isLite) {
+    idPowerSave = require('electron').powerSaveBlocker.start('prevent-display-sleep');
   }
 });
 
 app.on('window-all-closed', function () {
-  if (idPowerSave) {
-    console.log('closePowerSave');
-    powerSaveBlocker.stop(idPowerSave)
+  if (idPowerSave !== null) {
+    require('electron').powerSaveBlocker.stop(idPowerSave)
   }
 
   app.quit()
@@ -175,7 +175,7 @@ function createBrowser(new_page) {
       webviewTag: true,
       contextIsolation: false,
       enableRemoteModule: true,
-      backgroundThrottling: (new_page && !isLite),
+      backgroundThrottling: (new_page || isLite),
       preload: path.join(__dirname, new_page ? 'preload-read.js' : 'preload.js')
     },
     icon: path.join(__dirname, 'icon.png')
@@ -211,7 +211,7 @@ async function printData(option) {
     }
 
     const script = `
-    document.getElementById('content').innerHTML = ${id_pedido || id_impressao};
+    document.getElementById('content').innerHTML = ${content};
     document.body.style.fontSize = '${zoom}';
     document.body.style.width = '${width}';
     filtrarCozinha(${id_cozinha});
@@ -239,7 +239,7 @@ async function printData(option) {
 
 function print(config, copies, atual, callback) {
   setTimeout(() => {
-    log.info('print', config.id_pedido || 'pdv', new Date().getSeconds());
+    log.info('print', config.id_pedido || 'pdv');
     winP.webContents.print(config, (success, failureReason) => {
       if (success && copies > atual) {
         print(config, copies, ++atual, callback);
@@ -253,6 +253,7 @@ function print(config, copies, atual, callback) {
 
 function loadDendences() {
   const isPackaged = app.isPackaged;
+  autoUpdater = require('electron-updater')['autoUpdater'];
 
   // ipcmain
   ipcMain.on('print', (event, option) => {
@@ -316,12 +317,16 @@ function loadDendences() {
   });
 
   ipcMain.on('ifoodEvent', (event, option) => {
+    if (!ifood) {
+      ifood = require('./ifood');
+    }
+
     ifood.pollingAPI(win, option).then();
   });
 
   ipcMain.on('update', (event, option) => {
     if (option.outdate) {
-      if (isPackaged) {
+      if (isPackaged && autoUpdater) {
         showVersionMenu = false;
         autoUpdater.checkForUpdates();
 
@@ -336,7 +341,7 @@ function loadDendences() {
       }
 
     } else {
-      session.defaultSession.clearStorageData({
+      require('electron').session.defaultSession.clearStorageData({
         storages: ['cookies', 'filesystem', 'cachestorage', 'indexdb', 'shadercache', 'websql', 'serviceworkers']
       }).then(res => {
         app.relaunch();
@@ -449,33 +454,6 @@ function createMenuContext(){
       label: 'Configs',
       submenu: [
         {
-          label: (isBeta ? 'Voltar versão Estável' : 'Habilitar versão Beta'),
-          enabled: true,
-          click() {
-            const dialogOpts = {
-              type: 'info',
-              buttons: ['Cancelar', 'Sim'],
-              title: 'Alternar versão',
-              message: "",
-              detail: 'Deseja alterar este sistema para a versão ' + (isBeta ? 'estável?' : 'beta?')
-            };
-
-            dialog.showMessageBox(win, dialogOpts, null).then((returnValue) => {
-              if (returnValue.response !== 0) {
-                if (isBeta) {
-                  store.delete('IS_BETA');
-
-                } else {
-                  store.set('IS_BETA', 'true');
-                }
-
-                app.relaunch();
-                app.quit();
-              }
-            });
-          },
-        },
-        {
           label: (isHomolog ? 'Modo produção' : 'Modo de teste'),
           enabled: true,
           click() {
@@ -529,6 +507,12 @@ function createMenuContext(){
             showVersionMenu = true;
             autoUpdater.checkForUpdates()
           },
+        },
+        {
+          label: 'Logs do Sistema',
+          click: () => {
+            require('electron').shell.openPath(path.join(win.webContents.session.getStoragePath(), 'logs'));
+          }
         },
         {
           label: 'Versão',
