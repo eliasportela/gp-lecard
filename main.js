@@ -194,6 +194,7 @@ async function printData(option) {
     const zoom = impressora.zoom ? impressora.zoom : "9px";
     const width = impressora.largura ? impressora.largura : "100%";
     const device = impressora.device ? impressora.device : "";
+    const margin = impressora.margin || 'auto';
     const id_cozinha = impressora.id_cozinha || null;
     const id_impressao = option.id_impressao || null;
     const id_pedido = option.id_pedido || null;
@@ -214,6 +215,7 @@ async function printData(option) {
     document.getElementById('content').innerHTML = ${content};
     document.body.style.fontSize = '${zoom}';
     document.body.style.width = '${width}';
+    document.body.style.margin = '${margin}';
     filtrarCozinha(${id_cozinha});
     `;
 

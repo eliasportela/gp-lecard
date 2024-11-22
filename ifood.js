@@ -77,7 +77,7 @@ module.exports = {
         }
       }
 
-      log.info('ifood polling');
+      log.info('ifood polling', (res.status === 200));
       const orders = res.status === 200 ? await res.json() : [];
       const status = await this.getStatusMerchant(empresa);
       win.webContents.send('ifoodReply', { merchantId: empresa.merchantId, orders, status, count });
@@ -180,8 +180,8 @@ module.exports = {
         }, 2000);
 
         if (!res && msg) {
-          win.webContents.send('ifoodReply', { error: "Erro ao enviar o evento para o servidor. " + msg });
-          log.error("iFood registerOrder", msg);
+          msg = (typeof msg === 'string') ? msg : null;
+          win.webContents.send('ifoodReply', { error: "Erro ao enviar pedido do iFood. " + (msg || "Verifique os logs do sistema") });
         }
       });
 
@@ -191,25 +191,24 @@ module.exports = {
   },
 
   async integradorIfood(object, callback) {
-    const form = new FormData();
-    form.append('json_data', object);
-    const res = await fetch(base_url + 'api/integrador/ifood',
-      { method: 'POST', body: form });
-
-    const text = await res.text();
-
     try {
-      const json = JSON.parse(text);
+      const form = new FormData();
+      form.append('json_data', object);
+      const res = await fetch(base_url + 'api/integrador/ifood',
+          { method: 'POST', body: form });
 
       if (res.status === 200) {
         callback(true);
 
       } else {
-        callback(false, json);
+        callback(false);
       }
 
     } catch (e) {
-      callback(false, text);
+      let errorCode = e && e.code ? e.code : null;
+      let error = errorCode ? (['ERR_INTERNET_DISCONNECTED', 'ENOTFOUND'].includes(errorCode) ? 'Verifique sua conexão com a internet.' : 'Código do erro: ' + errorCode) : e;
+      log.error("integradorIfood", error, e);
+      callback(false, error);
     }
   }
 };
