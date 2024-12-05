@@ -5,7 +5,7 @@ const log = require('electron-log');
 let base_url = null;
 let count = 0;
 let ifoodTimeout = null;
-let listIfood = new Set();
+let listIfood = [];
 let processIfood = false;
 let empresas = [];
 
@@ -13,7 +13,6 @@ module.exports = {
   async pollingAPI(win, opt) {
     if (opt && opt.pause) {
       count = 0;
-      win.webContents.send('ifoodReply', { error: "iFood pausado com sucesso!" })
       log.error("iFood pausado");
       clearInterval(ifoodTimeout);
       return;
@@ -156,8 +155,15 @@ module.exports = {
     let orders = data || [];
 
     if (orders.length) {
+
+      if (orders.find(c => c.code === 'CAN')) {
+        orders.sort((a,b) => {
+          return a.code === 'CAN' && b.code !== 'CAN' ? -1 : (a.code !== 'CAN' && b.code === 'CAN' ? 1 : 0)
+        });
+      }
+
       orders.forEach(evt => {
-        listIfood.add(JSON.stringify(evt));
+        listIfood.push(JSON.stringify(evt));
       });
 
       setTimeout(async () => {
@@ -167,25 +173,26 @@ module.exports = {
   },
 
   async registerOrder(win) {
-    if (!processIfood && listIfood.size) {
+    if (!processIfood && listIfood.length) {
       processIfood = true;
-      const item = listIfood.values().next().value;
+      const item = listIfood.shift();
 
       await this.integradorIfood(item, (res, msg) => {
-        listIfood.delete(item);
-
         setTimeout(async () => {
           processIfood = false;
           await this.registerOrder(win);
         }, 2000);
 
-        if (!res && msg) {
+        if (res) {
+          win.webContents.send('ifoodReply', { event:  msg });
+
+        } else if (msg) {
           msg = (typeof msg === 'string') ? msg : null;
           win.webContents.send('ifoodReply', { error: "Erro ao enviar pedido do iFood. " + (msg || "Verifique os logs do sistema") });
         }
       });
 
-    } else if (!listIfood.size) {
+    } else if (!listIfood.length) {
       processIfood = false;
     }
   },
@@ -198,7 +205,7 @@ module.exports = {
           { method: 'POST', body: form });
 
       if (res.status === 200) {
-        callback(true);
+        callback(true, object);
 
       } else {
         callback(false);

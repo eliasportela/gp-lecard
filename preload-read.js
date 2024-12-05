@@ -19,6 +19,10 @@ document.addEventListener("comandoAcbr", (e) => {
   }
 }, false);
 
+document.addEventListener("logError", (e) => {
+  ipcRenderer.send('logError', e.detail);
+}, false);
+
 window.Electron = true;
 window.isReadOnly = true;
 window.acbrFolder = null;

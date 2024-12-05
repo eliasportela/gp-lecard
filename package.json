@@ -1,6 +1,6 @@
 {
   "name": "gp-lecard",
-  "version": "1.8.7",
+  "version": "1.8.8",
   "description": "Gestor de Pedidos LeCard",
   "author": "www.lecard.delivery",
   "main": "main.js",

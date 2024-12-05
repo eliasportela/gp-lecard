@@ -199,7 +199,7 @@ async function printData(option) {
     const id_impressao = option.id_impressao || null;
     const id_pedido = option.id_pedido || null;
     const copies = option.copies ? parseInt(option.copies) : 1;
-    const config = { silent: true, id_cozinha, id_pedido };
+    const config = { silent: true, id_cozinha, id_pedido, id_impressao };
     let erro;
 
     if (device && !printers.find(p => p.displayName === device)) {
@@ -216,13 +216,14 @@ async function printData(option) {
     document.body.style.fontSize = '${zoom}';
     document.body.style.width = '${width}';
     document.body.style.margin = '${margin}';
-    filtrarCozinha(${id_cozinha});
-    `;
+    filtrarCozinha(${id_cozinha});`;
 
     try {
       winP.webContents.executeJavaScript(script).then(() => {
         print(config, copies, 1, (erro) => {
-          return resolve({ id_impressao, id_pedido, erro, device, status: erro ? 4 : 3 });
+          setTimeout(() => {
+            return resolve({ id_impressao, id_pedido, erro, device, status: erro ? 4 : 3 });
+          }, 3000);
         });
 
       }).catch(e => {
@@ -240,17 +241,15 @@ async function printData(option) {
 }
 
 function print(config, copies, atual, callback) {
-  setTimeout(() => {
-    log.info('print', config.id_pedido || 'pdv');
-    winP.webContents.print(config, (success, failureReason) => {
-      if (success && copies > atual) {
-        print(config, copies, ++atual, callback);
+  log.info('print', config.id_pedido || 'pdv', config.id_impressao || 'local');
+  winP.webContents.print(config, (success, failureReason) => {
+    if (success && copies > atual) {
+      print(config, copies, ++atual, callback);
 
-      } else {
-        callback(success ? null : failureReason);
-      }
-    });
-  }, 2000);
+    } else {
+      callback(success ? null : failureReason);
+    }
+  });
 }
 
 function loadDendences() {
@@ -259,13 +258,13 @@ function loadDendences() {
 
   // ipcmain
   ipcMain.on('print', (event, option) => {
-    let print = Array.isArray(option) ? option : [option];
+    if (option) {
+      for (let i=0; i < option.length; i++) {
+        listPrint.push(option[i]);
+      }
 
-    for (let i=0; i < print.length; i++) {
-      listPrint.push(print[i]);
+      printFila(event);
     }
-
-    printFila(event);
   });
 
   ipcMain.on('showDialog', (event, option) => {
@@ -349,6 +348,12 @@ function loadDendences() {
         app.relaunch();
         app.quit();
       });
+    }
+  });
+
+  ipcMain.on('logError', (event, option) => {
+    if (option) {
+      log.error(option);
     }
   });
 
@@ -437,14 +442,13 @@ async function printFila(event) {
   if (isPrinting) return;
   isPrinting = true;
 
-  while (listPrint.length > 0) {
-    const resposta = await printData(listPrint[0]);
+  while (listPrint.length) {
+    const print = listPrint.shift();
+    const resposta = await printData(print);
 
     if (resposta) {
       event.reply('was-printed', resposta);
     }
-
-    listPrint.shift();
   }
 
   isPrinting = false;
