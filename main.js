@@ -117,13 +117,13 @@ function createMain() {
   });
 
   win.once('ready-to-show', () => {
-    setPrinters(win);
-
     setTimeout(() => {
       splash.close();
       win.show();
       win.focus();
     }, 2000);
+
+    getPrinters();
   });
 
   win.webContents.on('did-fail-load', () => {
@@ -281,10 +281,6 @@ function loadDendences() {
       win.show();
       win.loadFile('pages/error.html');
     });
-
-    win.once('ready-to-show', () => {
-      setPrinters(win);
-    });
   });
 
   ipcMain.on('gopage', (evt, opt) => {
@@ -357,9 +353,23 @@ function loadDendences() {
     }
   });
 
+  ipcMain.on('getPrinters', (event) => {
+    getPrinters(event);
+  });
+
   if (isPackaged) {
     checkAutoUpdater();
   }
+}
+
+function getPrinters(event) {
+  win.webContents.getPrintersAsync().then((devices) => {
+    printers = devices || [];
+
+    if (event) {
+      event.reply('setPrinters', printers);
+    }
+  });
 }
 
 function openPage(opt) {
@@ -374,7 +384,6 @@ function openPage(opt) {
     new_page.show();
     new_page.focus();
     new_page.webContents.executeJavaScript(`sessionStorage.setItem('isReadOnly',${windows.length});`);
-    setPrinters(new_page);
   });
 
   new_page.on('closed', () => {
@@ -425,17 +434,6 @@ function openPageExternal(url) {
       return { action: 'deny' };
     });
   }
-}
-
-function setPrinters(w) {
-  w.webContents.getPrintersAsync().then((devices) => {
-    printers = devices;
-
-    if (printers) {
-      const strPrinters = printers ? JSON.stringify(JSON.stringify(printers)) : "[]";
-      w.webContents.executeJavaScript(`sessionStorage.setItem('Printers',${strPrinters});`);
-    }
-  });
 }
 
 async function printFila(event) {

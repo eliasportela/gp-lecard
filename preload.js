@@ -28,6 +28,10 @@ document.addEventListener("logError", (e) => {
   ipcRenderer.send('logError', e.detail);
 }, false);
 
+document.addEventListener("getPrinters", (e) => {
+  ipcRenderer.send('getPrinters');
+}, false);
+
 window.Electron = true;
 window.ElectronV = process.env.APP_VERSION;
 window.acbrFolder = null;
@@ -48,6 +52,10 @@ ipcRenderer.on('updateReply', (event, arg) => {
 ipcRenderer.on('updateProgress', (event, arg) => {
   document.dispatchEvent(new CustomEvent('updateProgress', { detail: arg }));
 })
+
+ipcRenderer.on('setPrinters', (event, arg) => {
+  document.dispatchEvent(new CustomEvent('setPrinters', { detail: arg }));
+});
 
 // ifood
 document.addEventListener('ifoodPolling', (e) => {
